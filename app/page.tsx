@@ -26,6 +26,11 @@ const PostCard = ({ platform, content, day, webhookUrl }: PostCardProps) => {
   const [isPosting, setIsPosting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
+  // Update local state if the parent content prop changes (e.g. restoring history)
+  useEffect(() => {
+    setEditedContent(content);
+  }, [content]);
+
   const charLimit = 250;
   const isLong = editedContent.length > charLimit;
   const displayContent =
@@ -45,11 +50,10 @@ const PostCard = ({ platform, content, day, webhookUrl }: PostCardProps) => {
 
   const handlePost = async () => {
     if (platform.toLowerCase() !== "discord") return;
-
-    if (!webhookUrl) {
-      alert("❌ Please configure your Discord Webhook in Identity Settings.");
-      return;
-    }
+    if (!webhookUrl)
+      return alert(
+        "❌ Please configure your Discord Webhook in Identity Settings."
+      );
 
     setIsPosting(true);
     try {
@@ -58,15 +62,12 @@ const PostCard = ({ platform, content, day, webhookUrl }: PostCardProps) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: editedContent, webhookUrl }),
       });
-
       const data = await res.json();
-      if (res.ok) {
-        alert("✅ Shared to your Discord server!");
-      } else {
+      if (res.ok) alert("✅ Shared to your Discord server!");
+      else
         alert(
           `❌ Post failed: ${data.error || "Check your webhook settings."}`
         );
-      }
     } catch (err) {
       alert("❌ Post failed. Check connection.");
     } finally {
@@ -80,7 +81,6 @@ const PostCard = ({ platform, content, day, webhookUrl }: PostCardProps) => {
         <span className="bg-red-50 text-red-700 text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest">
           Day {day}
         </span>
-
         <div className="flex items-center gap-3">
           <button
             onClick={handleCopy}
@@ -144,11 +144,8 @@ const PostCard = ({ platform, content, day, webhookUrl }: PostCardProps) => {
 
 export default function Home() {
   const [session, setSession] = useState<any>(null);
-
-  // Unified Context State
   const [urlInput, setUrlInput] = useState("");
   const [textInput, setTextInput] = useState("");
-
   const [campaign, setCampaign] = useState<CampaignDay[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -158,17 +155,29 @@ export default function Home() {
   const [discordWebhook, setDiscordWebhook] = useState("");
   const [isSavingPersona, setIsSavingPersona] = useState(false);
 
+  // History State
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [pastCampaigns, setPastCampaigns] = useState<any[]>([]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) fetchProfile(session.user.id);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+        fetchHistory(session.user.id);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session?.user) fetchProfile(session.user.id);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+        fetchHistory(session.user.id);
+      } else {
+        setPastCampaigns([]);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -189,10 +198,18 @@ export default function Home() {
     }
   };
 
+  const fetchHistory = async (userId: string) => {
+    const { data } = await supabase
+      .from("campaigns")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (data) setPastCampaigns(data);
+  };
+
   const savePersona = async () => {
     if (!session?.user) return;
     setIsSavingPersona(true);
-
     try {
       const { data: existingProfile } = await supabase
         .from("profiles")
@@ -200,7 +217,6 @@ export default function Home() {
         .eq("user_id", session.user.id)
         .maybeSingle();
       let dbError;
-
       if (existingProfile) {
         const { error } = await supabase
           .from("profiles")
@@ -213,16 +229,12 @@ export default function Home() {
       } else {
         const { error } = await supabase.from("profiles").insert({
           user_id: session.user.id,
-          display_name:
-            session.user.user_metadata?.full_name ||
-            session.user.user_metadata?.preferred_username ||
-            "Writer",
+          display_name: session.user.user_metadata?.full_name || "Writer",
           persona_voice: personaVoice,
           discord_webhook: discordWebhook,
         });
         dbError = error;
       }
-
       if (dbError) throw dbError;
       setIsSettingsOpen(false);
       alert("✅ Identity & Webhook saved successfully!");
@@ -238,11 +250,7 @@ export default function Home() {
   const signOut = async () => await supabase.auth.signOut();
 
   const generateCampaign = async () => {
-    if (!session?.user) {
-      setError("Please authenticate via GitHub to orchestrate context.");
-      return;
-    }
-
+    if (!session?.user) return setError("Please authenticate via GitHub.");
     setLoading(true);
     setError("");
     try {
@@ -260,7 +268,21 @@ export default function Home() {
 
       const cleanJson = data.output.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(cleanJson);
-      if (parsed.campaign) setCampaign(parsed.campaign);
+
+      if (parsed.campaign) {
+        setCampaign(parsed.campaign);
+
+        // --- THE HISTORY AUTO-SAVE ---
+        await supabase.from("campaigns").insert({
+          user_id: session.user.id,
+          source_url: urlInput,
+          source_notes: textInput,
+          generated_content: parsed.campaign,
+        });
+
+        // Refresh the history list silently
+        fetchHistory(session.user.id);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to orchestrate strategy.");
     } finally {
@@ -268,8 +290,16 @@ export default function Home() {
     }
   };
 
+  const restoreCampaign = (pastRecord: any) => {
+    setUrlInput(pastRecord.source_url || "");
+    setTextInput(pastRecord.source_notes || "");
+    setCampaign(pastRecord.generated_content);
+    setIsHistoryOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans text-slate-900 selection:bg-red-100 selection:text-red-900">
+      {/* Identity Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
           <div className="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl border-4 border-slate-900 relative">
@@ -285,7 +315,6 @@ export default function Home() {
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
               Configure your Agentic Persona
             </p>
-
             <label className="block text-xs font-black uppercase tracking-widest text-slate-800 mb-2">
               System Prompt / Voice
             </label>
@@ -294,7 +323,6 @@ export default function Home() {
               onChange={(e) => setPersonaVoice(e.target.value)}
               className="w-full min-h-[150px] p-4 text-sm text-slate-900 border border-slate-200 rounded-xl outline-none focus:border-red-600/50 bg-slate-50 font-medium leading-relaxed resize-y"
             />
-
             <label className="block text-xs font-black uppercase tracking-widest text-slate-800 mt-6 mb-2">
               Discord Webhook URL
             </label>
@@ -303,7 +331,6 @@ export default function Home() {
               onChange={(e) => setDiscordWebhook(e.target.value)}
               className="w-full px-4 py-3 text-sm text-slate-900 border border-slate-200 rounded-xl outline-none focus:border-red-600/50 bg-slate-50 font-medium mb-6 transition-colors"
             />
-
             <button
               onClick={savePersona}
               disabled={isSavingPersona}
@@ -315,10 +342,69 @@ export default function Home() {
         </div>
       )}
 
+      {/* History Modal */}
+      {isHistoryOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+          <div className="bg-white w-full max-w-2xl rounded-3xl p-8 shadow-2xl border-4 border-slate-900 relative max-h-[80vh] flex flex-col">
+            <button
+              onClick={() => setIsHistoryOpen(false)}
+              className="absolute top-6 right-6 text-slate-400 hover:text-red-600 font-black text-xl transition-colors"
+            >
+              ×
+            </button>
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-1">
+              Context History
+            </h2>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
+              Restore past generations
+            </p>
+
+            <div className="overflow-y-auto pr-2 space-y-4 flex-1">
+              {pastCampaigns.length === 0 ? (
+                <p className="text-slate-400 text-sm italic text-center py-10">
+                  No past campaigns found.
+                </p>
+              ) : (
+                pastCampaigns.map((record) => (
+                  <div
+                    key={record.id}
+                    className="border border-slate-200 p-4 rounded-xl hover:border-red-600/30 hover:bg-red-50/20 transition-all flex justify-between items-center group"
+                  >
+                    <div className="flex-1 truncate pr-4">
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-1">
+                        {new Date(record.created_at).toLocaleDateString()}
+                      </p>
+                      <p className="text-sm font-medium text-slate-800 truncate">
+                        {record.source_url
+                          ? `🔗 ${record.source_url}`
+                          : "📝 Custom Notes Provided"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => restoreCampaign(record)}
+                      className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                    >
+                      Restore
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="relative bg-slate-950 pt-20 pb-24 px-6 text-center overflow-hidden">
         <div className="absolute top-6 right-6 z-50 flex items-center gap-4">
           {session ? (
             <div className="flex items-center gap-3 bg-slate-900/50 backdrop-blur-md px-4 py-2 rounded-full border border-slate-800">
+              <button
+                onClick={() => setIsHistoryOpen(true)}
+                className="text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+              >
+                📚 History
+              </button>
+              <div className="w-[1px] h-4 bg-slate-700"></div>
               <button
                 onClick={() => setIsSettingsOpen(true)}
                 className="text-[10px] font-black uppercase tracking-widest text-white hover:text-red-400 transition-colors cursor-pointer flex items-center gap-2"
@@ -372,7 +458,6 @@ export default function Home() {
           </p>
 
           <div className="mt-10 max-w-3xl mx-auto w-full">
-            {/* The Unified Input Block */}
             <div className="flex flex-col gap-4 p-5 bg-white/10 backdrop-blur-xl rounded-[2rem] shadow-2xl border-[4px] border-slate-800/50 focus-within:border-red-900/50 transition-colors">
               <div className="flex items-center bg-white rounded-2xl px-5 py-2 shadow-inner border border-slate-200">
                 <span className="text-xl mr-3 opacity-50">🔗</span>
