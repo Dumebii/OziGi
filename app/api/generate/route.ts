@@ -18,20 +18,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Fetch the User's Dynamic Persona from Supabase
+    // 1. Fetch the User's Dynamic Persona from Supabase (Failure-Proofed)
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("persona_voice")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle(); // Prevents a fatal crash if 0 rows are found
 
     if (profileError) {
-      console.error("Supabase Error:", profileError);
-      throw new Error("Failed to load identity matrix.");
+      console.warn("Supabase Warning (Proceeding with default):", profileError);
     }
 
+    // Fallback to your default Developer Educator persona if the database is empty
     const personaVoice =
-      profile?.persona_voice || "You are a professional content architect.";
+      profile?.persona_voice ||
+      "You are a professional technical writer and developer educator. Your tone is highly technical, concise, and structured for maximum readability.";
 
     // 2. Process the "Context Tank" Input
     let finalContext = context;
