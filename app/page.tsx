@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { supabase } from "../lib/supabase"; // Ensure your client is exported from here
+import { supabase } from "../lib/supabase";
 
 // --- Interfaces ---
 interface CampaignDay {
@@ -19,7 +19,7 @@ interface PostCardProps {
   day: number;
 }
 
-// --- Sub-Component: Social Post Card (Remains unchanged) ---
+// --- Sub-Component: Social Post Card ---
 const PostCard = ({ platform, content, day }: PostCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
@@ -111,26 +111,53 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 1. Listen for Auth State Changes
+  // Settings Modal State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [personaVoice, setPersonaVoice] = useState("");
+  const [isSavingPersona, setIsSavingPersona] = useState(false);
+
+  // 1. Listen for Auth State & Fetch Profile
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session?.user) fetchProfile(session.user.id);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session?.user) fetchProfile(session.user.id);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("persona_voice")
+      .eq("user_id", userId)
+      .single();
+
+    if (data) setPersonaVoice(data.persona_voice);
+  };
+
+  const savePersona = async () => {
+    if (!session?.user) return;
+    setIsSavingPersona(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ persona_voice: personaVoice })
+      .eq("user_id", session.user.id);
+
+    setIsSavingPersona(false);
+    if (!error) setIsSettingsOpen(false);
+  };
+
   // 2. Auth Handlers
   const signInWithGithub = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "github",
-    });
+    await supabase.auth.signInWithOAuth({ provider: "github" });
   };
 
   const signOut = async () => {
@@ -152,7 +179,6 @@ export default function Home() {
         body: JSON.stringify({
           context: inputContent,
           sourceType: sourceType,
-          // Sending the cryptographically verified User ID to pull your Persona
           userId: session.user.id,
         }),
       });
@@ -170,18 +196,63 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans text-slate-900 selection:bg-red-100 selection:text-red-900">
+      {/* Settings Modal Overlay */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+          <div className="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl border-4 border-slate-900 relative">
+            <button
+              onClick={() => setIsSettingsOpen(false)}
+              className="absolute top-6 right-6 text-slate-400 hover:text-red-600 font-black text-xl transition-colors"
+            >
+              ×
+            </button>
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-1">
+              Identity Settings
+            </h2>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
+              Configure your Agentic Persona
+            </p>
+
+            <label className="block text-xs font-black uppercase tracking-widest text-slate-800 mb-2">
+              System Prompt / Voice
+            </label>
+            <textarea
+              value={personaVoice}
+              onChange={(e) => setPersonaVoice(e.target.value)}
+              className="w-full min-h-[150px] p-4 text-sm text-slate-900 border border-slate-200 rounded-xl outline-none focus:border-red-600/50 bg-slate-50 font-medium leading-relaxed resize-y mb-6"
+              placeholder="E.g., You are a witty tech educator..."
+            />
+
+            <button
+              onClick={savePersona}
+              disabled={isSavingPersona}
+              className="w-full bg-red-700 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-red-800 transition-all active:scale-95 disabled:bg-slate-300"
+            >
+              {isSavingPersona ? "Syncing..." : "Update Persona Matrix"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <header className="relative bg-slate-950 pt-20 pb-24 px-6 text-center overflow-hidden">
         {/* The Auth Bridge UI */}
         <div className="absolute top-6 right-6 z-50 flex items-center gap-4">
           {session ? (
             <div className="flex items-center gap-3 bg-slate-900/50 backdrop-blur-md px-4 py-2 rounded-full border border-slate-800">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="text-[10px] font-black uppercase tracking-widest text-white hover:text-red-400 transition-colors cursor-pointer flex items-center gap-2"
+                title="Edit Persona Settings"
+              >
+                ⚙️{" "}
                 {session.user.user_metadata.preferred_username ||
+                  session.user.user_metadata.full_name ||
                   "Authenticated"}
-              </span>
+              </button>
+              <div className="w-[1px] h-4 bg-slate-700"></div>
               <button
                 onClick={signOut}
-                className="text-red-500 hover:text-red-400 text-xs font-bold uppercase transition-colors"
+                className="text-slate-500 hover:text-red-500 text-[10px] font-bold uppercase transition-colors"
               >
                 Disconnect
               </button>
@@ -280,7 +351,7 @@ export default function Home() {
                   className="flex-1 px-6 py-4 outline-none text-slate-900 text-sm font-medium placeholder:text-slate-300 bg-transparent min-h-[140px] resize-y transition-all"
                   placeholder={
                     session
-                      ? "Paste your 5G optimization research gaps, transcripts, or drafts here..."
+                      ? "Paste your research gaps, meeting transcripts, or drafts here..."
                       : "Please connect GitHub to unlock the Context Tank..."
                   }
                   value={inputContent}
