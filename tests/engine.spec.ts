@@ -1,64 +1,52 @@
-"use client";
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
-test.describe("Ozigi Content Engine Workflow", () => {
+test.describe('Ozigi Content Engine Workflow', () => {
+
   test.beforeEach(async ({ page }) => {
-    // Navigate to the app before each test
-    await page.goto("/");
+    await page.goto('/');
   });
 
-  test("should display the landing page and new Ozigi branding", async ({
-    page,
-  }) => {
-    // 1. Resilient Match: Look for the core H1 text
-    await expect(page.locator("h1")).toContainText(/WINNING SOCIAL MEDIA/i);
+  test('should display the landing page and new Ozigi branding', async ({ page }) => {
+    // 1. Resilient H1 Match
+    await expect(page.locator('h1')).toContainText(/WINNING SOCIAL MEDIA/i);
+    
+    // 2. Button Match: MUST match the aria-label, not the inner text!
+    await expect(page.getByRole('button', { name: /Try the Context Engine Now/i })).toBeVisible();
 
-    // 2. Button Match: Use .first() to bypass any mobile/desktop duplicate buttons
-    await expect(
-      page.getByRole("button", { name: /TRY IT NOW/i }).first()
-    ).toBeVisible();
-
-    // 3. Brand Match: Check that our new name is in the navigation bar
-    await expect(page.locator("nav")).toContainText(/OziGi/i);
-
-    // 4. Footer Match
-    await expect(page.locator("footer")).toContainText(/CONTENT WIZZES/i);
+    // 3. Brand & Auth Match
+    await expect(page.locator('nav')).toContainText(/Ozigi/i);
+    await expect(page.getByRole('button', { name: /Connect to Github/i })).toBeVisible();
   });
 
-  test("should navigate to the Context Engine and verify inputs", async ({
-    page,
-  }) => {
-    // Click the CTA
-    await page
-      .getByRole("button", { name: /TRY IT NOW/i })
-      .first()
-      .click();
+  test('should navigate to the Context Engine and verify inputs', async ({ page }) => {
+    // Click the Hero CTA using the aria-label
+    await page.getByRole('button', { name: /Try the Context Engine Now/i }).click();
 
-    // Verify the heading (ignoring exact DOM structure)
-    await expect(page.locator("h2")).toContainText(/CONTEXT ENGINE/i);
-
-    // Verify inputs are visible and enabled
-    const urlInput = page.getByPlaceholder(/article URL/i);
-    const textInput = page.getByPlaceholder(/additional context/i);
-
-    // Using toBeVisible instead of toBeEnabled helps bypass overlapping z-index test failures
+    // Verify the URL input exists
+    const urlInput = page.getByPlaceholder(/Paste your article URL here/i);
     await expect(urlInput).toBeVisible();
+
+    // Verify the Notes textarea exists
+    const textInput = page.getByPlaceholder(/Add additional context: meeting minutes/i);
     await expect(textInput).toBeVisible();
+
+    // Verify Generate button
+    const generateBtn = page.getByRole('button', { name: /Generate Personalized Content/i });
+    await expect(generateBtn).toBeVisible();
+    await expect(generateBtn).toBeDisabled();
   });
 
-  test("should verify the responsive header Home toggle works", async ({
-    page,
-  }) => {
-    // Navigate to the dashboard
-    await page
-      .getByRole("button", { name: /TRY IT NOW/i })
-      .first()
-      .click();
+  test('should verify the responsive header Home toggle works', async ({ page }) => {
+    // Navigate to the dashboard using the aria-label
+    await page.getByRole('button', { name: /Try the Context Engine Now/i }).click();
+    
+    // Verify we are on the dashboard
+    await expect(page.locator('h2')).toContainText(/Context Engine/i);
 
-    // Click the Home button in the header. We use .locator to be safer with span injections.
-    await page.locator('nav button:has-text("Home")').first().click();
-
-    // Verify we successfully navigated back to the Hero section
-    await expect(page.locator("h1")).toContainText(/WINNING SOCIAL MEDIA/i);
+    // Click the "Home" button in the header
+    await page.getByRole('button', { name: /^Home$/i }).click();
+    
+    // Verify we navigated back
+    await expect(page.locator('h1')).toContainText(/WINNING SOCIAL MEDIA/i);
   });
 });

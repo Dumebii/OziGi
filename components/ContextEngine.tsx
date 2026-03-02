@@ -1,3 +1,5 @@
+"use client";
+
 interface DistilleryProps {
   inputs: { url: string; text: string };
   setInputs: (val: { url: string; text: string }) => void;
@@ -35,6 +37,7 @@ export default function Distillery({
           onChange={(e) => setInputs({ ...inputs, text: e.target.value })}
         />
       </div>
+      
       <button
         onClick={onGenerate}
         disabled={loading || (!inputs.url && !inputs.text)}

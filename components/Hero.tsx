@@ -1,3 +1,5 @@
+"use client";
+
 export default function Hero({ onStart }: { onStart: () => void }) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-16 md:py-24 flex flex-col items-center text-center">
