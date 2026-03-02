@@ -9,7 +9,7 @@ export default function Footer() {
           An Agentic Content Engine built to close the gap between raw research
           and structured distribution.
         </p>
-        <div className="flex justify-center gap-6 mb-8 text-[10px] font-black tracking-widest uppercase">
+        <div className="flex flex-wrap justify-center gap-4 md:gap-6 mb-6 md:mb-8 text-[9px] md:text-[10px] font-black tracking-widest uppercase">
           <a
             href="https://linkedin.com/in/dumebi-okolo"
             target="_blank"

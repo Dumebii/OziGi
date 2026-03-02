@@ -150,11 +150,11 @@ export default function Home() {
         </div>
       )}
 
-      <main className="pt-32 flex-1 pb-10">
+      <main className="pt-28 md:pt-32 pb-8">
         {view === "landing" ? (
           <Hero onStart={() => handleSetView("dashboard")} />
         ) : (
-          <div className="max-w-5xl mx-auto px-8 pb-10">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 w-full pt-4 md:pt-8">
             {!session && <UpgradeBanner />}
             <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-12">
               Context Engine
