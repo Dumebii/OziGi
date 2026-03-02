@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="bg-slate-950 text-slate-400 py-12 text-center border-t border-slate-900 mt-20">
+    <footer className="bg-slate-950 text-slate-400 py-12 text-center border-t border-slate-900">
       <div className="max-w-4xl mx-auto px-6">
         <h3 className="text-white font-black italic uppercase tracking-widest mb-4">
           WriterHelper
@@ -11,7 +11,7 @@ export default function Footer() {
         </p>
         <div className="flex justify-center gap-6 mb-8 text-[10px] font-black tracking-widest uppercase">
           <a
-            href="https://linkedin.com/in/your-profile"
+            href="https://linkedin.com/in/dumebi-okolo"
             target="_blank"
             rel="noreferrer"
             className="hover:text-red-500 transition-colors"
@@ -19,7 +19,7 @@ export default function Footer() {
             LinkedIn
           </a>
           <a
-            href="https://github.com/your-username"
+            href="https://github.com/dumebii"
             target="_blank"
             rel="noreferrer"
             className="hover:text-red-500 transition-colors"
@@ -35,14 +35,14 @@ export default function Footer() {
             Dev.to
           </a>
           <a
-            href="mailto:your-email@example.com"
+            href="mailto:okolodumebi@gmail.com"
             className="hover:text-red-500 transition-colors"
           >
             Contact
           </a>
         </div>
         <p className="text-[10px] tracking-[0.2em] uppercase text-slate-600">
-          © 2026 WriterHelper. Built for developers.
+          © 2026 WriterHelper. Built for Content Wizzes!.
         </p>
       </div>
     </footer>
