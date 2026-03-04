@@ -70,9 +70,10 @@ function SocialCard({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setImageUrl(data.imageUrl);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to generate image.");
+      // ✨ Change this alert to show the actual error message
+      alert(`Image Error: ${err.message}`);
     } finally {
       setIsGeneratingImg(false);
     }
@@ -103,24 +104,31 @@ function SocialCard({
       {/* ✨ NEW: Image Display Area */}
       {imageUrl ? (
         <div className="mb-4 relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-          <img src={imageUrl} alt="Generated graphic" className="w-full h-auto object-cover aspect-video" />
+          <img
+            src={imageUrl}
+            alt="Generated graphic"
+            className="w-full h-auto object-cover aspect-video"
+          />
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-             <button 
-               onClick={handleGenerateImage}
-               disabled={isGeneratingImg}
-               className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors"
-             >
-               {isGeneratingImg ? "Generating..." : "Regenerate"}
-             </button>
+            <button
+              onClick={handleGenerateImage}
+              disabled={isGeneratingImg}
+              className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors"
+            >
+              {isGeneratingImg ? "Generating..." : "Regenerate"}
+            </button>
           </div>
         </div>
       ) : (
         <button
-          onClick={handleGenerateImage}
-          disabled={isGeneratingImg}
-          className="w-full mb-6 py-4 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-red-700 hover:border-red-200 hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+          disabled
+          className="w-full mb-6 py-4 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 opacity-70 cursor-not-allowed flex items-center justify-center gap-2"
+          title="Image Generation requires Vertex AI access and will be available in a future update."
         >
-          {isGeneratingImg ? "🎨 Painting pixels..." : "🎨 Generate Image Graphic"}
+          <span>🎨 AI Image Generation</span>
+          <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-[8px]">
+            Coming Soon
+          </span>
         </button>
       )}
 
