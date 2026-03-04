@@ -112,6 +112,7 @@ export default function Dashboard() {
   const handleGenerate = async () => {
     setLoading(true);
     setErrorMessage("");
+    setCampaign([]); // ✨ NEW: Instantly clears the old grid so the user knows it's working on a new one
 
     try {
       const formData = new FormData();
@@ -119,7 +120,14 @@ export default function Dashboard() {
       if (inputs.text) formData.append("textContext", inputs.text);
       if (inputs.file) formData.append("file", inputs.file);
       formData.append("tweetFormat", inputs.tweetFormat);
-      formData.append("personaVoice", "Expert Content Strategist");
+
+      // We pass the user's custom persona if they set it in Settings!
+      // (You might need to pull this from session.user.user_metadata in the future,
+      // but for now we default to a strong baseline)
+      formData.append(
+        "personaVoice",
+        session?.user?.user_metadata?.persona || "Senior Content Engineer"
+      );
 
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -129,7 +137,10 @@ export default function Dashboard() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setErrorMessage(data.error || "Failed to generate campaign.");
+        // ✨ NEW: Sanitized Error Message instead of revealing backend stack traces
+        setErrorMessage(
+          "We encountered a hiccup connecting to the AI engine. Please try again."
+        );
         setLoading(false);
         return;
       }
@@ -160,8 +171,9 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error("Context error:", err);
+      // ✨ NEW: Sanitized JSON parsing error
       setErrorMessage(
-        "A syntax error occurred while parsing the AI response. Try again."
+        "The AI returned an unexpected format. Please try tweaking your context and generating again."
       );
     } finally {
       setLoading(false);

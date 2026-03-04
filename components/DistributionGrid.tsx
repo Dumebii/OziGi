@@ -102,6 +102,7 @@ function SocialCard({
       </div>
 
       {/* ✨ NEW: Image Display Area */}
+      {/* ✨ RESTORED: The Active Image Generation UI */}
       {imageUrl ? (
         <div className="mb-4 relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm">
           <img
@@ -121,14 +122,13 @@ function SocialCard({
         </div>
       ) : (
         <button
-          disabled
-          className="w-full mb-6 py-4 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 opacity-70 cursor-not-allowed flex items-center justify-center gap-2"
-          title="Image Generation requires Vertex AI access and will be available in a future update."
+          onClick={handleGenerateImage}
+          disabled={isGeneratingImg}
+          className="w-full mb-6 py-4 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-red-700 hover:border-red-200 hover:bg-red-50 transition-all flex items-center justify-center gap-2"
         >
-          <span>🎨 AI Image Generation</span>
-          <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-[8px]">
-            Coming Soon
-          </span>
+          {isGeneratingImg
+            ? "🎨 Painting pixels..."
+            : "🎨 Generate Image Graphic"}
         </button>
       )}
 

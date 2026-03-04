@@ -26,6 +26,12 @@ export async function POST(req: Request) {
       
       PERSONA/VOICE: ${personaVoice}
 
+      STRICT TONE GUIDELINES:
+      1. Write highly technical, insightful, and punchy content.
+      2. ZERO HASHTAGS. Do not use a single hashtag on any platform.
+      3. ZERO CHEESY AI WORDS. Completely avoid words like "delve", "robust", "unleash", "supercharge", "transformative", or "tapestry". 
+      4. Sound like an authentic, battle-tested software developer sharing raw insights.
+
       CRITICAL X/TWITTER FORMAT RULE: 
       The user requested the Twitter format to be: "${tweetFormat}".
       If "single", the "x" field must contain EXACTLY ONE punchy, high-impact tweet.
