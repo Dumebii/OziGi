@@ -1,9 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { TwitterApi } from "twitter-api-v2";
 
 export async function POST(req: Request) {
   try {
-    const { text, userId } = await req.json();
+    // ✨ Added imageUrl to the payload extraction
+    const { text, userId, imageUrl } = await req.json();
     const authHeader = req.headers.get("Authorization");
 
     if (!authHeader || !userId) {
@@ -13,19 +15,18 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Initialize Supabase using the user's secure token so we can query their saved data
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    // 2. Fetch their X Access Token from the database
+    // ✨ Added access_secret to the query. Twitter requires BOTH to upload media!
     const { data: tokenData, error: tokenError } = await supabase
       .from("user_tokens")
-      .select("access_token")
+      .select("access_token, access_secret")
       .eq("user_id", userId)
-      .in("provider", ["twitter", "x"]) // Supabase sometimes saves it as 'twitter' internally
+      .in("provider", ["twitter", "x"])
       .single();
 
     if (tokenError || !tokenData) {
@@ -35,40 +36,50 @@ export async function POST(req: Request) {
       );
     }
 
-    const xAccessToken = tokenData.access_token;
+    // ✨ Initialize the Twitter Client with App Keys AND User Tokens
+    const twitterClient = new TwitterApi({
+      appKey: process.env.TWITTER_API_KEY!,
+      appSecret: process.env.TWITTER_API_SECRET!,
+      accessToken: tokenData.access_token,
+      accessSecret: tokenData.access_secret || "",
+    });
 
-    // 3. Thread Logic: Split the text by double newlines
-    // If it's a single tweet, this just creates an array of 1.
     const tweets = text.split("\n\n").filter((t: string) => t.trim() !== "");
+    let mediaId: string | undefined = undefined;
 
-    let previousTweetId: string | null = null;
+    // ✨ The Image Upload Handshake
+    if (imageUrl) {
+      const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
+      const imageBuffer = Buffer.from(base64Data, "base64");
 
-    // 4. Loop through and post them. If there is a previous ID, make it a thread.
-    for (const tweetContent of tweets) {
-      const payload: any = { text: tweetContent };
+      // Upload to X's media server
+      mediaId = await twitterClient.v1.uploadMedia(imageBuffer, {
+        mimeType: "image/jpeg",
+      });
+    }
 
-      // If we already posted a tweet in this loop, thread this one to it!
+    let previousTweetId: string | undefined = undefined;
+
+    // Loop through and post them.
+    for (let i = 0; i < tweets.length; i++) {
+      const isFirstTweet = i === 0;
+      const payload: any = { text: tweets[i] };
+
+      // Threading logic
       if (previousTweetId) {
         payload.reply = { in_reply_to_tweet_id: previousTweetId };
       }
 
-      const response = await fetch("https://api.twitter.com/2/tweets", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${xAccessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.detail || "Twitter API rejected the tweet.");
+      // ✨ Attach the image ONLY to the first tweet in the thread
+      if (isFirstTweet && mediaId) {
+        payload.media = { media_ids: [mediaId] };
       }
 
+      // Fire the tweet using the v2 client
+      const response = await twitterClient.v2.tweet(payload);
+
       // Save the ID so the next tweet knows what to reply to
-      previousTweetId = result.data.id;
+      previousTweetId = response.data.id;
     }
 
     return NextResponse.json({ success: true });

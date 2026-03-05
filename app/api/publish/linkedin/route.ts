@@ -3,89 +3,113 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { text, userId } = await req.json();
+    const { text, userId, imageUrl } = await req.json();
     const authHeader = req.headers.get("Authorization");
 
     if (!authHeader || !userId) {
-      return NextResponse.json(
-        { error: "Unauthorized request" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 1. Initialize Supabase securely
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    // 2. Fetch the LinkedIn Access Token from the database
-    // Note: Supabase uses 'linkedin_oidc' for modern LinkedIn connections
+    // Fetch LinkedIn Access Token (Supabase usually stores the provider profile id here too)
     const { data: tokenData, error: tokenError } = await supabase
       .from("user_tokens")
-      .select("access_token")
+      .select("access_token, provider_id")
       .eq("user_id", userId)
-      .eq("provider", "linkedin_oidc")
+      .eq("provider", "linkedin")
       .single();
 
     if (tokenError || !tokenData) {
       return NextResponse.json(
-        {
-          error:
-            "LinkedIn account not connected. Please sign in with LinkedIn.",
-        },
+        { error: "LinkedIn not connected." },
         { status: 401 }
       );
     }
 
-    const liAccessToken = tokenData.access_token;
+    const linkedInToken = tokenData.access_token;
+    // LinkedIn requires the user's URN to post. Supabase usually stores the provider ID.
+    const authorUrn = `urn:li:person:${tokenData.provider_id}`;
 
-    // 3. Get the user's LinkedIn ID (URN)
-    const profileRes = await fetch("https://api.linkedin.com/v2/userinfo", {
-      headers: { Authorization: `Bearer ${liAccessToken}` },
-    });
-    const profileData = await profileRes.json();
+    let assetUrn: string | undefined = undefined;
 
-    if (!profileRes.ok) {
-      throw new Error("Failed to fetch LinkedIn profile to authorize post.");
+    // ✨ The 3-Step Image Handshake
+    if (imageUrl) {
+      const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
+      const imageBuffer = Buffer.from(base64Data, "base64");
+
+      // Step 1: Register the Upload
+      const registerRes = await fetch(
+        "https://api.linkedin.com/v2/assets?action=registerUpload",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${linkedInToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            registerUploadRequest: {
+              recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+              owner: authorUrn,
+              serviceRelationships: [
+                {
+                  relationshipType: "OWNER",
+                  identifier: "urn:li:userGeneratedContent",
+                },
+              ],
+            },
+          }),
+        }
+      );
+
+      const registerData = await registerRes.json();
+      const uploadUrl =
+        registerData.value.uploadMechanism[
+          "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
+        ].uploadUrl;
+      assetUrn = registerData.value.asset;
+
+      // Step 2: Upload the binary data
+      await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${linkedInToken}` },
+        body: imageBuffer,
+      });
     }
 
-    // LinkedIn's OIDC endpoint returns the user's ID as 'sub'
-    const authorUrn = `urn:li:person:${profileData.sub}`;
+    // ✨ Step 3: Create the Post
+    const postPayload: any = {
+      author: authorUrn,
+      lifecycleState: "PUBLISHED",
+      specificContent: {
+        "com.linkedin.ugc.ShareContent": {
+          shareCommentary: { text: text },
+          shareMediaCategory: assetUrn ? "IMAGE" : "NONE",
+          media: assetUrn ? [{ status: "READY", media: assetUrn }] : [],
+        },
+      },
+      visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
+    };
 
-    // 4. Publish the actual post to the LinkedIn Feed
     const postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${liAccessToken}`,
+        Authorization: `Bearer ${linkedInToken}`,
         "Content-Type": "application/json",
         "X-Restli-Protocol-Version": "2.0.0",
       },
-      body: JSON.stringify({
-        author: authorUrn,
-        lifecycleState: "PUBLISHED",
-        specificContent: {
-          "com.linkedin.ugc.ShareContent": {
-            shareCommentary: { text: text },
-            shareMediaCategory: "NONE", // 'NONE' means text-only post
-          },
-        },
-        visibility: {
-          "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC",
-        },
-      }),
+      body: JSON.stringify(postPayload),
     });
 
-    const postData = await postRes.json();
-
-    if (!postRes.ok) {
-      throw new Error(postData.message || "LinkedIn API rejected the post.");
-    }
+    if (!postRes.ok) throw new Error("LinkedIn rejected the post");
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("LinkedIn Publish API Error:", error);
+    console.error("LinkedIn API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

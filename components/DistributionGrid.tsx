@@ -36,7 +36,7 @@ function SocialCard({
   day: number;
   platformName: string;
   initialText: string;
-  onPost?: (text: string, day: number) => void;
+  onPost?: (text: string, day: number, imageUrl?: string) => void;
   postStatus?: "idle" | "loading" | "success" | "error";
   actionButtonConfig?: {
     idle: string;
@@ -78,6 +78,17 @@ function SocialCard({
       setIsGeneratingImg(false);
     }
   };
+  const handleDownloadImage = () => {
+    if (!imageUrl) return;
+
+    // Create a temporary link element to trigger the browser download
+    const link = document.createElement("a");
+    link.href = imageUrl;
+    link.download = `ozigi-campaign-day-${day}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="bg-white rounded-[2rem] border-2 border-slate-100 shadow-lg flex flex-col p-6 hover:border-slate-300 transition-colors">
@@ -110,6 +121,12 @@ function SocialCard({
             alt="Generated graphic"
             className="w-full h-auto object-cover aspect-video"
           />
+          <button
+            onClick={handleDownloadImage}
+            className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-md text-xs font-bold hover:bg-black transition-colors"
+          >
+            Download ⬇️
+          </button>
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <button
               onClick={handleGenerateImage}
@@ -146,7 +163,7 @@ function SocialCard({
       {/* Action Button */}
       {onPost && actionButtonConfig && (
         <button
-          onClick={() => onPost(text, day)}
+          onClick={() => onPost(text, day, imageUrl || undefined)}
           disabled={postStatus === "loading" || postStatus === "success"}
           className={`w-full py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 mt-auto ${
             postStatus === "success"
