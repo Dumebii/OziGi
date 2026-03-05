@@ -5,6 +5,7 @@ import Hero from "../components/Hero";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AuthModal from "../components/AuthModal";
+import BentoGrid from "@/components/BentoGrid";
 
 export default function Home() {
   const [session, setSession] = useState<any>(null);
@@ -40,6 +41,7 @@ export default function Home() {
       {isAuthModalOpen && (
         <AuthModal onClose={() => setIsAuthModalOpen(false)} />
       )}
+      <BentoGrid />
       <Footer />
     </div>
   );

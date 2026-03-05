@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -11,6 +12,13 @@ export default function Footer() {
           An Agentic Content Engine built to close the gap between raw research
           and structured distribution.
         </p>
+        {/* ✨ NEW: Footer Docs Link */}
+        <Link
+          href="/docs"
+          className="text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
+        >
+          Docs
+        </Link>
         <div className="flex flex-wrap justify-center gap-4 md:gap-6 mb-6 md:mb-8 text-[9px] md:text-[10px] font-black tracking-widest uppercase">
           <a
             href="https://linkedin.com/in/dumebi-okolo"
