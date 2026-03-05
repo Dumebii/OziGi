@@ -20,10 +20,19 @@ export default function Header({
   const signOut = async () => await supabase.auth.signOut();
   const avatarUrl = session?.user?.user_metadata?.avatar_url;
   useEffect(() => {
-    const openModal = () => setIsSettingsOpen(true); // Match your state name
+    // 1. Define what happens when the signal is caught
+    const handleOpenSettings = () => {
+      console.log("📡 Signal received: Opening Settings Modal");
+      setIsSettingsOpen(true);
+    };
 
-    window.addEventListener("openSettingsModal", openModal);
-    return () => window.removeEventListener("openSettingsModal", openModal);
+    // 2. Tune into the "openSettingsModal" frequency
+    window.addEventListener("openSettingsModal", handleOpenSettings);
+
+    // 3. Stop listening if the header is unmounted (important for performance)
+    return () => {
+      window.removeEventListener("openSettingsModal", handleOpenSettings);
+    };
   }, []);
 
   return (
