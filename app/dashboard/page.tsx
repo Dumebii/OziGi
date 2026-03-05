@@ -9,6 +9,7 @@ import UpgradeBanner from "../../components/GuestModeBanner";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import AuthModal from "../../components/AuthModal";
+import DynamicLoader from "../../components/DynamicLoader";
 
 export default function Dashboard() {
   const [session, setSession] = useState<any>(null);
@@ -18,6 +19,7 @@ export default function Dashboard() {
     url: string;
     text: string;
     personaId: string;
+    additionalInfo: string;
     file: File | null;
     tweetFormat: "single" | "thread";
   }>({
@@ -26,6 +28,7 @@ export default function Dashboard() {
     file: null,
     tweetFormat: "single",
     personaId: "default",
+    additionalInfo: "",
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -181,6 +184,9 @@ export default function Dashboard() {
       if (inputs.url) formData.append("urlContext", inputs.url);
       if (inputs.text) formData.append("textContext", inputs.text);
       if (inputs.file) formData.append("file", inputs.file);
+      if (inputs.additionalInfo) {
+        formData.append("additionalInfo", inputs.additionalInfo);
+      }
       formData.append("tweetFormat", inputs.tweetFormat);
 
       // ✨ Injecting the dynamic prompt into the API payload
@@ -318,17 +324,10 @@ export default function Dashboard() {
             }}
           />
 
+          {/* Replace the giant animate-pulse div with this: */}
           {loading && (
-            <div className="mt-16 space-y-8 animate-pulse">
-              <div className="h-8 bg-slate-200 rounded w-64 mx-auto mb-8"></div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-slate-100 rounded-[2rem] h-96 border-2 border-slate-200"
-                  ></div>
-                ))}
-              </div>
+            <div className="mt-16 flex items-center justify-center min-h-[400px]">
+              <DynamicLoader />
             </div>
           )}
 
