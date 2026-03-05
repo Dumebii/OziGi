@@ -156,7 +156,25 @@ export default function Dashboard() {
   const handleGenerate = async () => {
     setLoading(true);
     setErrorMessage("");
-    setCampaign([]); // ✨ NEW: Instantly clears the old grid so the user knows it's working on a new one
+    setCampaign([]); // Instantly clears the old grid
+
+    // ✨ THE UPGRADE: Find the selected persona's exact instructions
+    let finalVoicePrompt = "Senior Content Engineer"; // The ultimate fallback
+
+    if (inputs.personaId && inputs.personaId !== "default") {
+      // 1. Look up the specific persona from the database array we fetched
+      const selectedPersona = userPersonas.find(
+        (p) => p.id === inputs.personaId
+      );
+      if (selectedPersona && selectedPersona.prompt) {
+        finalVoicePrompt = selectedPersona.prompt;
+      }
+    } else if (session?.user?.user_metadata?.persona) {
+      // 2. Fallback to their old workspace preference if they just selected "Default"
+      finalVoicePrompt = session.user.user_metadata.persona;
+    }
+
+    console.log("🤖 Injecting Voice Prompt into AI:", finalVoicePrompt);
 
     try {
       const formData = new FormData();
@@ -165,13 +183,8 @@ export default function Dashboard() {
       if (inputs.file) formData.append("file", inputs.file);
       formData.append("tweetFormat", inputs.tweetFormat);
 
-      // We pass the user's custom persona if they set it in Settings!
-      // (You might need to pull this from session.user.user_metadata in the future,
-      // but for now we default to a strong baseline)
-      formData.append(
-        "personaVoice",
-        session?.user?.user_metadata?.persona || "Senior Content Engineer"
-      );
+      // ✨ Injecting the dynamic prompt into the API payload
+      formData.append("personaVoice", finalVoicePrompt);
 
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -302,7 +315,8 @@ export default function Dashboard() {
             onOpenSettings={() => {
               console.log("🚀 Broadcasting openSettingsModal signal...");
               window.dispatchEvent(new Event("openSettingsModal"));
-            }}          />
+            }}
+          />
 
           {loading && (
             <div className="mt-16 space-y-8 animate-pulse">
