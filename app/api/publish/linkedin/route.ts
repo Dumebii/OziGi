@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       .from("user_tokens")
       .select("access_token, provider_id")
       .eq("user_id", userId)
-      .eq("provider", "linkedin")
+      .in("provider", ["linkedin", "linkedin_oidc"])
       .single();
 
     if (tokenError || !tokenData) {

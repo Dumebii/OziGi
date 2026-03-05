@@ -49,7 +49,7 @@ function SocialCard({
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // ✨ New Image Generation State
+  // ✨ Image Generation State
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGeneratingImg, setIsGeneratingImg] = useState(false);
 
@@ -72,13 +72,15 @@ function SocialCard({
       setImageUrl(data.imageUrl);
     } catch (err: any) {
       console.error(err);
-      // ✨ Change this alert to show the actual error message
       alert(`Image Error: ${err.message}`);
     } finally {
       setIsGeneratingImg(false);
     }
   };
-  const handleDownloadImage = () => {
+
+  // ✨ CRITICAL FIX: Stop propagation to prevent hitting the regen button
+  const handleDownloadImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!imageUrl) return;
 
     // Create a temporary link element to trigger the browser download
@@ -112,30 +114,35 @@ function SocialCard({
         </div>
       </div>
 
-      {/* ✨ NEW: Image Display Area */}
-      {/* ✨ RESTORED: The Active Image Generation UI */}
+      {/* ✨ UPDATED: Image Display Area with Dedicated Download Button */}
       {imageUrl ? (
-        <div className="mb-4 relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-          <img
-            src={imageUrl}
-            alt="Generated graphic"
-            className="w-full h-auto object-cover aspect-video"
-          />
+        <div className="mb-6 flex flex-col gap-2 relative z-10">
+          <div className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+            <img
+              src={imageUrl}
+              alt="Generated graphic"
+              className="w-full h-auto object-cover aspect-video"
+            />
+            {/* The absolute overlay is now ONLY for regenerating */}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <button
+                onClick={handleGenerateImage}
+                disabled={isGeneratingImg}
+                className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                {isGeneratingImg ? "Generating..." : "Regenerate"}
+              </button>
+            </div>
+          </div>
+
+          {/* ✨ NEW: Dedicated, un-blockable download button */}
           <button
             onClick={handleDownloadImage}
-            className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-md text-xs font-bold hover:bg-black transition-colors"
+            type="button"
+            className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2"
           >
-            Download ⬇️
+            ⬇️ Download Graphic
           </button>
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <button
-              onClick={handleGenerateImage}
-              disabled={isGeneratingImg}
-              className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors"
-            >
-              {isGeneratingImg ? "Generating..." : "Regenerate"}
-            </button>
-          </div>
         </div>
       ) : (
         <button
