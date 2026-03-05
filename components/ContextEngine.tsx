@@ -35,7 +35,9 @@ export default function Distillery({
   const handlePersonaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     if (value === "create_new") {
-      if (onOpenSettings) onOpenSettings();
+      // 1. Broadcast the "Open Settings" signal
+      window.dispatchEvent(new Event("openSettingsModal"));
+      // 2. Reset the dropdown so it doesn't stay on "Create New"
       setInputs({ ...inputs, personaId: "default" });
     } else {
       setInputs({ ...inputs, personaId: value });

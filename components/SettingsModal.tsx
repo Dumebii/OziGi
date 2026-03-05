@@ -67,33 +67,38 @@ export default function SettingsModal({
   // ✨ NEW: Function to insert the new persona into our database table
   const handleCreatePersona = async () => {
     if (!personaName.trim() || !personaPrompt.trim()) {
-      return alert(
-        "Please provide both a name and instructions for your persona."
-      );
+      return alert("Please provide both a name and instructions.");
     }
 
     setIsSavingPersona(true);
 
-    const { error } = await supabase.from("user_personas").insert([
-      {
-        user_id: session.user.id,
-        name: personaName.trim(),
-        prompt: personaPrompt.trim(),
-      },
-    ]);
+    try {
+      // We explicitly pull the user ID from the session to be safe
+      const userId = session?.user?.id;
+      if (!userId) throw new Error("No active user session found.");
 
-    setIsSavingPersona(false);
+      const { error } = await supabase.from("user_personas").insert([
+        {
+          user_id: userId,
+          name: personaName.trim(),
+          prompt: personaPrompt.trim(),
+        },
+      ]);
 
-    if (error) {
-      console.error("Failed to save persona:", error.message);
-      alert(`Error saving persona: ${error.message}`);
-    } else {
-      // Clear the form, alert the parent component to refetch, and close the modal
+      if (error) throw error;
+
+      // SUCCESS: Clear and Signal
       setPersonaName("");
       setPersonaPrompt("");
       window.dispatchEvent(new Event("refreshPersonas"));
-      if (onPersonaCreated) onPersonaCreated();
+      alert("Persona saved successfully!");
       onClose();
+    } catch (err: any) {
+      console.error("Persona Save Error:", err);
+      alert(`Save failed: ${err.message || "Check your database connection"}`);
+    } finally {
+      // This MUST run regardless of success or failure to reset the button
+      setIsSavingPersona(false);
     }
   };
 

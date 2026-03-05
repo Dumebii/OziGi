@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from "../lib/supabase";
@@ -19,6 +19,12 @@ export default function Header({
 
   const signOut = async () => await supabase.auth.signOut();
   const avatarUrl = session?.user?.user_metadata?.avatar_url;
+  useEffect(() => {
+    const openModal = () => setIsSettingsOpen(true); // Match your state name
+
+    window.addEventListener("openSettingsModal", openModal);
+    return () => window.removeEventListener("openSettingsModal", openModal);
+  }, []);
 
   return (
     <>
