@@ -52,6 +52,7 @@ function SocialCard({
   // ✨ Image Generation State
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGeneratingImg, setIsGeneratingImg] = useState(false);
+  const [imageTitle, setImageTitle] = useState("");
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -65,7 +66,11 @@ function SocialCard({
       const res = await fetch("/api/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, platform: platformName }),
+        body: JSON.stringify({
+          text,
+          platform: platformName,
+          graphicTitle: imageTitle,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -115,6 +120,15 @@ function SocialCard({
       </div>
 
       {/* ✨ UPDATED: Image Display Area with Dedicated Download Button */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Optional: Text to render on graphic (leave blank for abstract)"
+          value={imageTitle}
+          onChange={(e) => setImageTitle(e.target.value)}
+          className="w-full text-[10px] font-bold tracking-wide text-slate-700 bg-white border border-slate-200 rounded-lg p-2 focus:outline-none focus:border-slate-400 transition-colors placeholder:font-medium placeholder:text-slate-400"
+        />
+      </div>
       {imageUrl ? (
         <div className="mb-6 flex flex-col gap-2 relative z-10">
           <div className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm">
