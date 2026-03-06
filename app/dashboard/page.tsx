@@ -130,7 +130,7 @@ export default function Dashboard() {
     return () => {
       window.removeEventListener("refreshPersonas", fetchPersonas);
     };
-  }, []); // <-- Double-checking this is strictly empty!
+  }, [session?.user?.id]); // <-- Double-checking this is strictly empty or has currently what's in!
 
   const fetchHistory = async (userId: string) => {
     const { data } = await supabase
