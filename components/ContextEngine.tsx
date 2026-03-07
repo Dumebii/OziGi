@@ -3,11 +3,16 @@ import { useState } from "react";
 import DynamicLoader from "@/components/DynamicLoader";
 
 interface DistilleryProps {
+  session?: any;
+  userPersonas?: { id: string; name: string }[];
+  onOpenSettings?: () => void;
   inputs: {
     url: string;
     text: string;
     file?: File | null;
     tweetFormat: "single" | "thread";
+    additionalInfo?: string;
+    personaId?: string;
   };
   setInputs: (val: any) => void;
   onGenerate: () => void;
@@ -17,12 +22,33 @@ interface DistilleryProps {
 type Tab = "text" | "link" | "file";
 
 export default function Distillery({
+  session,
+  userPersonas = [],
+  onOpenSettings,
   inputs,
   setInputs,
   onGenerate,
   loading,
 }: DistilleryProps) {
   const [activeTab, setActiveTab] = useState<Tab>("link");
+
+  const handlePersonaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === "create_new") {
+      if (onOpenSettings) onOpenSettings();
+      setInputs({ ...inputs, personaId: "default" });
+    } else {
+      setInputs({ ...inputs, personaId: value });
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="flex flex-col items-center justify-center p-8 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden min-h-[400px]">
+        <DynamicLoader />
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-col gap-6 p-2 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
@@ -67,34 +93,34 @@ export default function Distillery({
                 onClick={() =>
                   setInputs({
                     ...inputs,
-                    url: "https://dev.to/dummy/using-perplexity-ai-and-gemini-pro-for-academic-research",
+                    url: "https://dev.to/dumebii/ozigi-v2-changelog-building-a-modular-agentic-content-engine-with-nextjs-supabase-and-playwright-59mo",
                   })
                 }
                 className="px-3 py-2 bg-white text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl text-[10px] font-bold transition-all border border-slate-200 shadow-sm active:scale-95"
               >
-                🧠 AI Research Blog
+                🧠 Ozigi V2 Changelog
               </button>
               <button
                 onClick={() =>
                   setInputs({
                     ...inputs,
-                    url: "https://playwright.dev/docs/intro",
+                    url: "https://currents.dev/posts/how-to-debug-playwright-tests-in-ci",
                   })
                 }
                 className="px-3 py-2 bg-white text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl text-[10px] font-bold transition-all border border-slate-200 shadow-sm active:scale-95"
               >
-                🎭 Playwright Docs
+                🎭 How To Debug Playwright Tests in the CI
               </button>
               <button
                 onClick={() =>
                   setInputs({
                     ...inputs,
-                    url: "https://arxiv.org/abs/dummy-5g-anomaly-detection-edge",
+                    url: "https://dev.to/dumebii/docs-as-code-the-best-guide-for-technical-writers-97c",
                   })
                 }
                 className="px-3 py-2 bg-white text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl text-[10px] font-bold transition-all border border-slate-200 shadow-sm active:scale-95"
               >
-                📡 5G Research Paper
+                📡 Docs As Code For Beginners
               </button>
             </div>
           </div>
@@ -112,7 +138,7 @@ export default function Distillery({
           </div>
         )}
 
-        {/* 📎 FILE TAB (v3 Roadmap Support) */}
+        {/* 📎 FILE TAB */}
         {activeTab === "file" && (
           <div className="flex flex-col items-center justify-center bg-slate-50 rounded-2xl p-8 border-2 border-dashed border-slate-200 group hover:border-red-500/50 transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-2">
             <span className="text-3xl mb-3">📁</span>
@@ -140,7 +166,68 @@ export default function Distillery({
           </div>
         )}
 
-        {/* ✨ Output Formatting Preferences */}
+        <div className="mt-6 mb-2 flex flex-col gap-2 animate-in fade-in">
+          <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-900 mb-1">
+            Additional Directives{" "}
+            <span className="text-slate-400 font-medium lowercase tracking-normal">
+              (Optional)
+            </span>
+          </label>
+          <p className="text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
+            ⚠️ Use this for campaign goals (e.g., "Target junior devs"). Do NOT
+            put tone/voice instructions here.
+          </p>
+          <input
+            type="text"
+            value={inputs.additionalInfo || ""}
+            onChange={(e) =>
+              setInputs({ ...inputs, additionalInfo: e.target.value })
+            }
+            placeholder="e.g., Make sure to mention the open-source release date..."
+            className="w-full text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:border-slate-400 transition-colors"
+          />
+        </div>
+
+        {/* ✨ The Upgraded Persona Selector */}
+        <div className="mt-4 mb-6 p-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 animate-in fade-in">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-1">
+                🗣️ Custom Voice Persona
+              </h4>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                Train Ozigi to write exactly like you.
+              </p>
+            </div>
+
+            {!session ? (
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-3 py-2 rounded-lg border border-red-100 whitespace-nowrap">
+                  🔒 Sign in to unlock
+                </span>
+              </div>
+            ) : (
+              <select
+                value={inputs.personaId || "default"}
+                onChange={handlePersonaChange}
+                className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none cursor-pointer hover:border-slate-300"
+              >
+                <option value="default">Default (Pragmatic Tech)</option>
+
+                {userPersonas.map((persona) => (
+                  <option key={persona.id} value={persona.id}>
+                    {persona.name}
+                  </option>
+                ))}
+
+                <option value="create_new" className="font-black text-red-600">
+                  + Create New Persona
+                </option>
+              </select>
+            )}
+          </div>
+        </div>
+
         <div className="mt-6 mb-2 flex flex-col gap-2 animate-in fade-in">
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-2">
             X (Twitter) Format Preference
@@ -171,15 +258,10 @@ export default function Distillery({
 
         <button
           onClick={onGenerate}
-          disabled={loading || (!inputs.url && !inputs.text && !inputs.file)}
-          className="w-full mt-4 bg-red-700 text-white py-6 rounded-[1.8rem] font-black uppercase tracking-widest hover:bg-red-800 transition-all disabled:bg-slate-200 shadow-xl shadow-red-900/10 active:scale-[0.98]"
+          disabled={!inputs.url && !inputs.text && !inputs.file}
+          className="w-full mt-4 bg-red-700 text-white py-6 rounded-[1.8rem] font-black uppercase tracking-widest hover:bg-red-800 transition-all disabled:bg-slate-200 disabled:text-slate-400 shadow-xl shadow-red-900/10 active:scale-[0.98]"
         >
-          {loading ? (
-            <DynamicLoader />
-          ) : (
-            // Your normal Generate Button or Form goes here
-            <button onClick={onGenerate}>Generate Campaign</button>
-          )}
+          Generate Campaign ⚡
         </button>
       </div>
     </section>
