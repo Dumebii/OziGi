@@ -31,6 +31,7 @@ export default function Distillery({
   loading,
 }: DistilleryProps) {
   const [activeTab, setActiveTab] = useState<Tab>("link");
+  const [showAdvanced, setShowAdvanced] = useState(false); // ✨ NEW: Controls progressive disclosure
 
   const handlePersonaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -84,45 +85,35 @@ export default function Distillery({
               />
             </div>
 
-            {/* ✨ Quick Examples Row */}
-            <div className="flex flex-wrap items-center gap-2 mt-1 px-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-2">
-                Try an example:
-              </span>
-              <button
-                onClick={() =>
-                  setInputs({
-                    ...inputs,
-                    url: "https://dev.to/dumebii/ozigi-v2-changelog-building-a-modular-agentic-content-engine-with-nextjs-supabase-and-playwright-59mo",
-                  })
-                }
-                className="px-3 py-2 bg-white text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl text-[10px] font-bold transition-all border border-slate-200 shadow-sm active:scale-95"
-              >
-                🧠 Ozigi V2 Changelog
-              </button>
-              <button
-                onClick={() =>
-                  setInputs({
-                    ...inputs,
-                    url: "https://currents.dev/posts/how-to-debug-playwright-tests-in-ci",
-                  })
-                }
-                className="px-3 py-2 bg-white text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl text-[10px] font-bold transition-all border border-slate-200 shadow-sm active:scale-95"
-              >
-                🎭 How To Debug Playwright Tests in the CI
-              </button>
-              <button
-                onClick={() =>
-                  setInputs({
-                    ...inputs,
-                    url: "https://dev.to/dumebii/docs-as-code-the-best-guide-for-technical-writers-97c",
-                  })
-                }
-                className="px-3 py-2 bg-white text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl text-[10px] font-bold transition-all border border-slate-200 shadow-sm active:scale-95"
-              >
-                📡 Docs As Code For Beginners
-              </button>
-            </div>
+            {/* ✨ Cleaned up Quick Examples */}
+            {!inputs.url && (
+              <div className="flex flex-wrap items-center gap-3 mt-1 px-2 text-[10px] font-black uppercase tracking-widest">
+                <span className="text-slate-400">Examples:</span>
+                <button
+                  onClick={() =>
+                    setInputs({
+                      ...inputs,
+                      url: "https://dev.to/dumebii/ozigi-v2-changelog-building-a-modular-agentic-content-engine-with-nextjs-supabase-and-playwright-59mo",
+                    })
+                  }
+                  className="text-slate-500 hover:text-red-600 transition-colors text-left"
+                >
+                  Ozigi V2
+                </button>
+                <span className="text-slate-300">•</span>
+                <button
+                  onClick={() =>
+                    setInputs({
+                      ...inputs,
+                      url: "https://currents.dev/posts/how-to-debug-playwright-tests-in-ci",
+                    })
+                  }
+                  className="text-slate-500 hover:text-red-600 transition-colors text-left"
+                >
+                  Playwright CI
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -166,100 +157,103 @@ export default function Distillery({
           </div>
         )}
 
-        <div className="mt-6 mb-2 flex flex-col gap-2 animate-in fade-in">
-          <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-900 mb-1">
-            Additional Directives{" "}
-            <span className="text-slate-400 font-medium lowercase tracking-normal">
-              (Optional)
-            </span>
-          </label>
-          <p className="text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
-            ⚠️ Use this for campaign goals (e.g., "Target junior devs"). Do NOT
-            put tone/voice instructions here.
-          </p>
-          <input
-            type="text"
-            value={inputs.additionalInfo || ""}
-            onChange={(e) =>
-              setInputs({ ...inputs, additionalInfo: e.target.value })
-            }
-            placeholder="e.g., Make sure to mention the open-source release date..."
-            className="w-full text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:border-slate-400 transition-colors"
-          />
-        </div>
+        {/* ✨ The Progressive Disclosure Toggle */}
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="w-full mt-6 py-3 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-200"
+        >
+          {showAdvanced ? "Hide Advanced Options ⬆" : "⚙️ Advanced Options (Personas, Formats) ⬇"}
+        </button>
 
-        {/* ✨ The Upgraded Persona Selector */}
-        <div className="mt-4 mb-6 p-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 animate-in fade-in">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-1">
-                🗣️ Custom Voice Persona
-              </h4>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                Train Ozigi to write exactly like you.
-              </p>
+        {/* ✨ The Hidden Engine Room */}
+        {showAdvanced && (
+          <div className="mt-4 p-5 bg-slate-50 rounded-[1.5rem] border border-slate-200 animate-in fade-in slide-in-from-top-2 flex flex-col gap-6">
+            
+            {/* Persona Selector */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-1">
+                  🗣️ Voice Persona
+                </h4>
+              </div>
+
+              {!session ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-3 py-2 rounded-lg border border-red-100 whitespace-nowrap">
+                    🔒 Sign in to unlock
+                  </span>
+                </div>
+              ) : (
+                <select
+                  value={inputs.personaId || "default"}
+                  onChange={handlePersonaChange}
+                  className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none cursor-pointer hover:border-slate-300"
+                >
+                  <option value="default">Default (Pragmatic Tech)</option>
+                  {userPersonas.map((persona) => (
+                    <option key={persona.id} value={persona.id}>
+                      {persona.name}
+                    </option>
+                  ))}
+                  <option value="create_new" className="font-black text-red-600">
+                    + Create New Persona
+                  </option>
+                </select>
+              )}
             </div>
 
-            {!session ? (
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-3 py-2 rounded-lg border border-red-100 whitespace-nowrap">
-                  🔒 Sign in to unlock
-                </span>
+            {/* Directives */}
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 flex items-center gap-2">
+                Campaign Directives
+              </label>
+              <input
+                type="text"
+                value={inputs.additionalInfo || ""}
+                onChange={(e) =>
+                  setInputs({ ...inputs, additionalInfo: e.target.value })
+                }
+                placeholder="e.g., Target junior devs. (No tone instructions here)"
+                className="w-full text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl p-3 focus:outline-none focus:border-slate-400 transition-colors"
+              />
+            </div>
+
+            {/* X Format Toggle */}
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 block">
+                X (Twitter) Format
+              </label>
+              <div className="flex bg-white p-1 rounded-xl border border-slate-200">
+                <button
+                  onClick={() => setInputs({ ...inputs, tweetFormat: "single" })}
+                  className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                    inputs.tweetFormat === "single"
+                      ? "bg-slate-100 text-slate-900 shadow-sm"
+                      : "text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  Single Tweet
+                </button>
+                <button
+                  onClick={() => setInputs({ ...inputs, tweetFormat: "thread" })}
+                  className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                    inputs.tweetFormat === "thread"
+                      ? "bg-slate-100 text-slate-900 shadow-sm"
+                      : "text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  Full Thread
+                </button>
               </div>
-            ) : (
-              <select
-                value={inputs.personaId || "default"}
-                onChange={handlePersonaChange}
-                className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none cursor-pointer hover:border-slate-300"
-              >
-                <option value="default">Default (Pragmatic Tech)</option>
+            </div>
 
-                {userPersonas.map((persona) => (
-                  <option key={persona.id} value={persona.id}>
-                    {persona.name}
-                  </option>
-                ))}
-
-                <option value="create_new" className="font-black text-red-600">
-                  + Create New Persona
-                </option>
-              </select>
-            )}
           </div>
-        </div>
-
-        <div className="mt-6 mb-2 flex flex-col gap-2 animate-in fade-in">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-2">
-            X (Twitter) Format Preference
-          </span>
-          <div className="flex bg-slate-50 p-1 rounded-[1.2rem] border border-slate-200">
-            <button
-              onClick={() => setInputs({ ...inputs, tweetFormat: "single" })}
-              className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                inputs.tweetFormat === "single"
-                  ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
-            >
-              Single Tweet
-            </button>
-            <button
-              onClick={() => setInputs({ ...inputs, tweetFormat: "thread" })}
-              className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                inputs.tweetFormat === "thread"
-                  ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
-            >
-              Full Thread
-            </button>
-          </div>
-        </div>
+        )}
 
         <button
           onClick={onGenerate}
           disabled={!inputs.url && !inputs.text && !inputs.file}
-          className="w-full mt-4 bg-red-700 text-white py-6 rounded-[1.8rem] font-black uppercase tracking-widest hover:bg-red-800 transition-all disabled:bg-slate-200 disabled:text-slate-400 shadow-xl shadow-red-900/10 active:scale-[0.98]"
+          className="w-full mt-6 bg-red-700 text-white py-6 rounded-[1.8rem] font-black uppercase tracking-widest hover:bg-red-800 transition-all disabled:bg-slate-200 disabled:text-slate-400 shadow-xl shadow-red-900/10 active:scale-[0.98]"
         >
           Generate Campaign ⚡
         </button>
