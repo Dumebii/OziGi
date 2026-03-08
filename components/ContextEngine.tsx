@@ -198,7 +198,7 @@ export default function Distillery({
                       onChange={handlePersonaChange}
                       className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none cursor-pointer hover:border-slate-300"
                     >
-                      <option value="default">Default (Pragmatic Tech)</option>
+                      <option value="default">Default Persona</option>
 
                       {userPersonas.length > 0 && (
                         <optgroup label="Your Saved Voices">
