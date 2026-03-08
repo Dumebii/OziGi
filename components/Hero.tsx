@@ -13,17 +13,23 @@ export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // ✨ GOAL 2: The Automatic Redirect Listener
+// ✨ FIXED: The Smart Redirect Listener
   useEffect(() => {
+    // 1. Just load the session so the Header knows to show "Dashboard" instead of "Sign In"
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) router.push("/dashboard"); // Instantly push logged-in users away from the homepage
     });
 
+    // 2. Listen specifically for the SIGN_IN event, ignore initial page loads
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-      if (session) router.push("/dashboard");
+      
+      // Only redirect if they actively just logged in!
+      if (event === "SIGNED_IN") {
+        router.push("/dashboard");
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -178,8 +184,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      <Footer />
 
       {isAuthModalOpen && <AuthModal onClose={() => setIsAuthModalOpen(false)} />}
     </div>
