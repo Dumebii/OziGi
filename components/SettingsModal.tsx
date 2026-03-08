@@ -15,7 +15,9 @@ export default function SettingsModal({
   const [persona, setPersona] = useState("");
   const [webhook, setWebhook] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-
+const [newPersonaName, setNewPersonaName] = useState("");
+  const [newPersonaPrompt, setNewPersonaPrompt] = useState("");
+  const [isSavingPersona, setIsSavingPersona] = useState(false);
   // --- OAuth Linking State ---
   const [connections, setConnections] = useState<string[]>([]);
   const [linkLoading, setLinkLoading] = useState<string | null>(null);
@@ -95,45 +97,57 @@ export default function SettingsModal({
 
         <div className="space-y-8">
           {/* --- SECTION 1: WORKSPACE PREFERENCES --- */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-2">
-              Workspace Preferences
+          {/* Custom Personas Section */}
+          <div className="p-6 bg-white border border-slate-200 rounded-2xl">
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-4">
+              🗣️ Create New Persona
             </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Persona Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Snarky DevRel"
+                  className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-red-500/50 text-sm font-medium text-slate-900"
+                  value={newPersonaName}
+                  onChange={(e) => setNewPersonaName(e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">System Prompt</label>
+                <textarea
+                  placeholder="You are a developer educator who hates corporate buzzwords..."
+                  className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-red-500/50 text-sm font-medium min-h-[100px] resize-y text-slate-900"
+                  value={newPersonaPrompt}
+                  onChange={(e) => setNewPersonaPrompt(e.target.value)}
+                />
+              </div>
 
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 mt-4">
-                Custom Persona Voice
-              </label>
-              <textarea
-                className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-red-500/50 text-sm font-medium min-h-[80px] resize-y text-slate-900"
-                placeholder="e.g., You are an expert developer educator who writes punchy, highly technical content..."
-                value={persona}
-                onChange={(e) => setPersona(e.target.value)}
-              />
+              <button
+                disabled={!newPersonaName || !newPersonaPrompt || isSavingPersona}
+                onClick={async () => {
+                  setIsSavingPersona(true);
+                  const { error } = await supabase.from("personas").insert({
+                    user_id: session.user.id,
+                    name: newPersonaName,
+                    prompt: newPersonaPrompt // ⚠️ Change to 'content' if your column is named content!
+                  });
+                  setIsSavingPersona(false);
+                  
+                  if (!error) {
+                    window.location.reload(); // Instantly reloads the page to fetch your newly saved persona!
+                  } else {
+                    alert("Failed to save persona: " + error.message);
+                  }
+                }}
+                className="w-full bg-red-700 text-white py-3 rounded-xl font-black uppercase tracking-widest hover:bg-red-800 transition-all disabled:opacity-50 text-xs shadow-lg"
+              >
+                {isSavingPersona ? "Saving..." : "Save Persona to Database"}
+              </button>
             </div>
-
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                Discord Webhook URL
-              </label>
-              <input
-                type="url"
-                className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-red-500/50 text-sm font-medium text-slate-900"
-                placeholder="https://discord.com/api/webhooks/..."
-                value={webhook}
-                onChange={(e) => setWebhook(e.target.value)}
-              />
-            </div>
-
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="w-full bg-slate-900 text-white py-3 rounded-xl font-black uppercase tracking-widest hover:bg-red-700 transition-all disabled:opacity-50 text-[10px] sm:text-xs shadow-lg mt-2"
-            >
-              {isSaving ? "Saving..." : "Save Preferences"}
-            </button>
           </div>
-
           {/* --- SECTION 2: CONNECTED ACCOUNTS --- */}
           <div className="space-y-4">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-2">
