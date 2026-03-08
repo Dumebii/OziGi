@@ -185,22 +185,37 @@ export default function Distillery({
                   </span>
                 </div>
               ) : (
-                <select
-                value={inputs.personaId || "default"}
-                onChange={handlePersonaChange}
-                className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none cursor-pointer hover:border-slate-300"
-              >
-                <option value="default">Default (Pragmatic Tech)</option>
-                
-                {/* ✨ Checks if a custom persona exists in user_metadata */}
-                {session?.user?.user_metadata?.persona && (
-                  <option value="custom">My Custom Voice</option>
-                )}
-                
-                <option value="create_new" className="font-black text-red-600">
-                  {session?.user?.user_metadata?.persona ? "✏️ Edit Custom Voice" : "+ Create Custom Voice"}
-                </option>
-              </select>
+                /* ✨ FIXED P1 & P2: Safe fallback state and better UX affordances */
+                (() => {
+                  const isValidPersona =
+                    inputs.personaId === "default" ||
+                    userPersonas.some((p) => p.id === inputs.personaId);
+                  const safePersonaId = isValidPersona ? inputs.personaId : "default";
+
+                  return (
+                    <select
+                      value={safePersonaId}
+                      onChange={handlePersonaChange}
+                      className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none cursor-pointer hover:border-slate-300"
+                    >
+                      <option value="default">Default (Pragmatic Tech)</option>
+
+                      {userPersonas.length > 0 && (
+                        <optgroup label="Your Saved Voices">
+                          {userPersonas.map((persona) => (
+                            <option key={persona.id} value={persona.id}>
+                              {persona.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+
+                      <option value="create_new" className="font-black text-red-600">
+                        {userPersonas.length > 0 ? "⚙️ Manage Personas" : "+ Create New Persona"}
+                      </option>
+                    </select>
+                  );
+                })()
               )}
             </div>
 
