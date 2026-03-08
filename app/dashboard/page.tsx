@@ -14,6 +14,10 @@ export default function Dashboard() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [campaign, setCampaign] = useState<CampaignDay[]>([]);
+  
+  // ✨ FIXED: Added the missing personas state so the app stops crashing!
+  const [personas, setPersonas] = useState<any[]>([]); 
+
   const [inputs, setInputs] = useState<{
     url: string;
     text: string;
@@ -57,10 +61,7 @@ export default function Dashboard() {
       setSession(session);
       if (session?.user) {
         fetchHistory(session.user.id);
-        // 🚨 UPGRADED TOKEN CATCHER 🚨
         if (session.provider_token) {
-          // Because users can link accounts, we must figure out WHICH provider this token belongs to.
-          // We do this by finding the most recently updated identity in their session.
           const identities = session.user.identities || [];
           const latestIdentity = identities.reduce((prev, current) =>
             new Date(prev.updated_at || 0).getTime() >
@@ -76,7 +77,7 @@ export default function Dashboard() {
           await supabase.from("user_tokens").upsert(
             {
               user_id: session.user.id,
-              provider: provider, // Accurately logs 'x' or 'linkedin_oidc' even if they signed up with Google
+              provider: provider, 
               access_token: session.provider_token,
               refresh_token: session.provider_refresh_token || null,
               updated_at: new Date().toISOString(),
@@ -112,7 +113,7 @@ export default function Dashboard() {
   const handleGenerate = async () => {
     setLoading(true);
     setErrorMessage("");
-    setCampaign([]); // ✨ NEW: Instantly clears the old grid so the user knows it's working on a new one
+    setCampaign([]); 
 
     try {
       const formData = new FormData();
@@ -121,9 +122,6 @@ export default function Dashboard() {
       if (inputs.file) formData.append("file", inputs.file);
       formData.append("tweetFormat", inputs.tweetFormat);
 
-      // We pass the user's custom persona if they set it in Settings!
-      // (You might need to pull this from session.user.user_metadata in the future,
-      // but for now we default to a strong baseline)
       formData.append(
         "personaVoice",
         session?.user?.user_metadata?.persona || "Senior Content Engineer"
@@ -137,7 +135,6 @@ export default function Dashboard() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        // ✨ NEW: Sanitized Error Message instead of revealing backend stack traces
         setErrorMessage(
           "We encountered a hiccup connecting to the AI engine. Please try again."
         );
@@ -171,7 +168,6 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error("Context error:", err);
-      // ✨ NEW: Sanitized JSON parsing error
       setErrorMessage(
         "The AI returned an unexpected format. Please try tweaking your context and generating again."
       );
@@ -248,15 +244,15 @@ export default function Dashboard() {
             </div>
           )}
 
-<Distillery
-  session={session}
-  userPersonas={personas}
-  inputs={inputs}
-  setInputs={setInputs}
-  loading={loading}
-  onOpenSettings={() => window.dispatchEvent(new Event("openSettingsModal"))}
-  onGenerate={handleGenerate} 
-/>
+          <Distillery
+            session={session}
+            userPersonas={personas}
+            inputs={inputs}
+            setInputs={setInputs}
+            loading={loading}
+            onOpenSettings={() => window.dispatchEvent(new Event("openSettingsModal"))}
+            onGenerate={handleGenerate} 
+          />
 
           {loading && (
             <div className="mt-16 space-y-8 animate-pulse">
