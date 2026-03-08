@@ -59,7 +59,7 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm">
                 <span className="flex h-2 w-2 rounded-full bg-slate-800 animate-pulse" />
                 <span className="text-xs font-black uppercase tracking-widest text-slate-700">
-                  Ozigi v3: The Universal Context Update
+                  Ozigi v3: Update Context to be more universal
                 </span>
               </div>
             </div>
@@ -68,18 +68,18 @@ export default function Home() {
             <div className="flex flex-col items-center justify-center mb-8 gap-2">
               <div className="overflow-hidden pb-1 px-4">
                 <h1 className="text-5xl md:text-7xl lg:text-8xl font-black italic uppercase tracking-tighter text-slate-900 leading-[0.9] animate-in slide-in-from-bottom-[100%] duration-1000 ease-out">
-                  Cure Blank Page
+                  The Intelligent
                 </h1>
               </div>
               <div className="overflow-hidden pt-1 pb-4 px-4">
                 <span className="inline-block text-5xl md:text-7xl lg:text-8xl font-black italic uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-slate-600 to-slate-900 leading-[0.9] animate-in slide-in-from-bottom-[100%] duration-1000 delay-150 ease-out">
-                  Syndrome.
+                  Content Engine
                 </span>
               </div>
             </div>
 
             <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-600 font-medium leading-relaxed mb-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 ease-out">
-              Staring at a blinking cursor trying to figure out what to post? Turn your existing context—raw notes, web links, or PDFs—into structured, multi-platform campaigns in your exact voice. No brainstorming required.
+              Staring at a blinking cursor, trying to figure out what to post? Stop fighting with generic AI tools. Feed Ozigi your raw notes, PDFs, or web links, and let it generate structured, multi-social-media-platform content in your OWN voice. No prompt engineering required.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-500 ease-out">
@@ -87,7 +87,7 @@ export default function Home() {
                 onClick={() => setIsAuthModalOpen(true)}
                 className="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:-translate-y-1 active:translate-y-0"
               >
-                Start Engineering Content
+                Start Creating Content
               </button>
               <Link
                 href="/docs"
@@ -106,7 +106,7 @@ export default function Home() {
               <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 mb-4">
                 How The Engine Works
               </h2>
-              <p className="text-slate-500 font-medium text-lg">Three steps from raw context to polished distribution.</p>
+              <p className="text-slate-500 font-medium text-lg">Three steps from raw context to polished Content.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
@@ -116,7 +116,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-black uppercase tracking-widest text-slate-900 mb-4">Ingest Context</h3>
                 <p className="text-base text-slate-600 font-medium leading-relaxed">
-                  Paste a URL, dump unformatted meeting transcripts, or upload a PDF. Ozigi extracts the core narrative without you needing to summarize it first.
+                  Paste a URL, dump unformatted meeting transcripts, or upload a PDF/image. Ozigi extracts the core narrative without you needing to summarize it first.
                 </p>
               </div>
 
@@ -127,7 +127,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-black uppercase tracking-widest text-slate-900 mb-4">Apply Voice Persona</h3>
                 <p className="text-base text-slate-600 font-medium leading-relaxed">
-                  Create and save custom voice profiles. The engine applies strict stylistic constraints to your selected persona, bypassing AI detection to sound exactly like you every time.
+                  Create and save custom voice personas. The engine applies strict stylistic constraints to your selected persona, bypassing AI detection to sound exactly like you every time.
                 </p>
               </div>
 
@@ -137,7 +137,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-black uppercase tracking-widest text-slate-900 mb-4">Omnichannel Routing</h3>
                 <p className="text-base text-slate-600 font-medium leading-relaxed">
-                  Instantly receive a structured campaign. Push directly to X (Twitter) via Web Intents, format for LinkedIn, or drop straight into your Discord server.
+                  Instantly receive structured content. Push directly to X (Twitter) via Web Intents, LinkedIn, or drop straight into your Discord server.
                 </p>
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function Home() {
               <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 mb-4">
                 Built For Professionals
               </h2>
-              <p className="text-slate-500 font-medium text-lg">A chameleon engine that adapts to your industry.</p>
+              <p className="text-slate-500 font-medium text-lg">An engine built to adapt to your industry.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
