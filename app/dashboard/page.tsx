@@ -52,7 +52,8 @@ export default function Dashboard() {
     // Supabase Auth
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) fetchHistory(session.user.id);
+      if (session?.user) {fetchHistory(session.user.id);
+      fetchPersonas(session.user.id);}
     });
 
     const {
@@ -99,6 +100,16 @@ export default function Dashboard() {
     if (data) setPastCampaigns(data);
   };
 
+  const fetchPersonas = async (userId: string) => {
+    const { data } = await supabase
+      .from("personas")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    
+    if (data) setPersonas(data);
+  };
+
   const restoreCampaign = (record: any) => {
     setInputs({
       url: record.source_url || "",
@@ -123,9 +134,14 @@ export default function Dashboard() {
       formData.append("tweetFormat", inputs.tweetFormat);
 
 // ✨ NEW: Route the correct voice to the API based on the dropdown
-      const selectedVoice = inputs.personaId === "custom" 
-        ? (session?.user?.user_metadata?.persona || "Senior Content Engineer") 
-        : "Senior Content Engineer"; // The default fallback
+let selectedVoice = "Senior Content Engineer";
+      if (inputs.personaId && inputs.personaId !== "default") {
+        const found = personas.find((p: any) => p.id === inputs.personaId);
+        if (found) {
+          // ⚠️ IMPORTANT: If your Supabase column is named 'content' or 'voice' instead of 'prompt', change it here!
+          selectedVoice = found.prompt; 
+        }
+      }
 
       formData.append("personaVoice", selectedVoice);
 
