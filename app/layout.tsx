@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     siteName: "Ozigi",
     images: [
       {
-        url: "/opengraph-image.png", // Points to public/landing-preview.png
+        url: "/heropage.png", // Points to public/landing-preview.png
         width: 1200,
         height: 630,
         alt: "Ozigi.app Landing Page Preview",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ozigi - Your Catchy Slogan",
     description: "A brief description of what Ozigi.app does.",
-    images: ["/opengraph-image.png"],
+    images: ["/heropage.png"],
   },
 };
 
