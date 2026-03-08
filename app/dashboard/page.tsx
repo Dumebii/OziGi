@@ -14,21 +14,23 @@ export default function Dashboard() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [campaign, setCampaign] = useState<CampaignDay[]>([]);
-  
-  // ✨ FIXED: Added the missing personas state so the app stops crashing!
   const [personas, setPersonas] = useState<any[]>([]); 
 
+  // ✨ FIXED P0: Added personaId to strict TypeScript interface and initialized state
   const [inputs, setInputs] = useState<{
     url: string;
     text: string;
     file: File | null;
     tweetFormat: "single" | "thread";
+    personaId: string; 
   }>({
     url: "",
     text: "",
     file: null,
     tweetFormat: "single",
+    personaId: "default", 
   });
+  
   const [errorMessage, setErrorMessage] = useState("");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [pastCampaigns, setPastCampaigns] = useState<any[]>([]);
@@ -37,7 +39,15 @@ export default function Dashboard() {
   const campaignRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // URL Error Catcher
+    const handlePersonaRefresh = () => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user?.id) {
+          fetchPersonas(session.user.id);
+        }
+      });
+    };
+    window.addEventListener("refreshPersonas", handlePersonaRefresh);
+
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const searchParams = new URLSearchParams(window.location.search);
     const errorDesc =
@@ -49,10 +59,12 @@ export default function Dashboard() {
       window.history.replaceState(null, "", window.location.pathname);
     }
 
-    // Supabase Auth
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) fetchHistory(session.user.id);
+      if (session?.user) {
+        fetchHistory(session.user.id);
+        fetchPersonas(session.user.id);
+      }
     });
 
     const {
@@ -61,6 +73,9 @@ export default function Dashboard() {
       setSession(session);
       if (session?.user) {
         fetchHistory(session.user.id);
+        // ✨ FIXED P1: Now fetches personas on auth state change (login)
+        fetchPersonas(session.user.id);
+        
         if (session.provider_token) {
           const identities = session.user.identities || [];
           const latestIdentity = identities.reduce((prev, current) =>
@@ -85,9 +100,16 @@ export default function Dashboard() {
             { onConflict: "user_id, provider" }
           );
         }
+      } else {
+        // Clear personas if user logs out
+        setPersonas([]);
       }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("refreshPersonas", handlePersonaRefresh);
+    };
   }, []);
 
   const fetchHistory = async (userId: string) => {
@@ -99,12 +121,22 @@ export default function Dashboard() {
     if (data) setPastCampaigns(data);
   };
 
+  const fetchPersonas = async (userId: string) => {
+    const { data } = await supabase
+      .from("personas")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (data) setPersonas(data);
+  };
+
   const restoreCampaign = (record: any) => {
     setInputs({
       url: record.source_url || "",
       text: record.source_notes || "",
       file: null,
       tweetFormat: "single",
+      personaId: "default",
     });
     setCampaign(record.generated_content);
     setIsHistoryOpen(false);
@@ -122,10 +154,14 @@ export default function Dashboard() {
       if (inputs.file) formData.append("file", inputs.file);
       formData.append("tweetFormat", inputs.tweetFormat);
 
-// ✨ NEW: Route the correct voice to the API based on the dropdown
-      const selectedVoice = inputs.personaId === "custom" 
-        ? (session?.user?.user_metadata?.persona || "Senior Content Engineer") 
-        : "Senior Content Engineer"; // The default fallback
+      // ✨ FIXED P1: Strict fallback logic, zero ambiguity.
+      let selectedVoice = "Senior Content Engineer";
+      if (inputs.personaId && inputs.personaId !== "default") {
+        const found = personas.find((p: any) => p.id === inputs.personaId);
+        if (found && found.prompt) {
+          selectedVoice = found.prompt;
+        }
+      }
 
       formData.append("personaVoice", selectedVoice);
 
