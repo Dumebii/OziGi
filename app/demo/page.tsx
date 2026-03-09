@@ -1,10 +1,10 @@
 "use client";
 import { useState, useRef } from "react";
 import Link from "next/link";
-import Distillery from "../components/ContextEngine";
-import DistributionGrid from "../components/DistributionGrid";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Distillery from "../../components/ContextEngine";
+import DistributionGrid from "../../components/DistributionGrid";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 
 // ✨ THE "HERO" PAYLOAD: A pre-calculated, stunning response to wow cold traffic
 const simulatedCampaign = [
