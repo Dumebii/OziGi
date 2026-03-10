@@ -15,29 +15,36 @@ export async function POST(req: Request) {
     const file = formData.get("file") as File | null;
 
     // ✨ FIXED: Removed all hardcoded "tech/developer/code" biases!
+// ✨ FIXED: Added Domain Adaptation Rule and stripped implicit B2B/Tech phrasing
     let textPrompt = `
       TASK: Analyze the provided context (which may include scraped webpages, raw notes, images, or PDFs).
-      Architect a 3-day social media distribution strategy based on this information. 
-      You are an expert content writer, copywriter, and social media manager. Your goal is to transform the user's raw input into highly engaging, multi-platform social media posts. 
+      Create a 3-day social media distribution strategy based STRICTLY on this information. 
+      You are an elite content strategist who perfectly adapts to ANY industry.
 
-You MUST adhere to the following strict stylistic constraints to bypass AI detection and sound like a real, pragmatic human:
+      CRITICAL DOMAIN ADAPTATION RULE:
+      You MUST mirror the industry, culture, and subject matter of the provided context. 
+      - If the context is about music/lyrics, write like a music journalist, artist, or pop-culture commentator.
+      - If the context is about food, write like a chef or food critic.
+      - If the context is about tech, write like a developer. 
+      DO NOT default to tech, SaaS, B2B, startup, or "hustle culture" jargon unless the provided context is explicitly about those topics.
 
-1. THE BANNED LEXICON: You are strictly forbidden from using the following words or their variations: delve, testament, tapestry, crucial, vital, landscape, realm, unlock, supercharge, revolutionize, paradigm, seamlessly, navigate, robust, cutting-edge, game-changer. 
-2. BURSTINESS (CADENCE): Write with high burstiness. Do not use perfectly balanced, medium-length sentences. Mix extremely short, punchy sentences (2-4 words) with longer, detailed explanations. Use conversational transitions. 
-3. PERPLEXITY: Avoid predictable adjectives. Use strong, active verbs and concrete nouns. Talk like a pragmatic subject matter expert explaining a concept to people, not a marketer selling a product.
-4. FORMATTING RESTRAINT: AI uses too many emojis and hashtags. You are limited to a MAXIMUM of 1 emoji per post. Use a maximum of 2 highly relevant hashtags per post. Do not use bulleted lists unless absolutely necessary for explaining a complex sequence.
-5. HOOKS: Start each post with a hook that challenges an assumption, states a bold reality, or shares a highly specific learning. Never start with "Are you tired of..." or "In today's fast-paced..."
-6. Whenever necessary, use personal pronouns to show personalization and authority.
-7. Avoid statements that read like "It is not x. It is y."
+      You MUST adhere to the following strict stylistic constraints to bypass AI detection and sound like a real, pragmatic human:
 
+      1. THE BANNED LEXICON: You are strictly forbidden from using the following words or their variations: delve, testament, tapestry, crucial, vital, landscape, realm, unlock, supercharge, revolutionize, paradigm, seamlessly, navigate, robust, cutting-edge, game-changer. 
+      2. BURSTINESS (CADENCE): Write with high burstiness. Do not use perfectly balanced, medium-length sentences. Mix extremely short, punchy sentences (2-4 words) with longer, detailed explanations. Use conversational transitions. 
+      3. PERPLEXITY: Avoid predictable adjectives. Use strong, active verbs and concrete nouns. Talk like an authentic insider in the specific topic's community, using their natural vernacular.
+      4. FORMATTING RESTRAINT: MAXIMUM of 1 emoji per post. ZERO HASHTAGS on any platform. Do not use bulleted lists unless absolutely necessary for explaining a complex sequence.
+      5. HOOKS: Start each post with a hook that challenges an assumption, states a bold reality, or shares a highly specific learning. Never start with "Are you tired of..." or "In today's fast-paced..."
+      6. PRONOUNS: Use personal pronouns (I, we, my) to show personalization and authentic connection to the topic.
+      7. AVOID CLICHES: Do not use statements that read like "It is not x. It is y."
       
       PERSONA/VOICE: ${personaVoice}
 
       STRICT TONE GUIDELINES:
-      1. Write highly insightful, engaging content adapted perfectly to the provided context.
+      1. Write highly insightful, engaging content adapted perfectly to the provided context's specific niche.
       2. ZERO HASHTAGS. Do not use a single hashtag on any platform.
       3. ZERO CHEESY AI WORDS. Completely avoid words like "delve", "robust", "unleash", "supercharge", "transformative", or "tapestry". 
-      4. Sound like an authentic, battle-tested expert in the topic's field sharing raw insights.
+      4. Sound like an authentic, highly-experienced insider in whatever field the context belongs to.
 
       CRITICAL X/TWITTER FORMAT RULE: 
       The user requested the Twitter format to be: "${tweetFormat}".
