@@ -125,6 +125,36 @@ export default function DocsPage() {
               total control over the final published product.
             </p>
 
+{/* Section 5: Native Image Generation (NEW) */}
+          <section className="mb-10">
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">
+              5. Native Image Generation
+            </h2>
+            <p className="text-slate-600 font-medium leading-relaxed mb-4">
+              Social platforms prioritize multimodal content. Instead of forcing you to leave Ozigi to create graphics in Figma or Canva, the Context Engine features a built-in, platform-aware image generator.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <div className="bg-white border-2 border-slate-200 p-6 rounded-[2rem] shadow-sm">
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-3 flex items-center gap-2">
+                  <span>🎨</span> Abstract vs. Text Graphics
+                </h3>
+                <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                  Inside each generated campaign card, you have the option to generate a graphic. If you leave the input field blank, the engine will create an abstract, high-quality background. If you provide text (e.g., "3 Rules for API Design"), the engine will render that text directly onto the graphic.
+                </p>
+              </div>
+
+              <div className="bg-slate-900 border-2 border-slate-900 p-6 rounded-[2rem] shadow-sm">
+                <h3 className="text-sm font-black uppercase tracking-widest text-white mb-3 flex items-center gap-2">
+                  <span>🔗</span> Pipeline Integration
+                </h3>
+                <p className="text-sm text-slate-400 font-medium leading-relaxed">
+                  Graphics are deeply integrated into the publishing flow. When you generate an image on a LinkedIn card and click "Publish," Ozigi executes a 3-step OAuth handshake to automatically upload and attach that specific image to your LinkedIn post.
+                </p>
+              </div>
+            </div>
+          </section>
+
             <div className="space-y-8">
               {/* X / Twitter Sub-section */}
               <div>
