@@ -58,7 +58,7 @@ export default function Footer() {
           </a>
         </div>
         <p className="text-[10px] tracking-[0.2em] uppercase text-slate-600">
-          © 2026 WriterHelper. Built for Content Wizzes!.
+          © 2026 Ozigi. Built for Content Wizzes!.
         </p>
       </div>
     </footer>

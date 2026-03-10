@@ -39,7 +39,7 @@ export default function DocsPage() {
               1. Multimodal Ingestion
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
-              Unlike standard AI chatbots, Ozigi does not require prompt engineering on your end. Powered by Google's Gemini 2.5 Pro, the engine handles massive context windows so you can simply drop in your raw data:
+              Unlike standard AI chatbots, Ozigi does not require prompt engineering on your end. Powered by Google's Gemini 2.5 Flash, the engine handles massive context windows so you can simply drop in your raw data:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-slate-600 font-medium mb-6">
               <li>
