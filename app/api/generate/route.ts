@@ -1,6 +1,7 @@
 export const maxDuration = 60; // ✨ Tells Vercel to wait up to 60 seconds for Vertex AI to finish!
 import { VertexAI, SchemaType } from "@google-cloud/vertexai";
 import { NextResponse } from "next/server";
+import { buildGenerationPrompt } from "../../../lib/prompts";
 
 // 1. Define the strict JSON Schema
 // This physically prevents the model from returning conversational pre-text or malformed data
@@ -43,48 +44,17 @@ export async function POST(req: Request) {
 
     const urlContext = formData.get("urlContext") as string | null;
     const textContext = formData.get("textContext") as string | null;
-    const tweetFormat = formData.get("tweetFormat") as string | "single";
-    const personaVoice = formData.get("personaVoice") as
-      | string
-      | "Expert Content Strategist";
+    const tweetFormat = formData.get("tweetFormat") as string || "single";
+    const personaVoice = formData.get("personaVoice") as string || "Expert Content Strategist";
     const file = formData.get("file") as File | null;
 
-    // ✨ Notice how we removed the "OUTPUT RULES" asking for JSON.
-    // The Schema handles that natively now.
-    let textPrompt = `
-      TASK: Analyze the provided context (which may include scraped webpages, raw notes, images, or PDFs).
-      Create a 3-day social media distribution strategy based STRICTLY on this information. 
-      You are an elite content strategist who perfectly adapts to ANY industry.
-
-      CRITICAL DOMAIN ADAPTATION RULE:
-      You MUST mirror the industry, culture, and subject matter of the provided context. 
-      - If the context is about music/lyrics, write like a music journalist, artist, or pop-culture commentator.
-      - If the context is about food, write like a chef or food critic.
-      - If the context is about tech, write like a developer. 
-      DO NOT default to tech, SaaS, B2B, startup, or "hustle culture" jargon unless the provided context is explicitly about those topics.
-
-      You MUST adhere to the following strict stylistic constraints to bypass AI detection and sound like a real, pragmatic human:
-
-      1. THE BANNED LEXICON: You are strictly forbidden from using the following words or their variations: delve, testament, tapestry, crucial, vital, landscape, realm, unlock, supercharge, revolutionize, paradigm, seamlessly, navigate, robust, cutting-edge, game-changer. 
-      2. BURSTINESS (CADENCE): Write with high burstiness. Do not use perfectly balanced, medium-length sentences. Mix extremely short, punchy sentences (2-4 words) with longer, detailed explanations. Use conversational transitions. 
-      3. PERPLEXITY: Avoid predictable adjectives. Use strong, active verbs and concrete nouns. Talk like an authentic insider in the specific topic's community, using their natural vernacular.
-      4. FORMATTING RESTRAINT: MAXIMUM of 1 emoji per post. ZERO HASHTAGS on any platform. Do not use bulleted lists unless absolutely necessary for explaining a complex sequence.
-      5. HOOKS: Start each post with a hook that challenges an assumption, states a bold reality, or shares a highly specific learning. Never start with "Are you tired of..." or "In today's fast-paced..."
-      6. PRONOUNS: Use personal pronouns (I, we, my) to show personalization and authentic connection to the topic.
-      7. AVOID CLICHES: Do not use statements that read like "It is not x. It is y."
-      
-      PERSONA/VOICE: ${personaVoice}
-
-      CRITICAL X/TWITTER FORMAT RULE: 
-      The user requested the Twitter format to be: "${tweetFormat}".
-      If "single", the "x" field must contain EXACTLY ONE punchy, high-impact tweet.
-      If "thread", the "x" field must contain a compelling 3-to-5 part thread. Separate each part with two blank lines and number them (e.g., 1/5, 2/5).
-      
-      CONTEXT TO ANALYZE:
-    `;
-
-    if (textContext) textPrompt += `\nRaw Notes: ${textContext}\n`;
-    if (urlContext) textPrompt += `\nSource URL: ${urlContext}\n`;
+    // ✨ Generate the prompt using our clean utility function
+    const textPrompt = buildGenerationPrompt({
+      tweetFormat,
+      personaVoice,
+      textContext,
+      urlContext,
+    });
 
     // 2. Array of "parts" strictly required by the Vertex AI SDK
     const parts: any[] = [{ text: textPrompt }];
