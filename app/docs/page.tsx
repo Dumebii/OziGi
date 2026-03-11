@@ -114,7 +114,7 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* Section 4: Publishing Integrations (Kept your excellent tactical guides) */}
+          {/* Section 4: Publishing Integrations */}
           <section>
             <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">
               4. Publishing & Formatting
@@ -124,9 +124,10 @@ export default function DocsPage() {
               use a combination of secure Web Intents and Webhooks to give you
               total control over the final published product.
             </p>
+          </section>
 
-{/* Section 5: Native Image Generation (NEW) */}
-          <section className="mb-10">
+          {/* Section 5: Native Image Generation (NEW) */}
+          <section>
             <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">
               5. Native Image Generation
             </h2>
@@ -155,6 +156,53 @@ export default function DocsPage() {
             </div>
           </section>
 
+          {/* Section 6: Human-in-the-Loop & The Edit Button */}
+          <section>
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">
+              6. Human-in-the-Loop: The Final Polish
+            </h2>
+            <p className="text-slate-600 font-medium leading-relaxed mb-6">
+              Ozigi is built on the belief that AI should be your <strong>co-pilot</strong>, not your replacement. While our engine handles the heavy lifting of extraction and structural drafting, the "Edit" button is the most critical tool in your arsenal.
+            </p>
+
+            <div className="bg-indigo-50 border-2 border-indigo-100 p-8 rounded-[2rem] mb-8">
+              <div className="flex flex-col md:flex-row gap-8 items-center">
+                <div className="flex-1">
+                  <h3 className="text-indigo-900 font-black uppercase tracking-widest text-sm mb-3">
+                    The Collaborative Workflow
+                  </h3>
+                  <p className="text-indigo-800/80 text-sm font-medium leading-relaxed">
+                    Ozigi generates "high-fidelity drafts"—posts that are 90% ready. That final 10% is where your unique expertise, current context, and personal flair live. By clicking the <strong>Edit</strong> icon on any campaign card, you take the wheel to add that specific piece of "insider knowledge" only a human can provide.
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-2xl shadow-xl border border-indigo-100 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </div>
+                  <span className="font-black italic uppercase text-slate-900 tracking-tighter">The "Edit" Factor</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="space-y-2">
+                <span className="text-slate-400 font-black text-xs uppercase tracking-widest">Phase 1</span>
+                <h4 className="font-bold text-slate-900">AI Synthesis</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">Ozigi processes your raw research and applies the Banned Lexicon to create a pragmatic, "AI-less" draft.</p>
+              </div>
+              <div className="space-y-2">
+                <span className="text-indigo-500 font-black text-xs uppercase tracking-widest">Phase 2</span>
+                <h4 className="font-bold text-slate-900">Human Polish</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">You use the Edit button to inject specific technical nuances, jokes, or project-specific details.</p>
+              </div>
+              <div className="space-y-2">
+                <span className="text-slate-400 font-black text-xs uppercase tracking-widest">Phase 3</span>
+                <h4 className="font-bold text-slate-900">Distribution</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">Once the draft matches your standard of excellence, you trigger the secure Web Intent or Webhook.</p>
+              </div>
+            </div>
+            
+            {/* Publishing Integrations Continued */}
             <div className="space-y-8">
               {/* X / Twitter Sub-section */}
               <div>
