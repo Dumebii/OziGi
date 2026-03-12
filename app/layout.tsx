@@ -18,24 +18,24 @@ export const metadata: Metadata = {
   description:
     "An Agentic Content Engine for social media handlers, technical writers and developer educators.",
   openGraph: {
-    title: "Ozigi | Agentic Social Media Manager",
-    description:
-      "Build a 3-day social media distribution campaign from raw context, in your own voice.",
+    title: "Ozigi | The Agentic Content Engine",
+    description: "Docs as code? Meet content as code. Build multi-platform social campaigns directly from your raw notes, PDFs, and links.",
     siteName: "Ozigi",
     images: [
       {
-        url: "/heropage.png", // Points to public/landing-preview.png
+        url: "/heropage.png", 
         width: 1200,
         height: 630,
-        alt: "Ozigi.app Landing Page Preview",
+        alt: "Ozigi Context Engine Interface",
       },
     ],
   },
+  
   twitter: {
     card: "summary_large_image",
-    title: "Ozigi - Your Catchy Slogan",
-    description: "A brief description of what Ozigi.app does.",
-    images: ["/heropage.png"],
+    title: "Ozigi | The Agentic Content Engine",
+    description: "Docs as code? Meet content as code. Build multi-platform social campaigns directly from your raw notes, PDFs, and links.",
+    images: ["/heropage.png"], 
   },
 };
 
