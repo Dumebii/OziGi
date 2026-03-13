@@ -42,36 +42,21 @@ const distributionSchema = {
 export async function POST(req: Request) {
   try {
     const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
-    const { success, limit, reset, remaining } = await ratelimit.limit(`ratelimit_${ip}`);
+    const { success } = await ratelimit.limit(`ratelimit_${ip}`);
 
     if (!success) {
-      return NextResponse.json(
-        { error: "You have exceeded your rate limit. Please try again in an hour." },
-        { 
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": limit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-            "X-RateLimit-Reset": reset.toString(),
-          }
-        }
-      );
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
 
     const formData = await req.formData();
-    const urlContext = formData.get("urlContext") as string | null;
-    const textContext = formData.get("textContext") as string | null;
-    const tweetFormat = formData.get("tweetFormat") as string || "single";
-    const personaVoice = formData.get("personaVoice") as string || "Expert Content Strategist";
-    const file = formData.get("file") as File | null;
-
     const textPrompt = buildGenerationPrompt({
-      tweetFormat,
-      personaVoice,
-      textContext,
-      urlContext,
+      tweetFormat: formData.get("tweetFormat") as string || "single",
+      personaVoice: formData.get("personaVoice") as string || "Expert Content Strategist",
+      textContext: formData.get("textContext") as string | null,
+      urlContext: formData.get("urlContext") as string | null,
     });
 
+    const file = formData.get("file") as File | null;
     const parts: any[] = [{ text: textPrompt }];
 
     if (file && file.size > 0) {
@@ -83,9 +68,11 @@ export async function POST(req: Request) {
     let authOptions = {};
 
     if (process.env.GCP_WORKLOAD_IDENTITY_POOL_ID) {
+      const audience = `//iam.googleapis.com/projects/${process.env.GCP_PROJECT_NUMBER}/locations/global/workloadIdentityPools/${process.env.GCP_WORKLOAD_IDENTITY_POOL_ID}/providers/${process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID}`;
+
       const authClient = ExternalAccountClient.fromJSON({
         type: 'external_account',
-        audience: `//iam.googleapis.com/projects/${process.env.GCP_PROJECT_NUMBER}/locations/global/workloadIdentityPools/${process.env.GCP_WORKLOAD_IDENTITY_POOL_ID}/providers/${process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID}`,
+        audience,
         subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
         token_url: 'https://sts.googleapis.com/v1/token',
         service_account_impersonation_url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${process.env.GCP_SERVICE_ACCOUNT_EMAIL}:generateAccessToken`,
@@ -94,14 +81,9 @@ export async function POST(req: Request) {
         },
       });
 
-      authOptions = {
-        authClient: authClient,
-        projectId: process.env.GCP_PROJECT_ID,
-      };
+      authOptions = { authClient, projectId: process.env.GCP_PROJECT_ID };
     } else {
-      authOptions = {
-        keyFilename: path.join(process.cwd(), "gcp-service-account.json"),
-      };
+      authOptions = { keyFilename: path.join(process.cwd(), "gcp-service-account.json") };
     }
 
     const vertex_ai = new VertexAI({
@@ -111,7 +93,7 @@ export async function POST(req: Request) {
     });
 
     const model = vertex_ai.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash", 
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: distributionSchema,
