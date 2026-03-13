@@ -80,21 +80,16 @@ export async function POST(req: Request) {
     }
 
     // HYBRID AUTH (LOCAL FILE vs VERCEL ENV)
-
     let authOptions = {};
     if (process.env.GOOGLE_PRIVATE_KEY && process.env.GOOGLE_CLIENT_EMAIL) {
       
-      // ⚡ THE TITANIUM PARSER: Fixes Vercel's multi-line mangling
-      let cleanPrivateKey = process.env.GOOGLE_PRIVATE_KEY;
-      
-      // 1. Strip accidental surrounding quotes 
-      cleanPrivateKey = cleanPrivateKey.replace(/^"|"$/g, '');
-      
-      // 2. Convert literal "\n" strings into actual newlines (if they exist)
-      cleanPrivateKey = cleanPrivateKey.replace(/\\n/g, '\n');
-      
-      // 3. Strip hidden Windows carriage returns (\r) that crash the crypto parser
-      cleanPrivateKey = cleanPrivateKey.replace(/\r/g, '');
+      // ⚡ THE OPEN-SSL SANITIZER
+      const cleanPrivateKey = process.env.GOOGLE_PRIVATE_KEY
+        .replace(/"/g, '')           // 1. Strip any accidental quotes
+        .replace(/\\n/g, '\n')       // 2. Convert escaped \n to real newlines (just in case)
+        .split('\n')                 // 3. Break the string apart at every newline
+        .map(line => line.trim())    // 4. DESTROY invisible trailing/leading spaces (The OpenSSL Killer)
+        .join('\n');                 // 5. Reassemble with perfect line breaks
 
       authOptions = {
         credentials: {
