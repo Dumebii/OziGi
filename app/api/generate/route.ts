@@ -15,7 +15,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(10, "1 h"),
+  limiter: Ratelimit.slidingWindow(30, "1 h"), // ⚡ Increased to 30 per hour
   analytics: true, 
 });
 
@@ -45,7 +45,11 @@ export async function POST(req: Request) {
     const { success } = await ratelimit.limit(`ratelimit_${ip}`);
 
     if (!success) {
-      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+      // ⚡ Human-readable error message
+      return NextResponse.json(
+        { error: "You've reached the maximum number of generations. Please take a quick break and try again later." }, 
+        { status: 429 }
+      );
     }
 
     const formData = await req.formData();
@@ -65,13 +69,9 @@ export async function POST(req: Request) {
       parts.push({ inlineData: { data: base64Data, mimeType: file.type } });
     }
 
-    // ==========================================
-    // ⚡ THE OIDC HANDSHAKE (FINAL STABLE VERSION)
-    // ==========================================
     let authOptions = {};
 
     if (process.env.GCP_WORKLOAD_IDENTITY_POOL_ID) {
-      // Clean variables to prevent 400 "Invalid Argument" errors from hidden spaces
       const projectNumber = process.env.GCP_PROJECT_NUMBER?.trim();
       const poolId = process.env.GCP_WORKLOAD_IDENTITY_POOL_ID?.trim();
       const providerId = process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID?.trim();
@@ -85,7 +85,6 @@ export async function POST(req: Request) {
         audience: audience,
         subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
         token_url: 'https://sts.googleapis.com/v1/token',
-        // The "-" project path is the most stable for federated impersonation
         service_account_impersonation_url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${saEmail}:generateAccessToken`,
         subject_token_supplier: {
           getSubjectToken: async () => await getVercelOidcToken(),
@@ -97,7 +96,6 @@ export async function POST(req: Request) {
         projectId: projectId,
       };
     } else {
-      // Fallback for local development if you have a local JSON key
       authOptions = {
         keyFilename: path.join(process.cwd(), "gcp-service-account.json"),
       };

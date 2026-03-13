@@ -16,7 +16,6 @@ export default function Dashboard() {
   const [campaign, setCampaign] = useState<CampaignDay[]>([]);
   const [personas, setPersonas] = useState<any[]>([]); 
 
-  // ✨ FIXED P0: Added personaId to strict TypeScript interface and initialized state
   const [inputs, setInputs] = useState<{
     url: string;
     text: string;
@@ -73,7 +72,6 @@ export default function Dashboard() {
       setSession(session);
       if (session?.user) {
         fetchHistory(session.user.id);
-        // ✨ FIXED P1: Now fetches personas on auth state change (login)
         fetchPersonas(session.user.id);
         
         if (session.provider_token) {
@@ -101,7 +99,6 @@ export default function Dashboard() {
           );
         }
       } else {
-        // Clear personas if user logs out
         setPersonas([]);
       }
     });
@@ -142,6 +139,7 @@ export default function Dashboard() {
     setIsHistoryOpen(false);
   };
 
+  // ⚡ THE UPDATED HANDLE GENERATE FUNCTION
   const handleGenerate = async () => {
     setLoading(true);
     setErrorMessage("");
@@ -154,7 +152,6 @@ export default function Dashboard() {
       if (inputs.file) formData.append("file", inputs.file);
       formData.append("tweetFormat", inputs.tweetFormat);
 
-      // ✨ FIXED P1: Strict fallback logic, zero ambiguity.
       let selectedVoice = "Expert Social Media Copywriter who adapts perfectly to the provided context";
       if (inputs.personaId && inputs.personaId !== "default") {
         const found = personas.find((p: any) => p.id === inputs.personaId);
@@ -165,21 +162,38 @@ export default function Dashboard() {
 
       formData.append("personaVoice", selectedVoice);
 
-      const res = await fetch("/api/generate", {
+      const response = await fetch("/api/generate", {
         method: "POST",
         body: formData,
       });
 
-      const data = await res.json();
+      // ⚡ The fix: Intercepting the 429 and other non-200 status codes correctly
+      if (!response.ok) {
+        let errorMsg = "We encountered a hiccup connecting to the AI engine. Please try again.";
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMsg = errorData.error; // Grabs the "Rate limit exceeded" or custom string from the backend
+          }
+        } catch (parseError) {
+          console.error("Failed to parse error response");
+        }
+        
+        setErrorMessage(errorMsg);
+        setLoading(false);
+        return; 
+      }
 
-      if (!res.ok || data.error) {
-        setErrorMessage(
-          "We encountered a hiccup connecting to the AI engine. Please try again."
-        );
+      const data = await response.json();
+
+      // Fallback for an odd 200 response that still includes an error payload
+      if (data.error) {
+        setErrorMessage(data.error);
         setLoading(false);
         return;
       }
 
+      // Safe parse the successful output
       const cleanJson = data.output
         .replace(/```json/gi, "")
         .replace(/```/gi, "");
@@ -261,7 +275,7 @@ export default function Dashboard() {
         </div>
       )}
 
-<main className="pt-28 md:pt-32 pb-8 flex-1">
+      <main className="pt-28 md:pt-32 pb-8 flex-1">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 w-full">
           {!session && (
             <UpgradeBanner onSignIn={() => setIsAuthModalOpen(true)} />
@@ -282,8 +296,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* 🔥 FIX 1: We allow Distillery to render when campaign is empty, regardless of loading state. 
-              This allows it to successfully mount your custom DynamicLoader! */}
           {!campaign.length && (
             <Distillery
               session={session}
@@ -296,12 +308,11 @@ export default function Dashboard() {
             />
           )}
 
-          {/* 🔥 FIX 2: Only show the grid and 'Architect New' button AFTER generation is done and loading is false */}
           {campaign.length > 0 && !loading && (
             <div className="mt-4 animate-in fade-in slide-in-from-bottom-8">
               <div className="flex justify-between items-center mb-8">
                 <button 
-                  onClick={() => setCampaign([])} // Clears campaign, brings engine back
+                  onClick={() => setCampaign([])} 
                   className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-red-700 transition-colors bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm hover:shadow-md active:scale-95"
                 >
                   ← Architect New Campaign
@@ -309,11 +320,12 @@ export default function Dashboard() {
               </div>
 
               <div className="scroll-mt-32" ref={campaignRef}>
-              <DistributionGrid
-                campaign={campaign}
-                session={session}
-                discordWebhook={session?.user?.user_metadata?.discord_webhook ?? ""}
-              />              </div>
+                <DistributionGrid
+                  campaign={campaign}
+                  session={session}
+                  discordWebhook={session?.user?.user_metadata?.discord_webhook ?? ""}
+                />              
+              </div>
             </div>
           )}
         </div>
