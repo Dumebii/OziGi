@@ -1,58 +1,110 @@
-# Ozigi: The Intelligent Context Engine ⚡
+# ⚡ Ozigi — The Intelligent Context Engine
 
-Ozigi is a universal context engine designed to cure "blank page syndrome" for technical writers, founders, and content creators. 
+**Turn raw research into platform-ready social content. In your voice. Without sounding like a bot.**
 
-Instead of relying on generic prompt engineering, Ozigi ingests raw, unformatted context (PDFs, scraped URLs, meeting transcripts, or rough notes) and architects a structured, multi-platform social media distribution strategy in a strictly constrained, authentic human voice.
+→ **[Try it live at ozigi.app](https://ozigi.app)**
 
 ![Ozigi Hero](https://ozigi.app/opengraph-image.png)
 
-## 🚀 The Core Problem it Solves
-Generative AI often produces content that sounds robotic, relies heavily on predictable lexicons (e.g., "delve", "robust", "tapestry"), and ignores the user's actual technical context. Ozigi solves this by wrapping an enterprise-grade LLM in strict stylistic constraints and persona-based routing, ensuring the output is highly bursty, pragmatic, and ready for immediate distribution.
 
-## ✨ Key Features
-- **Multimodal Context Ingestion:** Drop in a URL, paste unformatted text, or upload a PDF/Image. Ozigi extracts the core narrative without requiring pre-summarization.
-- **Voice Personas (Database-Backed):** Users can create and save custom voice profiles. The engine dynamically maps the selected persona to the prompt, guaranteeing stylistic consistency across campaigns.
-- **Banned Lexicon & Anti-Detection:** The API enforces strict negative constraints, actively forbidding the use of cheesy AI buzzwords and restricting emoji/hashtag formatting.
-- **Omnichannel Routing:** A single generation yields distinct, platform-optimized outputs for X (Twitter) threads, LinkedIn posts, and Discord markdown announcements.
-- **Perceived Performance UI:** Features a custom, determinate loading sequence that builds psychological suspense, masking the standard 15-second LLM generation wait time.
+---
 
-## 🛠 Tech Stack & Architecture
-- **Frontend:** Next.js (App Router), React, Tailwind CSS
-- **Backend/API:** Next.js Route Handlers, Vercel Edge/Serverless Functions
-- **AI Engine:** Google Cloud Vertex AI (Gemini 2.5 Pro)
-- **Database & Auth:** Supabase (PostgreSQL)
-- **Testing:** Playwright
+## What is Ozigi?
 
-## 💻 Local Development Setup
+Ozigi is a content engine built for technical creators, founders, and builders who have real things to say — but treat writing posts as a tax on their actual work.
 
-To run Ozigi locally, you will need Node.js (v18+) and `pnpm` installed.
+You drop in raw context. Ozigi returns polished, platform-specific drafts for X (Twitter), LinkedIn, and Discord. You edit the 10% only you know. You publish.
 
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/Dumebii/OziGi.git](https://github.com/Dumebii/OziGi.git)
-   cd OziGi
-   ```
+No prompt engineering. No reformatting for each platform. No AI slop.
 
-2. **Install dependencies:**
-   ```bash
-   pnpm install
-   ```
+---
 
-3. **Configure Environment Variables:**
-   Create a `.env.local` file in the root directory and add your credentials:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   GOOGLE_CLOUD_PROJECT_ID=your_gcp_project_id
-   GOOGLE_CLOUD_CLIENT_EMAIL=your_gcp_client_email
-   GOOGLE_CLOUD_PRIVATE_KEY="your_gcp_private_key"
-   ```
+## The Core Systems
 
-4. **Start the development server:**
-   ```bash
-   pnpm dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) to view the application.
+### 1. Multimodal Ingestion
+Drop in a URL, paste raw notes, or upload a PDF/image. Ozigi extracts the core narrative without requiring you to summarise it first. Powered by Gemini 2.5 Flash's massive context window.
 
-## 🤝 Philosophy & Contribution
-Ozigi was built to optimize the technical content lifecycle. It prioritizes workflow automation and developer experience (DevEx) over complex prompt engineering. If you have suggestions for new integrations (e.g., scheduling APIs or Dev.to publishing), feel free to open an issue or submit a pull request!
+### 2. The Banned Lexicon
+Ozigi enforces a strict list of banned words at the API route level — not filtered after the fact, blocked at generation. No "delve", no "robust", no "seamlessly". The model is penalised for AI-speak, which forces output that reads like a professional wrote it.
+
+### 3. System Personas
+Instead of prompting "write a tweet about X", you define *who* the AI is. Personas are saved to a database and applied automatically to every campaign. One persona setup. Consistent voice across every post, forever.
+
+### 4. Human-in-the-Loop (HITL)
+Every generated campaign includes an Edit button. Ozigi handles the 90% — extraction, structure, constraints, platform formatting. You own the 10% — the specific detail, the insider context, the judgment call only a human can make. AI as co-pilot, not replacement.
+
+### 5. Native Image Generation
+Generate platform-aware graphics directly inside the engine. Blank field = abstract background. Add text = rendered text graphic. LinkedIn posts auto-attach images via a 3-step OAuth handshake on publish.
+
+### 6. Publishing Integrations
+- **X (Twitter):** Web Intents pop open a pre-loaded tweet tab for final review before posting
+- **LinkedIn:** Direct OAuth publishing with image attachment
+- **Discord:** Paste a webhook URL in Settings — campaigns drop straight into your chosen channel
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js (App Router), React, Tailwind CSS |
+| Backend | Next.js Route Handlers, Vercel Serverless |
+| AI Engine | Google Cloud Vertex AI (Gemini 2.5 Flash) |
+| Database & Auth | Supabase (PostgreSQL) |
+| Testing | Playwright |
+
+---
+
+## Local Development
+
+Requires Node.js v18+ and `pnpm`.
+
+```bash
+# Clone the repo
+git clone https://github.com/Dumebii/OziGi.git
+cd OziGi
+
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Fill in your Supabase and Google Cloud credentials
+
+# Start the dev server
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+### Required Environment Variables
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+GOOGLE_CLOUD_PROJECT_ID=
+GOOGLE_CLOUD_CLIENT_EMAIL=
+GOOGLE_CLOUD_PRIVATE_KEY=
+```
+
+---
+
+## Architecture
+
+Curious how the Banned Lexicon works at the API level, or how the multimodal ingestion pipeline processes a PDF?
+
+→ [Read the Architecture Deep Dives at ozigi.app/docs/deep-dives](https://ozigi.app/docs/deep-dives)
+
+---
+
+## Contributing
+
+If you have ideas for new integrations (scheduling APIs, Dev.to publishing, Bluesky support), open an issue or submit a PR. The roadmap is public.
+Ozigi was vibe-coded. Vibe-coded contributions are explicitly welcome — bring your instincts, run the tests, and ship the fix. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guidelines.
+
+---
+
+## Built by
+
+**Dumebi Okolo** — Documentation Engineer & Builder  
+[X / Twitter](https://x.com/DumebiTheWriter) · [LinkedIn](https://linkedin.com/in/dumebi-okolo) · [DEV.to](https://dev.to/dumebii)

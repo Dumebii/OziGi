@@ -1,10 +1,22 @@
-export const maxDuration = 60; // ✨ Tells Vercel to wait up to 60 seconds for Vertex AI to finish!
+export const maxDuration = 60;
 import { VertexAI, SchemaType } from "@google-cloud/vertexai";
 import { NextResponse } from "next/server";
 import { buildGenerationPrompt } from "../../../lib/prompts";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import path from "path";
 
-// 1. Define the strict JSON Schema
-// This physically prevents the model from returning conversational pre-text or malformed data
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+const ratelimit = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(10, "1 h"),
+  analytics: true, 
+});
+
 const distributionSchema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -14,22 +26,10 @@ const distributionSchema = {
       items: {
         type: SchemaType.OBJECT,
         properties: {
-          day: { 
-            type: SchemaType.INTEGER, 
-            description: "The day number in the sequence (1, 2, or 3)" 
-          },
-          x: { 
-            type: SchemaType.STRING, 
-            description: "Content for X/Twitter. Must match the requested single/thread format." 
-          },
-          linkedin: { 
-            type: SchemaType.STRING, 
-            description: "Content for LinkedIn." 
-          },
-          discord: { 
-            type: SchemaType.STRING, 
-            description: "Content for Discord." 
-          }
+          day: { type: SchemaType.INTEGER },
+          x: { type: SchemaType.STRING },
+          linkedin: { type: SchemaType.STRING },
+          discord: { type: SchemaType.STRING }
         },
         required: ["day", "x", "linkedin", "discord"]
       }
@@ -40,15 +40,30 @@ const distributionSchema = {
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
+    const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
+    const { success, limit, reset, remaining } = await ratelimit.limit(`ratelimit_${ip}`);
 
+    if (!success) {
+      return NextResponse.json(
+        { error: "You have exceeded your rate limit. Please try again in an hour." },
+        { 
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+          }
+        }
+      );
+    }
+
+    const formData = await req.formData();
     const urlContext = formData.get("urlContext") as string | null;
     const textContext = formData.get("textContext") as string | null;
     const tweetFormat = formData.get("tweetFormat") as string || "single";
     const personaVoice = formData.get("personaVoice") as string || "Expert Content Strategist";
     const file = formData.get("file") as File | null;
 
-    // ✨ Generate the prompt using our clean utility function
     const textPrompt = buildGenerationPrompt({
       tweetFormat,
       personaVoice,
@@ -56,37 +71,37 @@ export async function POST(req: Request) {
       urlContext,
     });
 
-    // 2. Array of "parts" strictly required by the Vertex AI SDK
     const parts: any[] = [{ text: textPrompt }];
 
-    // Handle Image/PDF Uploads
     if (file && file.size > 0) {
       const arrayBuffer = await file.arrayBuffer();
       const base64Data = Buffer.from(arrayBuffer).toString("base64");
-
-      parts.push({
-        inlineData: {
-          data: base64Data,
-          mimeType: file.type,
-        },
-      });
+      parts.push({ inlineData: { data: base64Data, mimeType: file.type } });
     }
 
-    // 3. Initialize Enterprise Vertex AI
-    const vertex_ai = new VertexAI({
-      project: process.env.GOOGLE_CLOUD_PROJECT_ID as string,
-      location: "us-central1",
-      googleAuthOptions: {
+    // ==========================================
+    // ⚡ HYBRID AUTH (LOCAL FILE vs VERCEL ENV)
+    // ==========================================
+    let authOptions = {};
+    if (process.env.GOOGLE_PRIVATE_KEY && process.env.GOOGLE_CLIENT_EMAIL) {
+      authOptions = {
         credentials: {
-          client_email: process.env.GOOGLE_CLOUD_CLIENT_EMAIL?.replace(/"/g, ''),
-          private_key: process.env.GOOGLE_CLOUD_PRIVATE_KEY
-            ?.replace(/\\n/g, "\n")
-            ?.replace(/"/g, ""),
+          client_email: process.env.GOOGLE_CLIENT_EMAIL,
+          private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
         },
-      },
+      };
+    } else {
+      authOptions = {
+        keyFilename: path.join(process.cwd(), "gcp-service-account.json"),
+      };
+    }
+
+    const vertex_ai = new VertexAI({
+      project: "ozigi-489021", 
+      location: "us-central1",
+      googleAuthOptions: authOptions,
     });
 
-    // 4. ✨ Attach the Schema to the Model Configuration
     const model = vertex_ai.getGenerativeModel({ 
       model: "gemini-2.5-flash",
       generationConfig: {
@@ -95,17 +110,16 @@ export async function POST(req: Request) {
       }
     });
 
-    // 5. Fire the properly formatted enterprise request
     const result = await model.generateContent({
       contents: [{ role: "user", parts: parts }],
     });
 
-    const responseText =
-      result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
+    const responseText = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
     return NextResponse.json({ output: responseText });
-  } catch (error: any) {
-    console.error("Vertex AI Generate Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+  } catch (err: any) {
+    console.error("🔥 VERTEX AI CRASH:", err);
+    // Return the actual error message if it's a rate limit or a known issue
+    return NextResponse.json({ error: err.message || "Internal Server Error" }, { status: 500 });
   }
 }

@@ -6,12 +6,17 @@ export interface PromptParams {
   urlContext: string | null;
 }
 
+
+
 export const buildGenerationPrompt = ({
   tweetFormat,
   personaVoice,
   textContext,
   urlContext,
 }: PromptParams): string => {
+  const xConstraint = tweetFormat === "thread"
+    ? "STRICT RULE: Format the 'x' field as a 3-to-5 part THREAD. Number each part (1/5, 2/5) and use double line breaks between parts."
+    : "STRICT RULE: Format the 'x' field as EXACTLY ONE single, high-impact tweet. DO NOT use numbering. DO NOT create multiple parts. Maximum 280 characters.";
   let textPrompt = `
 TASK: Analyze the provided context (which may include scraped webpages, raw notes, images, or PDFs).
 Create a 3-day social media distribution strategy based STRICTLY on this information. 
