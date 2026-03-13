@@ -105,21 +105,23 @@ export async function POST(req: Request) {
       parts.push({ inlineData: { data: base64Data, mimeType: file.type } });
     }
 
-    // ==========================================
-    // ⚡ BULLETPROOF VERTEX AI INIT
-    // ==========================================
+
+    // ⚡ THE BASE64 FILE BYPASS
     let authOptions = {};
-    if (process.env.GOOGLE_PRIVATE_KEY && process.env.GOOGLE_CLIENT_EMAIL) {
-      // Pass Vercel's broken string through our reconstructor
-      const pristineKey = buildFlawlessPrivateKey(process.env.GOOGLE_PRIVATE_KEY);
+
+    if (process.env.GOOGLE_BASE64_JSON) {
+      // PROD: Decode the pristine Base64 string back into a perfect JSON object
+      const decodedJsonString = Buffer.from(process.env.GOOGLE_BASE64_JSON, 'base64').toString('utf-8');
+      const gcpCredentials = JSON.parse(decodedJsonString);
       
       authOptions = {
         credentials: {
-          client_email: process.env.GOOGLE_CLIENT_EMAIL,
-          private_key: pristineKey,
+          client_email: gcpCredentials.client_email,
+          private_key: gcpCredentials.private_key,
         },
       };
     } else {
+      // LOCAL: Fallback to the local file if the env var isn't present
       authOptions = {
         keyFilename: path.join(process.cwd(), "gcp-service-account.json"),
       };
