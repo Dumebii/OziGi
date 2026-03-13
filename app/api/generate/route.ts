@@ -5,12 +5,9 @@ import { buildGenerationPrompt } from "../../../lib/prompts";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import path from "path";
-import fs from "fs";
-import os from "os";
+import { getVercelOidcToken } from '@vercel/oidc';
+import { ExternalAccountClient } from 'google-auth-library';
 
-// ==========================================
-// 1. INITIALIZE SECURITY LAYER (UPSTASH)
-// ==========================================
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
@@ -42,9 +39,6 @@ const distributionSchema = {
   required: ["campaign"]
 };
 
-// ==========================================
-// 3. MAIN API CONTROLLER
-// ==========================================
 export async function POST(req: Request) {
   try {
     const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
@@ -86,30 +80,32 @@ export async function POST(req: Request) {
       parts.push({ inlineData: { data: base64Data, mimeType: file.type } });
     }
 
-    // ==========================================
-    // ⚡ THE VERCEL /TMP DIRECTORY BYPASS
-    // ==========================================
     let authOptions = {};
 
-    if (process.env.GCP_CREDENTIALS) {
-      // PROD: We are on Vercel. Write the env var to a physical file on Vercel's ephemeral disk.
-      const tmpKeyPath = path.join(os.tmpdir(), "gcp-key.json");
-      
-      // Write the file synchronously so it exists before Vertex AI looks for it
-      fs.writeFileSync(tmpKeyPath, process.env.GCP_CREDENTIALS, "utf8");
-      
+    if (process.env.GCP_WORKLOAD_IDENTITY_POOL_ID) {
+      const authClient = ExternalAccountClient.fromJSON({
+        type: 'external_account',
+        audience: `//iam.googleapis.com/projects/${process.env.GCP_PROJECT_NUMBER}/locations/global/workloadIdentityPools/${process.env.GCP_WORKLOAD_IDENTITY_POOL_ID}/providers/${process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID}`,
+        subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
+        token_url: 'https://sts.googleapis.com/v1/token',
+        service_account_impersonation_url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${process.env.GCP_SERVICE_ACCOUNT_EMAIL}:generateAccessToken`,
+        subject_token_supplier: {
+          getSubjectToken: async () => await getVercelOidcToken(),
+        },
+      });
+
       authOptions = {
-        keyFilename: tmpKeyPath,
+        authClient: authClient,
+        projectId: process.env.GCP_PROJECT_ID,
       };
     } else {
-      // LOCAL: Use the file sitting in your root directory
       authOptions = {
         keyFilename: path.join(process.cwd(), "gcp-service-account.json"),
       };
     }
 
     const vertex_ai = new VertexAI({
-      project: "ozigi-489021", 
+      project: process.env.GCP_PROJECT_ID || "ozigi-489021", 
       location: "us-central1",
       googleAuthOptions: authOptions,
     });
