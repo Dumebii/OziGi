@@ -11,7 +11,7 @@ export default function SettingsModal({
   session,
   onClose,
 }: SettingsModalProps) {
-  // --- Workspace State (The P0 Fix) ---
+  // --- Workspace State ---
   const [persona, setPersona] = useState("");
   const [webhook, setWebhook] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -24,6 +24,9 @@ export default function SettingsModal({
   // --- OAuth Linking State ---
   const [connections, setConnections] = useState<string[]>([]);
   const [linkLoading, setLinkLoading] = useState<string | null>(null);
+
+  // --- Deletion State ---
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (session?.user?.user_metadata) {
@@ -46,7 +49,6 @@ export default function SettingsModal({
     }
   };
 
-  // Saves the fallback default settings (Discord / Default Voice)
   const handleSaveWorkspace = async () => {
     setIsSaving(true);
     const { error } = await supabase.auth.updateUser({
@@ -57,12 +59,11 @@ export default function SettingsModal({
     else console.error("Failed to update settings:", error.message);
   };
 
-  // ✨ FIXED P1 & P2: Saves to DB, validates whitespace, uses Radio Tower instead of reload
   const handleSaveDatabasePersona = async () => {
     const cleanName = newPersonaName.trim();
     const cleanPrompt = newPersonaPrompt.trim();
 
-    if (!cleanName || !cleanPrompt) return; // Basic validation
+    if (!cleanName || !cleanPrompt) return; 
 
     setIsSavingPersona(true);
     const { error } = await supabase.from("user_personas").insert({
@@ -73,9 +74,10 @@ export default function SettingsModal({
     setIsSavingPersona(false);
 
     if (!error) {
-      // Broadcast the signal to the Dashboard to fetch the new list silently
       window.dispatchEvent(new Event("refreshPersonas"));
-      onClose(); // Close the modal gracefully
+      setNewPersonaName("");
+      setNewPersonaPrompt("");
+      onClose(); 
     } else {
       alert("Failed to save persona: " + error.message);
     }
@@ -100,9 +102,49 @@ export default function SettingsModal({
     }
   };
 
+  // ✨ NEW: Handle Account Deletion Request
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "DANGER: Are you sure? This will permanently delete your account, all connected personas, and generated campaign history. This action CANNOT be undone."
+    );
+    
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch('/api/user/delete', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Sign them out of the local client to clear browser cookies
+        await supabase.auth.signOut();
+        // Hard redirect to the homepage
+        window.location.href = '/'; 
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to delete account: ${errorData.error}`);
+        setIsDeleting(false);
+      }
+    } catch (error) {
+      console.error("Error calling deletion API:", error);
+      alert("An unexpected error occurred while trying to delete your account.");
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 sm:p-6 animate-in fade-in">
-      <div className="bg-white w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-slate-900 relative max-h-[90vh] overflow-y-auto flex flex-col">
+    // ✨ NEW: onClick handler on the backdrop to close the modal when clicking outside
+    <div 
+      className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 sm:p-6 animate-in fade-in"
+      onClick={onClose}
+    >
+      {/* ✨ NEW: onClick={(e) => e.stopPropagation()} prevents clicks *inside* the white modal box from bubbling up and triggering the close function.
+      */}
+      <div 
+        className="bg-white w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-slate-900 relative max-h-[90vh] overflow-y-auto flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={onClose}
           className="absolute top-6 right-6 text-slate-400 hover:text-red-600 font-black text-xl transition-colors"
@@ -117,7 +159,7 @@ export default function SettingsModal({
 
         <div className="space-y-8">
           
-          {/* --- ✨ RESTORED P0: WORKSPACE PREFERENCES --- */}
+          {/* --- WORKSPACE PREFERENCES --- */}
           <div className="space-y-4">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-2">
               Workspace Preferences
@@ -159,7 +201,7 @@ export default function SettingsModal({
             </button>
           </div>
 
-          {/* --- NEW DATABASE PERSONAS FORM --- */}
+          {/* --- DATABASE PERSONAS FORM --- */}
           <div className="space-y-4">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-2">
               🗣️ Create Persona
@@ -191,20 +233,18 @@ export default function SettingsModal({
             <button
               disabled={!newPersonaName.trim() || !newPersonaPrompt.trim() || isSavingPersona}
               onClick={handleSaveDatabasePersona}
-              className="w-full bg-red-700 text-white py-3 rounded-xl font-black uppercase tracking-widest hover:bg-red-800 transition-all disabled:opacity-50 disabled:bg-slate-300 text-xs shadow-lg"
+              className="w-full bg-red-700 text-white py-3 rounded-xl font-black uppercase tracking-widest hover:bg-red-800 transition-all disabled:opacity-50 disabled:bg-slate-300 text-[10px] sm:text-xs shadow-lg"
             >
-              {isSavingPersona ? "Saving..." : "Save"}
+              {isSavingPersona ? "Saving..." : "Save Persona"}
             </button>
           </div>
 
           {/* --- CONNECTED ACCOUNTS --- */}
-          {/* (Kept identical to your previous working version for X and LinkedIn) */}
           <div className="space-y-4">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-2">
               Social Connections
             </h3>
             
-            {/* LinkedIn Connection */}
             <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl bg-slate-50">
               <div className="flex items-center gap-3">
                 <span className="font-black uppercase tracking-widest text-xs">LinkedIn</span>
@@ -221,6 +261,23 @@ export default function SettingsModal({
                 </button>
               )}
             </div>
+          </div>
+
+          {/* --- ✨ NEW: DANGER ZONE (ACCOUNT DELETION) --- */}
+          <div className="space-y-4 mt-12 pt-8 border-t-2 border-red-100">
+            <h3 className="text-xs font-black uppercase tracking-widest text-red-700 pb-2">
+              Danger Zone
+            </h3>
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              Once you delete your account, there is no going back. All personas, settings, and generated content will be instantly and permanently wiped from our servers.
+            </p>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+              className="w-full bg-red-50 text-red-600 border border-red-200 py-3 rounded-xl font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all disabled:opacity-50 text-[10px] sm:text-xs"
+            >
+              {isDeleting ? "Deleting Account..." : "Delete Account"}
+            </button>
           </div>
 
         </div>
