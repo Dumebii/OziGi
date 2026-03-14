@@ -34,7 +34,22 @@ export default function Header({
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 md:px-8 py-4 pointer-events-none">
+<header className="fixed top-0 left-0 right-0 z-50 pointer-events-none flex flex-col items-center pt-5 gap-4">
+        
+        {/* CONDITIONAL RENDER: Only show the pill on the root landing page */}
+        {pathname === "/" && (
+          <Link
+            href="/dashboard"
+            className="pointer-events-auto inline-flex items-center justify-center bg-slate-900 px-5 py-1.5 text-xs sm:text-sm font-semibold text-slate-100 rounded-full shadow-md hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg transition-all group border border-slate-700/50"
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-amber-400">⚡</span> 
+              Ozigi is live — try it free today
+              <span className="group-hover:translate-x-1 transition-transform opacity-60 ml-1">&rarr;</span>
+            </span>
+          </Link>
+        )}
+        <div className="w-full px-4 md:px-8 pointer-events-none">
         <div className="max-w-7xl mx-auto flex justify-between items-center bg-white/80 backdrop-blur-xl border-2 border-slate-900 rounded-[2rem] p-3 md:p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] pointer-events-auto transition-all">
           <Link
             href="/"
@@ -119,6 +134,7 @@ export default function Header({
               </div>
             )}
           </div>
+        </div>
         </div>
       </header>
 

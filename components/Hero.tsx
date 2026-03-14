@@ -197,72 +197,83 @@ const staggerContainer: Variants = {
           </div>
         </section>
 
-        {/* --- 3. THE MOAT: CHAOS IN, STRATEGY OUT --- */}
-        <section className="py-24 px-6 bg-slate-50 border-b border-slate-200/60 relative">
-          <div className="max-w-7xl mx-auto relative z-10">
-            <motion.div 
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: false, amount: 0.1 }}
-              variants={fadeUp}
-              className="text-center mb-16"
-            >
-              <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 mb-6">
-                Chaos In. <span className="text-red-700">Strategy Out.</span>
-              </h2>
-              <p className="text-lg font-medium text-slate-500 max-w-2xl mx-auto leading-relaxed">
-                Most AI tools wrap your insights in corporate buzzwords and predictable emojis. 
-                Ozigi uses a strict editorial brief and a "Banned Lexicon" to force a pragmatic, human cadence. 
-                See the difference.
+
+        {/* Change 5: Social Proof / HITL Callout Block */}
+        <motion.section 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={fadeUp}
+          className="w-full max-w-6xl mx-auto px-6 py-16"
+        >
+          <div className="rounded-[2.5rem] border border-slate-800 bg-slate-900 p-8 md:p-14 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl">
+            <div className="max-w-2xl space-y-4">
+              <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white">
+                AI handles the 90%. <br className="hidden md:block"/>You own the 10% that matters.
+              </h3>
+              <p className="text-slate-400 font-medium text-lg leading-relaxed">
+                Every generated post has an Edit button. Add the insider detail, the specific joke, the context only you know. Publish when it&apos;s yours.
               </p>
-            </motion.div>
-
-            <motion.div 
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: false, amount: 0.1 }}
-              variants={staggerContainer}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch"
+            </div>
+            <Link 
+              href="/docs#human-in-the-loop" 
+              className="whitespace-nowrap rounded-xl bg-slate-800 px-8 py-4 text-sm font-bold text-white shadow-sm hover:bg-slate-700 ring-1 ring-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
-              {/* Standard AI Card */}
-              <motion.div variants={fadeUp} className="bg-white border-2 border-slate-200 rounded-[2.5rem] p-8 md:p-10 flex flex-col hover:border-slate-300 transition-colors shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="text-2xl">🤖</span>
-                  <h3 className="text-xl font-black uppercase tracking-widest text-slate-400">Standard AI Output</h3>
-                </div>
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex-1 shadow-inner">
-                  <p className="text-slate-500 font-medium leading-relaxed">
-                    🚀 <span className="font-bold">Navigating the complex landscape</span> of Cloud infrastructure! 
-                    Today I <span className="font-bold">delved</span> into a <span className="font-bold">robust</span> Supabase auth bug. 
-                    It is a <span className="font-bold">testament</span> to how <span className="font-bold">crucial</span> OAuth handshakes are in the <span className="font-bold">realm</span> of web dev. 
-                    Let's <span className="font-bold">unlock</span> seamless integration together! 👇 #TechLife #Coding #WebDev
-                  </p>
-                </div>
-                <div className="mt-6 flex justify-center">
-                   <span className="text-xs font-black uppercase tracking-widest text-red-700 bg-red-50 px-4 py-2 rounded-lg border border-red-100">Fails Anti-AI Detection</span>
-                </div>
-              </motion.div>
-
-              {/* Ozigi Engine Card */}
-              <motion.div variants={fadeUp} className="bg-slate-900 border-2 border-slate-900 rounded-[2.5rem] p-8 md:p-10 flex flex-col shadow-2xl relative overflow-hidden group">
-                <div className="absolute -top-20 -right-20 w-64 h-64 bg-red-700/20 blur-3xl rounded-full pointer-events-none group-hover:bg-red-700/30 transition-colors duration-700"></div>
-                
-                <div className="flex items-center gap-3 mb-6 relative z-10">
-                  <span className="text-2xl">⚡</span>
-                  <h3 className="text-xl font-black uppercase tracking-widest text-white">The Ozigi Engine</h3>
-                </div>
-                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 flex-1 shadow-inner relative z-10">
-                  <p className="text-slate-300 font-medium leading-relaxed">
-                    Stop debugging your Auth in a silo. I just lost 4 hours to a single missing domain in Google Cloud. <br/><br/>
-                    The OAuth handshake doesn't care about your feelings. Check your authorized domains first. Save the headache.
-                  </p>
-                </div>
-                <div className="mt-6 flex justify-center relative z-10">
-                   <span className="text-xs font-black uppercase tracking-widest text-green-400 bg-green-400/10 px-4 py-2 rounded-lg border border-green-400/20">Passes as Human 100%</span>
-                </div>
-              </motion.div>
-            </motion.div>
+              See how the Edit workflow works &rarr;
+            </Link>
           </div>
+        </motion.section>
+
+        {/* --- 3. THE MOAT: CHAOS IN, STRATEGY OUT --- */}
+        <section className="w-full max-w-6xl mx-auto py-24 px-6">
+          <motion.div 
+            initial="hidden" 
+            whileInView="visible" 
+            viewport={{ once: true }} 
+            variants={staggerContainer}
+            className="flex flex-col items-center"
+          >
+            <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black italic uppercase tracking-tighter text-slate-900 mb-16">
+              Chaos In. Strategy Out.
+            </motion.h2>
+            
+            <div className="grid md:grid-cols-2 gap-8 w-full items-stretch">
+              {/* Left: Standard AI Output */}
+              <motion.div variants={fadeUp} className="rounded-[2.5rem] border border-slate-200 bg-white p-10 flex flex-col items-center shadow-sm">
+                <div className="text-xl font-black italic uppercase tracking-tighter text-slate-400 mb-8">🤖 Standard AI Output</div>
+                
+                <div className="w-full h-full min-h-[14rem] bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 italic mb-8 border border-dashed border-slate-200 p-6 text-center text-sm font-medium leading-relaxed">
+                  "Here are 5 key takeaways from this PDF about Scaling automation. Number 1 will shock you! 🚀 In conclusion, AI is changing the landscape of development for everyone..."
+                </div>
+
+                <div className="rounded-full bg-red-50 px-4 py-1.5 text-sm font-bold text-red-600 ring-1 ring-inset ring-red-100">
+                  Sounds like a template
+                </div>
+              </motion.div>
+              
+              {/* Right: The Ozigi Engine (WITH SIDE-BY-SIDE PROOF) */}
+              <motion.div variants={fadeUp} className="rounded-[2.5rem] border border-indigo-100 bg-indigo-50/50 p-10 flex flex-col items-center shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full"></div>
+                <div className="text-xl font-black italic uppercase tracking-tighter text-indigo-600 mb-8">⚡ The Ozigi Engine</div>
+                
+                {/* Side-by-Side Proof Container */}
+                <div className="w-full h-auto min-h-[14rem] bg-white rounded-2xl flex flex-col md:flex-row items-stretch text-slate-700 mb-8 border border-indigo-100 shadow-sm overflow-hidden text-xs sm:text-sm font-medium">
+                  {/* Quality description column */}
+                  <div className="flex-1 p-5 border-b md:border-b-0 md:border-r border-indigo-50 bg-indigo-50/30 flex items-center justify-center text-center italic text-slate-500">
+                    [ Well-structured thread with your actual technical insights, pacing, and tone. No emojis or robotic conclusions. ]
+                  </div>
+                  {/* Real Post Proof column */}
+                  <div className="flex-1 p-5 flex items-center justify-start bg-white text-slate-900 leading-relaxed">
+                    <span>Scaling automation requires treating test code like production code. Poor architecture, like ignoring POM or SOLID, sinks suites faster than flaky environments. Data management is non-negotiable.</span>
+                  </div>
+                </div>
+
+                <div className="rounded-full bg-emerald-50 px-4 py-1.5 text-sm font-bold text-emerald-600 ring-1 ring-inset ring-emerald-100">
+                  Sounds like a person
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
         </section>
 
         {/* --- 4. VERSATILE USE CASES --- */}
@@ -320,6 +331,73 @@ const staggerContainer: Variants = {
                 </p>
               </motion.div>
             </motion.div>
+          </div>
+        </section>
+        <section id="pricing" className="w-full max-w-5xl mx-auto pt-12 pb-32 px-6 scroll-mt-32">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-black italic uppercase tracking-tighter text-slate-900">Pricing</h2>
+            <p className="mt-4 text-lg font-medium text-slate-500">Free to start. No credit card required.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch text-left">
+            {/* Free Tier */}
+            <div className="rounded-[2.5rem] border border-slate-200 bg-white p-10 flex flex-col shadow-sm hover:shadow-xl transition-shadow">
+              <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 mb-2">Free</h3>
+              <p className="text-slate-500 font-medium mb-8 pb-8 border-b border-slate-100">Perfect for getting started.</p>
+              
+              <ul className="space-y-5 text-slate-600 font-medium mb-10 flex-grow">
+                <li className="flex items-center gap-3">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span> 
+                  5 campaigns/month
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span> 
+                  1 saved persona
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span> 
+                  X + Discord publishing
+                </li>
+              </ul>
+              
+              <Link href="/dashboard" className="w-full rounded-xl bg-slate-100 px-4 py-4 text-center text-sm font-bold text-slate-900 hover:bg-slate-200 transition-colors">
+                Get Started
+              </Link>
+            </div>
+
+            {/* Pro Tier */}
+            <div className="rounded-[2.5rem] border border-indigo-200 bg-indigo-50 p-10 relative overflow-hidden flex flex-col shadow-md">
+              <div className="flex items-baseline gap-3 mb-2">
+                <h3 className="text-3xl font-black italic uppercase tracking-tighter text-indigo-900">Pro</h3>
+                <span className="rounded-full bg-indigo-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                  Coming soon
+                </span>
+              </div>
+              <p className="text-slate-600 font-medium mb-8 pb-8 border-b border-indigo-100/50">For serious creators scaling up.</p>
+              
+              <ul className="space-y-5 text-slate-700 font-medium mb-10 flex-grow">
+                <li className="flex items-center gap-3">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-200 text-indigo-700 text-xs">✓</span> 
+                  Unlimited campaigns
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-200 text-indigo-700 text-xs">✓</span> 
+                  Unlimited personas
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-200 text-indigo-700 text-xs">✓</span> 
+                  LinkedIn OAuth + Image Gen
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-200 text-indigo-700 text-xs">✓</span> 
+                  Priority model access
+                </li>
+              </ul>
+              
+              <button disabled className="w-full rounded-xl bg-indigo-200/50 px-4 py-4 text-center text-sm font-bold text-indigo-400 cursor-not-allowed">
+                Join the Waitlist
+              </button>
+            </div>
           </div>
         </section>
       </main>
