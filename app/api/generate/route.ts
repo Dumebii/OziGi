@@ -7,6 +7,8 @@ import { Redis } from "@upstash/redis";
 import path from "path";
 import { getVercelOidcToken } from '@vercel/oidc';
 import { ExternalAccountClient } from 'google-auth-library';
+// ✨ IMPORT POSTHOG
+import { PostHog } from 'posthog-node';
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -15,7 +17,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(30, "1 h"), // ⚡ Increased to 30 per hour
+  limiter: Ratelimit.slidingWindow(30, "1 h"),
   analytics: true, 
 });
 
@@ -40,6 +42,12 @@ const distributionSchema = {
 };
 
 export async function POST(req: Request) {
+  // ✨ START STOPWATCH & INITIALIZE POSTHOG
+  const startTime = Date.now();
+  const posthog = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+  });
+
   try {
     const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
     const { success } = await ratelimit.limit(`ratelimit_${ip}`);
@@ -59,7 +67,6 @@ export async function POST(req: Request) {
     const personaVoice = formData.get("personaVoice") as string || "Expert Content Strategist";
     const file = formData.get("file") as File | null;
 
-    // ✨ SECURITY GATE 2: Prompt Injection Check
     if (containsPromptInjection(textContext)) {
       console.warn(`[SECURITY] Prompt injection attempt intercepted from IP: ${ip}`);
       return NextResponse.json(
@@ -133,9 +140,37 @@ export async function POST(req: Request) {
     });
 
     const responseText = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    // ✨ LOG SUCCESS TO POSTHOG
+    const durationMs = Date.now() - startTime;
+    posthog.capture({
+      distinctId: ip, // Group by IP for unauthenticated tracking
+      event: 'vertex_generation_completed',
+      properties: {
+        durationMs,
+        personaVoice,
+        hasFile: file !== null,
+        status: 'success'
+      }
+    });
+    await posthog.shutdown(); // Ensure event fires before lambda spins down
+
     return NextResponse.json({ output: responseText });
     
   } catch (error: any) {
+    // ✨ LOG FAILURE TO POSTHOG
+    const durationMs = Date.now() - startTime;
+    posthog.capture({
+      distinctId: req.headers.get("x-forwarded-for") ?? "127.0.0.1",
+      event: 'vertex_generation_failed',
+      properties: {
+        durationMs,
+        errorMessage: error.message,
+        status: 'error'
+      }
+    });
+    await posthog.shutdown();
+
     console.error("Vertex AI Generate Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
