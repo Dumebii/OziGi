@@ -34,107 +34,93 @@ export default function Header({
 
   return (
     <>
-<header className="fixed top-0 left-0 right-0 z-50 pointer-events-none flex flex-col items-center pt-5 gap-4">
-        
-        {/* CONDITIONAL RENDER: Only show the pill on the root landing page */}
-        {pathname === "/" && (
-          <Link
-            href="/dashboard"
-            className="pointer-events-auto inline-flex items-center justify-center bg-slate-900 px-5 py-1.5 text-xs sm:text-sm font-semibold text-slate-100 rounded-full shadow-md hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg transition-all group border border-slate-700/50"
-          >
-            <span className="flex items-center gap-2">
-              <span className="text-amber-400">⚡</span> 
-              Ozigi is live — try it free today
-              <span className="group-hover:translate-x-1 transition-transform opacity-60 ml-1">&rarr;</span>
-            </span>
-          </Link>
-        )}
-        <div className="w-full px-4 md:px-8 pointer-events-none">
-        <div className="max-w-7xl mx-auto flex justify-between items-center bg-white/80 backdrop-blur-xl border-2 border-slate-900 rounded-[2rem] p-3 md:p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] pointer-events-auto transition-all">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 group cursor-pointer"
+            className="flex items-center gap-3 group"
           >
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-red-700 rounded-xl md:rounded-2xl rotate-3 group-hover:rotate-12 transition-all flex items-center justify-center shadow-lg shadow-red-900/20">
-              <img
-                src="/icon.svg"
-                alt="Ozigi Logo"
-                className="w-8 h-8 md:w-10 md:h-10 object-contain transition-transform group-hover:scale-105"
-              />
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
+              O
             </div>
-            <span className="font-black italic uppercase tracking-tighter text-xl md:text-2xl hidden sm:block text-slate-900">
-              Ozigi
-            </span>
+            <span className="text-xl font-bold text-foreground hidden sm:block">Ozigi</span>
           </Link>
 
-          <div className="flex items-center gap-2 md:gap-4">
-                        <nav className="hidden md:flex items-center gap-4 mr-2 border-r border-slate-200 pr-4">
-              <Link 
-                href="/docs" 
-                className={`text-[10px] md:text-xs font-black uppercase tracking-widest transition-colors ${pathname === '/docs' ? 'text-red-700' : 'text-slate-500 hover:text-slate-900'}`}
-              >
-                Docs
-              </Link>
-              <Link 
-                href="/architecture" 
-                className={`text-[10px] md:text-xs font-black uppercase tracking-widest transition-colors ${pathname === '/architecture' ? 'text-red-700' : 'text-slate-500 hover:text-slate-900'}`}
-              >
-                Architecture
-              </Link>
-            </nav>
-            {pathname === "/" ? (
-              <Link
-                href="/dashboard"
-                className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-500 hover:text-red-700 transition-colors px-2 md:px-4"
-              >
-                Try It Now
-              </Link>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-8">
+            <Link
+              href="/docs"
+              className={`text-sm font-medium transition-colors ${pathname === '/docs' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Docs
+            </Link>
+            <Link
+              href="/architecture"
+              className={`text-sm font-medium transition-colors ${pathname === '/architecture' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Architecture
+            </Link>
+            <Link
+              href="/pricing"
+              className={`text-sm font-medium transition-colors ${pathname === '/pricing' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Pricing
+            </Link>
+          </nav>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-4">
+            {!session ? (
+              <>
+                <button
+                  onClick={onSignIn}
+                  className="hidden sm:block px-6 py-2 text-foreground hover:text-primary transition-colors font-medium text-sm"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={onSignIn}
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-accent transition-all text-sm"
+                >
+                  Get Started
+                </button>
+              </>
             ) : (
-              session && (
+              <div className="flex items-center gap-3">
                 <button
                   onClick={onOpenHistory}
-                  className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-500 hover:text-red-700 transition-colors px-2 md:px-4 hidden sm:block"
+                  className="hidden sm:block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium text-sm"
                 >
                   History
                 </button>
-              )
-            )}
-
-            {!session ? (
-              <button
-                onClick={onSignIn}
-                className="bg-red-700 text-white px-5 md:px-8 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-red-800 transition-all shadow-lg active:scale-95 shrink-0"
-              >
-                Sign In
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 md:gap-3 bg-slate-100 p-1 md:p-1.5 rounded-[1.5rem] border border-slate-200">
-                <button
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-300 overflow-hidden border-2 border-white hover:border-red-400 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shrink-0"
-                >
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white font-bold text-xs">
-                      {session.user.email?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </button>
-                <button
-                  onClick={signOut}
-                  className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 px-3 md:px-4 pr-4 md:pr-5 transition-colors hidden sm:block"
-                >
-                  Log Out
-                </button>
+                <div className="flex items-center gap-2 bg-secondary p-1.5 rounded-full border border-border">
+                  <button
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent overflow-hidden border-2 border-background hover:border-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background shrink-0"
+                  >
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-primary flex items-center justify-center text-white font-bold text-xs">
+                        {session.user.email?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </button>
+                  <button
+                    onClick={signOut}
+                    className="text-xs font-semibold text-muted-foreground hover:text-foreground px-3 transition-colors hidden sm:block"
+                  >
+                    Log Out
+                  </button>
+                </div>
               </div>
             )}
           </div>
-        </div>
         </div>
       </header>
 
