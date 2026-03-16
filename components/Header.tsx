@@ -82,12 +82,13 @@ export default function Header({
                 Architecture
               </Link>
             </nav>
+
             {pathname === "/" ? (
               <Link
-                href="/dashboard"
+                href="/demo"
                 className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-500 hover:text-red-700 transition-colors px-2 md:px-4"
               >
-                Try It Now
+                Live Demo
               </Link>
             ) : (
               session && (
@@ -99,7 +100,6 @@ export default function Header({
                 </button>
               )
             )}
-
             {!session ? (
               <button
                 onClick={onSignIn}

@@ -199,16 +199,50 @@ export default function Distillery({
             )}
           </div>
         )}
+{/* 🔥 Platform selector – always visible */}
+<div className="mt-6">
+  <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 block">
+    Target Platforms (click to exclude)
+  </label>
+  <div className="flex gap-2 flex-wrap">
+    {["x", "linkedin", "discord"].map((platform) => (
+      <button
+        key={platform}
+        onClick={() => togglePlatform(platform)}
+        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+          inputs.platforms.includes(platform)
+            ? "bg-slate-900 text-white"
+            : "bg-white text-slate-400 border border-slate-200"
+        }`}
+      >
+        {platform === "x" ? "X" : platform.charAt(0).toUpperCase() + platform.slice(1)}
+      </button>
+    ))}
 
+    {/* Disabled Email button (pro feature) */}
+    <button
+      disabled
+      className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest bg-white text-slate-300 border border-slate-200 cursor-not-allowed relative group"
+    >
+      Email
+      <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none">
+        included in Pro
+      </span>
+    </button>
+  </div>
+  <p className="text-[8px] text-slate-400 mt-2">
+    Selected platforms will appear in the distribution grid. Uncheck any you don't need.
+  </p>
+</div>
         {/* Progressive disclosure toggle */}
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full mt-6 py-3 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-200"
-        >
-          {showAdvanced
-            ? "Hide Advanced Options ⬆"
-            : "⚙️ Advanced Options (Platforms, Personas, Formats) ⬇"}
-        </button>
+<button
+  onClick={() => setShowAdvanced(!showAdvanced)}
+  className="w-full mt-6 py-3 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-200"
+>
+  {showAdvanced
+    ? "Hide Advanced Options ⬆"
+    : "⚙️ Advanced Options (Personas, Directives, Format) ⬇"}
+</button>
 
         {/* Advanced options panel */}
         {showAdvanced && (

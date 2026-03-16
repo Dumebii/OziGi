@@ -5,8 +5,9 @@ import Distillery from "../../components/ContextEngine";
 import DistributionGrid from "../../components/DistributionGrid";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import AuthModal from "../../components/AuthModal";
 
-// ✨ THE "HERO" PAYLOAD: A pre-calculated, stunning response to wow cold traffic
+// ✨ THE "HERO" PAYLOAD (unchanged)
 const simulatedCampaign = [
   {
     day: 1,
@@ -31,13 +32,17 @@ const simulatedCampaign = [
 export default function DemoSandbox() {
   const [loading, setLoading] = useState(false);
   const [campaign, setCampaign] = useState<any[]>([]);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const campaignRef = useRef<HTMLDivElement>(null);
 
+  // ✅ Updated to match Distillery's expected input shape
   const [inputs, setInputs] = useState({
     url: "",
     text: "",
-    file: null,
-    tweetFormat: "single",
+    files: [],                      // must be an array
+    platforms: ["x", "linkedin", "discord"], // default all platforms
+    tweetFormat: "single" as const,
+    additionalInfo: "",
     personaId: "default",
   });
 
@@ -45,24 +50,23 @@ export default function DemoSandbox() {
     setLoading(true);
     setCampaign([]);
 
-    // Simulate a 10-second wait so the beautiful progress bar can run
+    // Simulate a 4-second wait
     setTimeout(() => {
       setCampaign(simulatedCampaign);
       setLoading(false);
       
-      // Smooth scroll to the results
       setTimeout(() => {
         campaignRef.current?.scrollIntoView({
           behavior: "smooth",
           block: "start",
         });
       }, 100);
-    }, 10000); 
+    }, 4000);
   };
 
   return (
     <div className="bg-[#fafafa] font-sans text-slate-900 min-h-screen flex flex-col">
-      <Header session={null} onSignIn={() => {}} onOpenHistory={() => {}} />
+      <Header session={null} onSignIn={() => setIsAuthModalOpen(true)} onOpenHistory={() => {}} />
 
       <main className="pt-28 md:pt-32 pb-24 flex-1">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 w-full">
@@ -83,10 +87,9 @@ export default function DemoSandbox() {
             </p>
           </div>
 
-          {/* Reusing your exact ContextEngine UI, but passing the simulated generator */}
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
             <Distillery
-              session={null} // Forces the locked state for advanced features
+              session={null}
               userPersonas={[]}
               inputs={inputs}
               setInputs={setInputs}
@@ -95,24 +98,34 @@ export default function DemoSandbox() {
             />
           </div>
 
-          {/* Render the resulting grid exactly like the real dashboard */}
           {campaign.length > 0 && !loading && (
             <div className="mt-16 scroll-mt-32 animate-in fade-in slide-in-from-bottom-8 duration-700" ref={campaignRef}>
               <div className="mb-8 p-6 bg-slate-900 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
                 <div>
                   <h3 className="text-white font-black uppercase tracking-widest text-sm mb-1">Wow. That was fast.</h3>
-                  <p className="text-slate-400 text-xs font-medium">Create a free account to unlock full content generation, custom persona, direct social integrations and full history storage.</p>
+                  <p className="text-slate-400 text-xs font-medium">
+                    Create a free account to unlock full content generation, custom personas, direct social integrations and full history storage.
+                  </p>
                 </div>
-                <Link href="/" className="px-6 py-3 bg-white text-slate-900 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-slate-100 transition-colors whitespace-nowrap">
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="px-6 py-3 bg-white text-slate-900 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-slate-100 transition-colors whitespace-nowrap"
+                >
                   Sign Up Free
-                </Link>
+                </button>
               </div>
-              <DistributionGrid campaign={campaign} session={null} />
+              {/* ✅ Pass required selectedPlatforms prop */}
+              <DistributionGrid
+                campaign={campaign}
+                session={null}
+                selectedPlatforms={inputs.platforms}
+              />
             </div>
           )}
         </div>
       </main>
 
+      {isAuthModalOpen && <AuthModal onClose={() => setIsAuthModalOpen(false)} />}
       <Footer />
     </div>
   );

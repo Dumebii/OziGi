@@ -102,8 +102,14 @@ const staggerContainer: Variants = {
             </motion.div>
 
             <motion.div variants={fadeUp}>
+              {/* Bullet points */}
+              <div className="flex flex-wrap justify-center gap-4 mb-4 text-sm font-medium text-slate-700">
+                <span className="flex items-center gap-1">✅ No prompt engineering – just drop raw notes</span>
+                <span className="flex items-center gap-1">✅ Generates X, LinkedIn, Discord drafts in your voice</span>
+                <span className="flex items-center gap-1">✅ Works with URLs, PDFs, images, and messy text</span>
+              </div>
               <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-600 font-medium leading-relaxed mb-6">
-                Staring at a blinking cursor, trying to figure out what to post? Stop fighting with generic AI tools. Feed Ozigi your raw notes, PDFs, or web links, and let it generate structured, multi-platform content in your OWN voice. No prompt engineering required.
+                Stop fighting with generic AI tools. Feed Ozigi your raw material and get structured, multi‑platform content – without the AI‑speak.
               </p>
             </motion.div>
 
@@ -112,24 +118,24 @@ const staggerContainer: Variants = {
                 href="/demo"
                 className="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:-translate-y-1 active:translate-y-0 text-center"
               >
-                See a Live Example
+                Try the Engine Free
               </Link>
               <button
                 onClick={() => setIsAuthModalOpen(true)}
                 className="w-full sm:w-auto px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-50 transition-all shadow-sm hover:shadow-md hover:-translate-y-1 active:translate-y-0"
               >
-                Sign In to Build
+                Sign Up – It’s Free
               </button>
             </motion.div>
 
-            {/* 🔥 UPDATED: Pulled up significantly by reducing mt-12 to mt-8 */}
-            <motion.div variants={fadeUp} className="mt-8 flex justify-center">
-               <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md py-3 px-6 rounded-full border border-slate-200 shadow-sm">
+            {/* 🔥 Social proof - made more prominent */}
+            <motion.div variants={fadeUp} className="mt-10 flex justify-center">
+               <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md py-4 px-8 rounded-full border border-slate-200 shadow-lg">
                    <div className="flex -space-x-3">
                       <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm"></div>
                       <div className="w-10 h-10 rounded-full bg-slate-300 border-2 border-white shadow-sm"></div>
                       <div className="w-10 h-10 rounded-full bg-slate-400 border-2 border-white shadow-sm"></div>
-                      <div className="w-10 h-10 rounded-full bg-slate-900 border-2 border-white flex items-center justify-center text-[10px] text-white font-black tracking-tighter shadow-sm">140+</div>
+                      <div className="w-10 h-10 rounded-full bg-slate-900 border-2 border-white flex items-center justify-center text-xs text-white font-black tracking-tighter shadow-sm">140+</div>
                    </div>
                    <div className="text-left flex flex-col justify-center">
                        <p className="text-sm font-black text-slate-900 tracking-tight leading-none mb-1">140+ Campaigns</p>
@@ -140,6 +146,7 @@ const staggerContainer: Variants = {
 
           </div>
         </motion.section>
+
         
         {/* --- 2. HOW IT WORKS --- */}
         <section id="how-it-works" className="py-16 md:py-24 bg-white border-b border-slate-200/60 relative">
