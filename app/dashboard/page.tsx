@@ -19,13 +19,15 @@ export default function Dashboard() {
   const [inputs, setInputs] = useState<{
     url: string;
     text: string;
-    file: File | null;
+    files: File[];        // 🚀 1. Blueprint updated to array
+    platforms: string[];  // 🚀 2. Blueprint updated for platforms
     tweetFormat: "single" | "thread";
     personaId: string; 
   }>({
     url: "",
     text: "",
-    file: null,
+    files: [],            // 🚀 3. Initialized as an actual empty array
+    platforms: ["x", "linkedin", "discord"],
     tweetFormat: "single",
     personaId: "default", 
   });
@@ -127,17 +129,18 @@ export default function Dashboard() {
     if (data) setPersonas(data);
   };
 
-  const restoreCampaign = (record: any) => {
-    setInputs({
-      url: record.source_url || "",
-      text: record.source_notes || "",
-      file: null,
-      tweetFormat: "single",
-      personaId: "default",
-    });
-    setCampaign(record.generated_content);
-    setIsHistoryOpen(false);
-  };
+const restoreCampaign = (record: any) => {
+  setInputs({
+    url: record.source_url || "",
+    text: record.source_notes || "",
+    files: [], // 🚀 Reset to an empty array instead of file: null
+    platforms: ["x", "linkedin", "discord"], // 🚀 Add default platforms
+    tweetFormat: "single",
+    personaId: "default",
+  });
+  setCampaign(record.generated_content);
+  setIsHistoryOpen(false);
+};
 
   // ⚡ THE UPDATED HANDLE GENERATE FUNCTION
   const handleGenerate = async () => {
@@ -149,7 +152,9 @@ export default function Dashboard() {
       const formData = new FormData();
       if (inputs.url) formData.append("urlContext", inputs.url);
       if (inputs.text) formData.append("textContext", inputs.text);
-      if (inputs.file) formData.append("file", inputs.file);
+      inputs.files.forEach((file) => {
+  formData.append("files", file); // Note: we are sending it as "files" now
+});
       formData.append("tweetFormat", inputs.tweetFormat);
 
       let selectedVoice = "Expert Social Media Copywriter who adapts perfectly to the provided context";
@@ -322,6 +327,7 @@ export default function Dashboard() {
               <div className="scroll-mt-32" ref={campaignRef}>
                 <DistributionGrid
                   campaign={campaign}
+                  selectedPlatforms={inputs.platforms}
                   session={session}
                   discordWebhook={session?.user?.user_metadata?.discord_webhook ?? ""}
                 />              

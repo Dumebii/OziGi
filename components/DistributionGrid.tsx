@@ -112,7 +112,6 @@ function SocialCard({
   };
 
   return (
-    // 🔥 We keep fadeUp here. It will be triggered by the direct parent grid.
     <motion.div variants={fadeUp} className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm flex flex-col p-5 hover:border-slate-300 hover:shadow-md transition-all">
       <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
         <span className="text-xs font-black uppercase tracking-widest text-slate-900">
@@ -211,13 +210,15 @@ function SocialCard({
   );
 }
 
-// 3. Main Grid Component
+// 3. Main Grid Component – now accepts selectedPlatforms
 export default function DistributionGrid({
   campaign,
   session,
+  selectedPlatforms,               // 🚀 new prop
 }: {
   campaign: CampaignDay[];
   session: any;
+  selectedPlatforms: string[];     // 🚀 e.g. ['x', 'linkedin']
 }) {
   const [xStatuses, setXStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
   const [discordStatuses, setDiscordStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
@@ -276,12 +277,12 @@ export default function DistributionGrid({
     }
   };
 
-  const hasX = campaign.some((d) => d.x);
-  const hasLinkedIn = campaign.some((d) => d.linkedin);
-  const hasDiscord = campaign.some((d) => d.discord);
+  // 🚀 Only render rows that the user selected AND for which we have data
+  const hasX = campaign.some((d) => d.x) && selectedPlatforms.includes('x');
+  const hasLinkedIn = campaign.some((d) => d.linkedin) && selectedPlatforms.includes('linkedin');
+  const hasDiscord = campaign.some((d) => d.discord) && selectedPlatforms.includes('discord');
 
   return (
-    // Changed the parent to a standard div to prevent context breakages
     <div className="space-y-12">
       
       {/* X ROW */}
@@ -299,7 +300,6 @@ export default function DistributionGrid({
             </h3>
           </motion.div>
           
-          {/* 🔥 This is the direct orchestrator. It passes the signal directly to the SocialCards */}
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start"
             variants={staggerContainer}

@@ -9,7 +9,8 @@ interface DistilleryProps {
   inputs: {
     url: string;
     text: string;
-    file?: File | null;
+    files: File[];               // 🚀 array of files
+    platforms: string[];          // 🚀 selected platforms (should default to ['x','linkedin','discord'])
     tweetFormat: "single" | "thread";
     additionalInfo?: string;
     personaId?: string;
@@ -31,7 +32,7 @@ export default function Distillery({
   loading,
 }: DistilleryProps) {
   const [activeTab, setActiveTab] = useState<Tab>("link");
-  const [showAdvanced, setShowAdvanced] = useState(false); // ✨ NEW: Controls progressive disclosure
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handlePersonaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -40,6 +41,29 @@ export default function Distillery({
       setInputs({ ...inputs, personaId: "default" });
     } else {
       setInputs({ ...inputs, personaId: value });
+    }
+  };
+
+  // multi‑file handling
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setInputs({ ...inputs, files: [...inputs.files, ...newFiles] });
+    }
+  };
+
+  const removeFile = (index: number) => {
+    const updatedFiles = inputs.files.filter((_, i) => i !== index);
+    setInputs({ ...inputs, files: updatedFiles });
+  };
+
+  // platform toggle: remove if present, add if absent
+  const togglePlatform = (platform: string) => {
+    const active = inputs.platforms.includes(platform);
+    if (active) {
+      setInputs({ ...inputs, platforms: inputs.platforms.filter(p => p !== platform) });
+    } else {
+      setInputs({ ...inputs, platforms: [...inputs.platforms, platform] });
     }
   };
 
@@ -85,7 +109,6 @@ export default function Distillery({
               />
             </div>
 
-            {/* ✨ Cleaned up Quick Examples */}
             {!inputs.url && (
               <div className="flex flex-wrap items-center gap-3 mt-1 px-2 text-[10px] font-black uppercase tracking-widest">
                 <span className="text-slate-400">Examples:</span>
@@ -129,48 +152,105 @@ export default function Distillery({
           </div>
         )}
 
-        {/* 📎 FILE TAB */}
+        {/* 📎 FILE TAB – multiple files */}
         {activeTab === "file" && (
-          <div className="flex flex-col items-center justify-center bg-slate-50 rounded-2xl p-8 border-2 border-dashed border-slate-200 group hover:border-red-500/50 transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-2">
-            <span className="text-3xl mb-3">📁</span>
-            <p className="text-sm font-bold text-slate-900 mb-1">
-              Upload PDF or Image
-            </p>
-            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
-              Support for PDFs, PNGs, and JPEGs
-            </p>
-            <input
-              type="file"
-              className="hidden"
-              id="file-upload"
-              accept=".pdf,image/*"
-              onChange={(e) =>
-                setInputs({ ...inputs, file: e.target.files?.[0] })
-              }
-            />
-            <label
-              htmlFor="file-upload"
-              className="mt-4 px-6 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 cursor-pointer"
-            >
-              {inputs.file ? inputs.file.name : "Select File"}
-            </label>
+          <div className="flex flex-col animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex flex-col items-center justify-center bg-slate-50 rounded-2xl p-8 border-2 border-dashed border-slate-200 group hover:border-red-500/50 transition-all cursor-pointer">
+              <span className="text-3xl mb-3">📁</span>
+              <p className="text-sm font-bold text-slate-900 mb-1">
+                Upload Reference Datasets
+              </p>
+              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
+                Support for PDFs, TXTs, CSVs, Images
+              </p>
+              <input
+                type="file"
+                className="hidden"
+                id="file-upload"
+                multiple
+                accept=".pdf,.txt,.csv,image/*"
+                onChange={handleFileChange}
+              />
+              <label
+                htmlFor="file-upload"
+                className="mt-4 px-6 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 cursor-pointer"
+              >
+                Add Files
+              </label>
+            </div>
+
+            {inputs.files.length > 0 && (
+              <ul className="mt-4 space-y-2">
+                {inputs.files.map((file, idx) => (
+                  <li
+                    key={idx}
+                    className="flex justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700"
+                  >
+                    <span className="truncate">{file.name}</span>
+                    <button
+                      onClick={() => removeFile(idx)}
+                      className="text-red-500 hover:text-red-700 font-bold ml-4"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
-        {/* ✨ The Progressive Disclosure Toggle */}
+        {/* Progressive disclosure toggle */}
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="w-full mt-6 py-3 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-200"
         >
           {showAdvanced
             ? "Hide Advanced Options ⬆"
-            : "⚙️ Advanced Options (Personas, Formats) ⬇"}
+            : "⚙️ Advanced Options (Platforms, Personas, Formats) ⬇"}
         </button>
 
-        {/* ✨ The Hidden Engine Room */}
+        {/* Advanced options panel */}
         {showAdvanced && (
           <div className="mt-4 p-5 bg-slate-50 rounded-[1.5rem] border border-slate-200 animate-in fade-in slide-in-from-top-2 flex flex-col gap-6">
-            {/* Persona Selector */}
+            
+            {/* 🚀 Platform selector – all selected by default (parent must provide that) */}
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 block">
+                Target Platforms (click to exclude)
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                {["x", "linkedin", "discord"].map((platform) => (
+                  <button
+                    key={platform}
+                    onClick={() => togglePlatform(platform)}
+                    className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                      inputs.platforms.includes(platform)
+                        ? "bg-slate-900 text-white"      // selected → included
+                        : "bg-white text-slate-400 border border-slate-200"
+                    }`}
+                  >
+                    {platform === "x" ? "X" : platform.charAt(0).toUpperCase() + platform.slice(1)}
+                  </button>
+                ))}
+
+                {/* 🚀 Disabled Email button (pro feature) */}
+                <button
+                  disabled
+                  className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest bg-white text-slate-300 border border-slate-200 cursor-not-allowed relative group"
+                >
+                  Email
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none">
+                    included in Pro
+                  </span>
+                </button>
+              </div>
+              <p className="text-[8px] text-slate-400 mt-2">
+                Selected platforms will appear in the distribution grid. Uncheck any you don't need.
+              </p>
+            </div>
+
+            {/* Persona selector (unchanged) */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-1">
@@ -185,7 +265,6 @@ export default function Distillery({
                   </span>
                 </div>
               ) : (
-                /* ✨ FIXED P1 & P2: Safe fallback state and better UX affordances */
                 (() => {
                   const isValidPersona =
                     inputs.personaId === "default" ||
@@ -219,7 +298,7 @@ export default function Distillery({
               )}
             </div>
 
-            {/* Directives */}
+            {/* Directives (unchanged) */}
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 flex items-center gap-2">
                 Campaign Directives
@@ -235,7 +314,7 @@ export default function Distillery({
               />
             </div>
 
-            {/* X Format Toggle */}
+            {/* X Format Toggle (unchanged) */}
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 block">
                 X (Twitter) Format
@@ -270,9 +349,10 @@ export default function Distillery({
           </div>
         )}
 
+        {/* Generate button */}
         <button
           onClick={onGenerate}
-          disabled={!inputs.url && !inputs.text && !inputs.file}
+          disabled={!inputs.url && !inputs.text && inputs.files.length === 0}
           className="w-full mt-6 bg-red-700 text-white py-6 rounded-[1.8rem] font-black uppercase tracking-widest hover:bg-red-800 transition-all disabled:bg-slate-200 disabled:text-slate-400 shadow-xl shadow-red-900/10 active:scale-[0.98]"
         >
           Generate Campaign ⚡
