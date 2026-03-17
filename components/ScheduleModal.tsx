@@ -4,11 +4,12 @@ import { useState } from "react";
 interface ScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSchedule: (scheduledFor: string) => void;
+  onSchedule: (scheduledFor: string) => Promise<void>;
   postText: string;
   platform: string;
   day: number;
   imageUrl?: string;
+  userEmail?: string | null; // 👈 add this
 }
 
 export default function ScheduleModal({
@@ -19,6 +20,7 @@ export default function ScheduleModal({
   platform,
   day,
   imageUrl,
+  userEmail, // 👈 receive it
 }: ScheduleModalProps) {
   const [scheduledFor, setScheduledFor] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,7 @@ export default function ScheduleModal({
 
   // Set minimum datetime to now
   const now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Fix for input
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   const minDateTime = now.toISOString().slice(0, 16);
 
   return (
@@ -82,12 +84,29 @@ export default function ScheduleModal({
               className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-red-500/50 text-sm font-medium text-slate-900"
             />
           </div>
-          {platform.toLowerCase() === "x" && (
-  <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
-    ⚠️ X posts require manual publishing. We'll remind you when it's time.
-  </p>
-)}
 
+          {/* X‑specific email reminder info */}
+          {platform.toLowerCase() === "x" && (
+            <div className="space-y-3">
+              {!userEmail ? (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-xs text-amber-800 font-medium mb-2">
+                    ⚠️ Email reminders require a verified email address.
+                  </p>
+                  <a
+                    href="/dashboard?openSettings=true"
+                    className="text-xs font-black uppercase tracking-widest text-amber-700 hover:text-amber-900 underline"
+                  >
+                    Add your email in Settings
+                  </a>
+                </div>
+              ) : (
+                <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                  📧 Reminders will be sent to {userEmail}
+                </p>
+              )}
+            </div>
+          )}
 
           <button
             type="submit"

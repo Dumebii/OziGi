@@ -242,6 +242,15 @@ const handleGenerate = async () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+  // Check for query parameter to open settings
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('openSettings') === 'true') {
+    window.dispatchEvent(new Event("openSettingsModal"));
+    // Clean up the URL
+    window.history.replaceState({}, '', '/dashboard');
+  }
+}, []);
 
   return (
     <div className="bg-[#fafafa] font-sans text-slate-900 min-h-screen flex flex-col">

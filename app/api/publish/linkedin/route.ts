@@ -15,6 +15,10 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { global: { headers: { Authorization: authHeader } } }
     );
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     // ✨ 1. The ultra-lean, crash-proof query
     const { data: tokenData, error: tokenError } = await supabase
@@ -134,14 +138,21 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify(postPayload),
     });
+    
 
     const postResult = await postRes.json();
+    
+    await supabase.rpc("increment_posts_published", { user_id_input: user.id });
+
 
     if (!postRes.ok)
       throw new Error(postResult.message || "LinkedIn rejected the post");
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+
+  } 
+  
+  catch (error: any) {
     console.error("LinkedIn API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

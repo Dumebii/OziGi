@@ -20,6 +20,10 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { global: { headers: { Authorization: authHeader } } }
     );
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     // ✨ Added access_secret to the query. Twitter requires BOTH to upload media!
     const { data: tokenData, error: tokenError } = await supabase
@@ -81,8 +85,11 @@ export async function POST(req: Request) {
       // Save the ID so the next tweet knows what to reply to
       previousTweetId = response.data.id;
     }
+    await supabase.rpc("increment_posts_published", { user_id_input: user.id });
 
     return NextResponse.json({ success: true });
+
+
   } catch (error: any) {
     console.error("X Publish API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

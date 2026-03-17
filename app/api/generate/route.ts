@@ -9,6 +9,10 @@ import { getVercelOidcToken } from '@vercel/oidc';
 import { ExternalAccountClient } from 'google-auth-library';
 import { PostHog } from 'posthog-node';
 
+// NEW: plan & auth imports
+import { createClient } from "@/lib/supabase/server";
+import { getPlanStatus, incrementGenerationCount } from "@/lib/plan";
+
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
@@ -17,7 +21,7 @@ const redis = new Redis({
 const ratelimit = new Ratelimit({
   redis: redis,
   limiter: Ratelimit.slidingWindow(30, "1 h"),
-  analytics: true, 
+  analytics: true,
 });
 
 const distributionSchema = {
@@ -58,7 +62,32 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🚀 NEW: Parse the incoming JSON payload instead of FormData
+    // --- AUTHENTICATION & PLAN CHECK ---
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const planStatus = await getPlanStatus(user.id);
+    if (!planStatus.canGenerate) {
+      return NextResponse.json(
+        {
+          error: "generation_limit_reached",
+          plan: planStatus.plan,
+          generationsUsed: planStatus.generationsUsed,
+          generationsLimit: planStatus.generationsLimit,
+        },
+        { status: 403 }
+      );
+    }
+    // --- END PLAN CHECK ---
+
+    // Parse the incoming JSON payload
     const payload = await req.json();
     const { sourceMaterial, campaignDirectives } = payload;
 
@@ -70,7 +99,7 @@ export async function POST(req: Request) {
     const personaVoice = campaignDirectives?.personaVoice || "Expert Content Strategist";
 
     // Append additional directives to textContext if they exist
-    const finalContext = campaignDirectives?.additionalContext 
+    const finalContext = campaignDirectives?.additionalContext
       ? `${textContext}\n\nAdditional Directives: ${campaignDirectives.additionalContext}`
       : textContext;
 
@@ -91,17 +120,17 @@ export async function POST(req: Request) {
 
     const parts: any[] = [{ text: textPrompt }];
 
-    // 🚀 NEW: Fetch assets from Cloudflare R2 and convert to Base64 for Gemini
+    // Fetch assets from Cloudflare R2 and convert to Base64 for Gemini
     if (assetUrls && assetUrls.length > 0) {
       for (const assetUrl of assetUrls) {
         try {
           const fileRes = await fetch(assetUrl);
           if (!fileRes.ok) throw new Error(`HTTP error! status: ${fileRes.status}`);
-          
+
           const mimeType = fileRes.headers.get("content-type") || "application/octet-stream";
           const arrayBuffer = await fileRes.arrayBuffer();
           const base64Data = Buffer.from(arrayBuffer).toString("base64");
-          
+
           parts.push({
             inlineData: {
               data: base64Data,
@@ -110,7 +139,7 @@ export async function POST(req: Request) {
           });
         } catch (err) {
           console.error(`Failed to fetch and process asset from R2: ${assetUrl}`, err);
-          // We continue instead of crashing so the text generation still works
+          // Continue instead of crashing so text generation still works
         }
       }
     }
@@ -148,13 +177,13 @@ export async function POST(req: Request) {
     }
 
     const vertex_ai = new VertexAI({
-      project: projectId, 
+      project: projectId,
       location: "us-central1",
       googleAuthOptions: authOptions,
     });
 
-    const model = vertex_ai.getGenerativeModel({ 
-      model: "gemini-2.5-flash", 
+    const model = vertex_ai.getGenerativeModel({
+      model: "gemini-2.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: distributionSchema,
@@ -166,7 +195,10 @@ export async function POST(req: Request) {
     });
 
     const responseText = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    
+
+    // --- Increment generation count after successful generation ---
+    await incrementGenerationCount(user.id);
+
     const durationMs = Date.now() - startTime;
     posthog.capture({
       distinctId: ip,
@@ -182,7 +214,7 @@ export async function POST(req: Request) {
     await posthog.shutdown();
 
     return NextResponse.json({ output: responseText });
-    
+
   } catch (error: any) {
     const durationMs = Date.now() - startTime;
     posthog.capture({

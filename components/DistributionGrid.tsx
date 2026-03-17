@@ -260,6 +260,7 @@ function SocialCard({
           platform={platformName}
           day={day}
           imageUrl={imageUrl || undefined}
+            userEmail={session?.user?.email}
         />
       )}
     </motion.div>
