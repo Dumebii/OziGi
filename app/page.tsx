@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "../lib/supabase";
 import { motion, Variants } from "framer-motion";
 import Hero from "../components/Hero";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AuthModal from "../components/AuthModal";
+import { createClient } from "../lib/supabase/client";
+const supabase = createClient();
 
 // --- Animation Variants ---
 const fadeUp: Variants = {

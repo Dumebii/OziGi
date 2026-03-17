@@ -132,7 +132,7 @@ export async function POST(req: Request) {
     const postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${linkedInToken}`,
+        //Authorization: `Bearer ${linkedInToken}`,
         "Content-Type": "application/json",
         "X-Restli-Protocol-Version": "2.0.0",
       },

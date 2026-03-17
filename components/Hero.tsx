@@ -2,12 +2,13 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "../lib/supabase";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AuthModal from "../components/AuthModal";
 import { motion, Variants } from "framer-motion";
 import PricingWaitlistModal from "./PricingWaitlistModal";
+import { createClient } from "../lib/supabase/client";
+const supabase = createClient();
 
 
 export default function Hero() {

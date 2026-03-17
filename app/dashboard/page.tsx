@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "../../lib/supabase";
 import { CampaignDay } from "../../lib/types";
 import Link from "next/link";
 import Distillery from "../../components/ContextEngine";
@@ -11,6 +10,8 @@ import Footer from "../../components/Footer";
 import AuthModal from "../../components/AuthModal";
 import SkeletonGrid from "@/components/SkeletonGrid";
 import ScheduledPostsModal from "../../components/ScheduledPostsModal";
+import { createClient } from "../../lib/supabase/client";
+const supabase = createClient();
 
 export default function Dashboard() {
   const [session, setSession] = useState<any>(null);
