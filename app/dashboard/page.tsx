@@ -160,6 +160,13 @@ export default function Dashboard() {
   const handleGenerate = async () => {
   setLoading(true);
   setErrorMessage("");
+
+    console.log("Session in generate:", session);
+  if (!session?.access_token) {
+    setErrorMessage("Your session expired. Please log in again.");
+    setLoading(false);
+    return;
+  }
   setCampaign([]);
 
   try {
