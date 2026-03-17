@@ -68,6 +68,17 @@ const staggerContainer: Variants = {
 };
 
   const [isScheduledOpen, setIsScheduledOpen] = useState(false);
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) {
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) console.error("Exchange error:", error);
+      // Clean the URL
+      window.history.replaceState({}, document.title, "/");
+    });
+  }
+}, []);
 
 
   return (
