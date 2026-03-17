@@ -30,11 +30,10 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
     .select("plan, trial_ends_at, generations_used_this_month, generation_reset_at")
     .eq("id", userId)
     .maybeSingle();
-
-  if (error) {
-    throw new Error("Could not fetch user profile.");
-  }
-
+if (error) {
+  console.error("Supabase profile fetch error:", error);
+  throw new Error("Could not fetch user profile.");
+}
   // If no profile exists, create one (should be handled by trigger, but just in case)
   if (!profile) {
     const now = new Date();
