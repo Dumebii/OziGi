@@ -12,10 +12,11 @@ import {
   ArcElement,
 } from "chart.js";
 import { Bar, Doughnut } from "react-chartjs-2";
-import { supabase } from "../../lib/supabase";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import AuthModal from "../../components/AuthModal";
+import { createClient } from "../../lib/supabase/client";
+const supabase = createClient();
 
 // Register ChartJS components
 ChartJS.register(
@@ -146,7 +147,8 @@ export default function Architecture() {
       <Header 
         session={session} 
         onSignIn={() => setIsAuthModalOpen(true)} 
-        onOpenHistory={() => {}} 
+        onOpenHistory={() => {}}
+        onOpenScheduled={() => {}}
       />
 
       <main className="flex-grow max-w-6xl mx-auto w-full px-6 pt-32 pb-16">
