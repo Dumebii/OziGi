@@ -157,98 +157,99 @@ export default function Dashboard() {
   };
 
   const handleGenerate = async () => {
-    setLoading(true);
-    setErrorMessage("");
-    setCampaign([]);
+  setLoading(true);
+  setErrorMessage("");
+  setCampaign([]);
 
-    try {
-      let selectedVoice = "Expert Social Media Copywriter who adapts perfectly to the provided context";
-      if (inputs.personaId && inputs.personaId !== "default") {
-        const found = personas.find((p: any) => p.id === inputs.personaId);
-        if (found && found.prompt) {
-          selectedVoice = found.prompt;
-        }
+  try {
+    let selectedVoice = "Expert Social Media Copywriter who adapts perfectly to the provided context";
+    if (inputs.personaId && inputs.personaId !== "default") {
+      const found = personas.find((p: any) => p.id === inputs.personaId);
+      if (found && found.prompt) {
+        selectedVoice = found.prompt;
       }
-
-      const payload = {
-        sourceMaterial: {
-          url: inputs.url,
-          rawText: inputs.text,
-          assetUrls: inputs.fileUrls,
-        },
-        campaignDirectives: {
-          platforms: inputs.platforms,
-          tweetFormat: inputs.tweetFormat,
-          additionalContext: inputs.additionalInfo,
-          personaVoice: selectedVoice, 
-        }
-      };
-
-      console.log("🚀 Firing payload to AI:", payload);
-
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        let errorMsg = "We encountered a hiccup connecting to the AI engine. Please try again.";
-        try {
-          const errorData = await response.json();
-          if (errorData.error) {
-            errorMsg = errorData.error;
-          }
-        } catch (parseError) {
-          console.error("Failed to parse error response");
-        }
-        setErrorMessage(errorMsg);
-        setLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-      if (data.error) {
-        setErrorMessage(data.error);
-        setLoading(false);
-        return;
-      }
-
-      const cleanJson = data.output
-        .replace(/```json/gi, "")
-        .replace(/```/gi, "");
-      const finalCampaign = JSON.parse(cleanJson);
-
-      if (finalCampaign.campaign) {
-        setCampaign(finalCampaign.campaign);
-        setTimeout(() => {
-          campaignRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }, 100);
-
-        if (session?.user) {
-          await supabase.from("campaigns").insert({
-            user_id: session.user.id,
-            source_url: inputs.url,
-            source_notes: inputs.text || inputs.fileUrls.join(", "), 
-            generated_content: finalCampaign.campaign,
-          });
-          fetchHistory(session.user.id);
-        }
-      }
-    } catch (err) {
-      console.error("Context error:", err);
-      setErrorMessage(
-        "The AI returned an unexpected format. Please try tweaking your context and generating again."
-      );
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const payload = {
+      sourceMaterial: {
+        url: inputs.url,
+        rawText: inputs.text,
+        assetUrls: inputs.fileUrls,
+      },
+      campaignDirectives: {
+        platforms: inputs.platforms,
+        tweetFormat: inputs.tweetFormat,
+        additionalContext: inputs.additionalInfo,
+        personaVoice: selectedVoice,
+      }
+    };
+
+    console.log("🚀 Firing payload to AI:", payload);
+
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session?.access_token}`, // 👈 send token
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      let errorMsg = "We encountered a hiccup connecting to the AI engine. Please try again.";
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMsg = errorData.error;
+        }
+      } catch (parseError) {
+        console.error("Failed to parse error response");
+      }
+      setErrorMessage(errorMsg);
+      setLoading(false);
+      return;
+    }
+
+    const data = await response.json();
+    if (data.error) {
+      setErrorMessage(data.error);
+      setLoading(false);
+      return;
+    }
+
+    const cleanJson = data.output
+      .replace(/```json/gi, "")
+      .replace(/```/gi, "");
+    const finalCampaign = JSON.parse(cleanJson);
+
+    if (finalCampaign.campaign) {
+      setCampaign(finalCampaign.campaign);
+      setTimeout(() => {
+        campaignRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+
+      if (session?.user) {
+        await supabase.from("campaigns").insert({
+          user_id: session.user.id,
+          source_url: inputs.url,
+          source_notes: inputs.text || inputs.fileUrls.join(", "),
+          generated_content: finalCampaign.campaign,
+        });
+        fetchHistory(session.user.id);
+      }
+    }
+  } catch (err) {
+    console.error("Context error:", err);
+    setErrorMessage(
+      "The AI returned an unexpected format. Please try tweaking your context and generating again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

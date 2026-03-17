@@ -10,6 +10,7 @@ import { ExternalAccountClient } from 'google-auth-library';
 import { PostHog } from 'posthog-node';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'; // for token auth
 import { getPlanStatus, incrementGenerationCount } from "@/lib/plan";
 
 const redis = new Redis({
@@ -62,9 +63,12 @@ export async function POST(req: Request) {
     }
 
     // --- AUTHENTICATION & PLAN CHECK ---
+    let user = null;
+    let authError = null;
+
+    // 1. Try cookie-based auth (for same-origin requests)
     const cookieStore = await cookies();
-    
-    const supabase = createServerClient(
+    const supabaseFromCookie = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -73,23 +77,38 @@ export async function POST(req: Request) {
             return cookieStore.getAll();
           },
           setAll() {
-            // No-op in API routes – you can't set cookies here
+            // No-op
           },
         },
       }
     );
+    const { data: { user: userFromCookie }, error: cookieError } = await supabaseFromCookie.auth.getUser();
+    if (userFromCookie) {
+      user = userFromCookie;
+    }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    // Log for debugging (remove in production if desired)
-    console.log('Generate route - auth result:', { 
-      userId: user?.id, 
-      authError: authError?.message 
-    });
+    // 2. If no cookie user, try Authorization header (for cross-origin or token-based)
+    if (!user) {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.split(" ")[1];
+        const supabaseFromToken = createSupabaseClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        const { data: { user: userFromToken }, error: tokenError } = await supabaseFromToken.auth.getUser(token);
+        if (userFromToken) {
+          user = userFromToken;
+        } else {
+          authError = tokenError;
+        }
+      }
+    }
 
-    if (authError || !user) {
+    if (!user) {
+      console.log('Auth failed:', { cookieError, authError });
       return NextResponse.json(
-        { error: "Unauthorized", details: authError?.message || "No user session" },
+        { error: "Unauthorized", details: authError?.message || "No valid session" },
         { status: 401 }
       );
     }
@@ -106,7 +125,7 @@ export async function POST(req: Request) {
         { status: 403 }
       );
     }
-    // --- END PLAN CHECK ---
+    // --- END AUTH ---
 
     // Parse the incoming JSON payload
     const payload = await req.json();
@@ -119,7 +138,6 @@ export async function POST(req: Request) {
     const tweetFormat = campaignDirectives?.tweetFormat || "single";
     const personaVoice = campaignDirectives?.personaVoice || "Expert Content Strategist";
 
-    // Append additional directives to textContext if they exist
     const finalContext = campaignDirectives?.additionalContext
       ? `${textContext}\n\nAdditional Directives: ${campaignDirectives.additionalContext}`
       : textContext;
@@ -141,7 +159,6 @@ export async function POST(req: Request) {
 
     const parts: any[] = [{ text: textPrompt }];
 
-    // Fetch assets from Cloudflare R2 and convert to Base64 for Gemini
     if (assetUrls && assetUrls.length > 0) {
       for (const assetUrl of assetUrls) {
         try {
@@ -160,7 +177,6 @@ export async function POST(req: Request) {
           });
         } catch (err) {
           console.error(`Failed to fetch and process asset from R2: ${assetUrl}`, err);
-          // Continue instead of crashing so text generation still works
         }
       }
     }
@@ -217,7 +233,6 @@ export async function POST(req: Request) {
 
     const responseText = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    // --- Increment generation count after successful generation ---
     await incrementGenerationCount(user.id);
 
     const durationMs = Date.now() - startTime;
