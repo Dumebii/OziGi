@@ -38,6 +38,12 @@ const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
     });
 
     return () => subscription.unsubscribe();
+    console.log("Hero mounted, URL:", window.location.href);
+supabase.auth.getSession().then(({ data: { session } }) => {
+  console.log("Initial session check:", session);
+  setSession(session);
+  prevSession.current = session;
+});
   }, [router]);
 
   // --- Animation Variants ---
