@@ -96,6 +96,9 @@ importers:
       twitter-api-v2:
         specifier: ^1.29.0
         version: 1.29.0
+      zeptomail:
+        specifier: ^7.0.2
+        version: 7.0.2
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -4226,6 +4229,9 @@ packages:
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  zeptomail@7.0.2:
+    resolution: {integrity: sha512-bolBpUJoQgaMoYU5vE8vWuMGlRljtLH31hIhK4R3WpkEZZA1s5DZG3tVc93FQ4SiFbAZsMNvMZiggeQ8Ukk5dA==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -9682,5 +9688,11 @@ snapshots:
     optional: true
 
   yocto-queue@0.1.0: {}
+
+  zeptomail@7.0.2:
+    dependencies:
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
 
   zwitch@2.0.4: {}

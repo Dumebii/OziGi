@@ -1,12 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { Resend } from 'resend';
+import { SendMailClient } from "zeptomail";
 
 const CRON_SECRET = process.env.CRON_SECRET;
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
-const EMAIL_FROM = process.env.EMAIL_FROM || 'Ozigi <notifications@ozigi.app>'; // fallback
+// ZeptoMail configuration
+const ZEPTOMAIL_API_KEY = process.env.ZEPTOMAIL_API_KEY!;
+const ZEPTOMAIL_URL = "api.zeptomail.com/";
+const mailClient = new SendMailClient({ url: ZEPTOMAIL_URL, token: ZEPTOMAIL_API_KEY });
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Email sender details – update these to match your verified domain
+const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'notifications@ozigi.app';
+const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'Ozigi';
 
 export async function GET(req: Request) {
   try {
@@ -50,16 +55,26 @@ export async function GET(req: Request) {
         let publishError: string | null = null;
 
         if (post.platform === 'x') {
-          // X: Send email reminder
+          // X: Send email reminder via ZeptoMail
           if (post.user_email && !post.reminder_sent) {
             const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.content)}`;
             
             try {
-              const emailResult = await resend.emails.send({
-                from: EMAIL_FROM,
-                to: post.user_email,
+              await mailClient.sendMail({
+                from: {
+                  address: EMAIL_FROM_ADDRESS,
+                  name: EMAIL_FROM_NAME
+                },
+                to: [
+                  {
+                    email_address: {
+                      address: post.user_email,
+                      name: ""
+                    }
+                  }
+                ],
                 subject: 'Your scheduled X post is ready',
-                html: `
+                htmlbody: `
                   <h2>Your scheduled X post is due!</h2>
                   <p>Click the link below to publish it now:</p>
                   <a href="${intentUrl}" target="_blank">Post to X</a>
@@ -67,7 +82,7 @@ export async function GET(req: Request) {
                 `
               });
 
-              console.log(`Email sent for post ${post.id}:`, emailResult);
+              console.log(`Email sent for post ${post.id} via ZeptoMail`);
 
               await supabase
                 .from("scheduled_posts")
