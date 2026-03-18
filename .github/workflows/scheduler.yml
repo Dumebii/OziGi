@@ -8,5 +8,5 @@ jobs:
     steps:
       - name: Call publish endpoint
         run: |
-          curl -X GET "https://ozigi.app/api/cron" \
+          curl -X GET "https://ozigi.app/api/cron/publish" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
