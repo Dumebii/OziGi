@@ -4,14 +4,22 @@ import { SendMailClient } from "zeptomail";
 
 const CRON_SECRET = process.env.CRON_SECRET;
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+
 // ZeptoMail configuration
 const ZEPTOMAIL_API_KEY = process.env.ZEPTOMAIL_API_KEY!;
 const ZEPTOMAIL_URL = "api.zeptomail.com/";
 const mailClient = new SendMailClient({ url: ZEPTOMAIL_URL, token: ZEPTOMAIL_API_KEY });
 
-// Email sender details – update these to match your verified domain
 const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'notifications@ozigi.app';
 const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'Ozigi';
+
+// Define a type for the token object
+interface UserToken {
+  user_id: string;
+  provider: string;
+  access_token: string;
+  access_secret?: string;
+}
 
 export async function GET(req: Request) {
   try {
@@ -26,23 +34,40 @@ export async function GET(req: Request) {
     );
 
     const now = new Date().toISOString();
+
+    // 1. Fetch due posts (without joining to auth.users)
     const { data: duePosts, error: fetchError } = await supabase
       .from("scheduled_posts")
-      .select(`
-        *,
-        users!inner (
-          id,
-          user_tokens (*)
-        )
-      `)
+      .select("*")
       .eq("status", "pending")
       .lte("scheduled_for", now)
       .limit(50);
 
     if (fetchError) throw fetchError;
 
+    // 2. Collect unique user IDs
+    const userIds = [...new Set(duePosts?.map(p => p.user_id) || [])];
+
+    // 3. Fetch user tokens for those users (if needed for non‑X platforms)
+    const { data: tokensData, error: tokensError } = await supabase
+      .from("user_tokens")
+      .select("user_id, provider, access_token, access_secret")
+      .in("user_id", userIds);
+
+    if (tokensError) throw tokensError;
+
+    // 4. Group tokens by user_id – with explicit typing
+    const tokensByUser = new Map<string, UserToken[]>();
+    tokensData?.forEach((token: UserToken) => {
+      if (!tokensByUser.has(token.user_id)) {
+        tokensByUser.set(token.user_id, []);
+      }
+      tokensByUser.get(token.user_id)!.push(token);
+    });
+
     const results = [];
 
+    // 5. Process each post
     for (const post of duePosts || []) {
       try {
         // Mark as processing
@@ -55,10 +80,10 @@ export async function GET(req: Request) {
         let publishError: string | null = null;
 
         if (post.platform === 'x') {
-          // X: Send email reminder via ZeptoMail
+          // X: Send email reminder
           if (post.user_email && !post.reminder_sent) {
             const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.content)}`;
-            
+
             try {
               await mailClient.sendMail({
                 from: {
@@ -88,49 +113,60 @@ export async function GET(req: Request) {
                 .from("scheduled_posts")
                 .update({ reminder_sent: true, status: "pending" })
                 .eq("id", post.id);
-              
+
               publishSuccess = true;
             } catch (emailError: any) {
               console.error(`Failed to send email for post ${post.id}:`, emailError);
               publishSuccess = false;
               publishError = emailError.message;
-              
-              // Keep as pending, don't set reminder_sent so we retry next time
+
+              // Keep as pending, retry next time
               await supabase
                 .from("scheduled_posts")
                 .update({ status: "pending" })
                 .eq("id", post.id);
             }
           } else {
-            // No email or already reminded, just leave as pending
             await supabase
               .from("scheduled_posts")
               .update({ status: "pending" })
               .eq("id", post.id);
             publishSuccess = true;
           }
-        } 
+        }
         else if (post.platform === 'linkedin') {
-          const res = await fetch(`${APP_URL}/api/publish/linkedin`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              text: post.content,
-              userId: post.user_id,
-              imageUrl: post.media_url
-            })
-          });
-          const data = await res.json();
-          publishSuccess = res.ok;
-          publishError = data.error || null;
-        } 
+          // Get tokens for this user
+          const userTokens = tokensByUser.get(post.user_id) || [];
+          const linkedInToken = userTokens.find(t => t.provider === 'linkedin_oidc')?.access_token;
+
+          if (!linkedInToken) {
+            publishSuccess = false;
+            publishError = "No LinkedIn token found";
+          } else {
+            const res = await fetch(`${APP_URL}/api/publish/linkedin`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                text: post.content,
+                userId: post.user_id,
+                imageUrl: post.media_url,
+                accessToken: linkedInToken // might need to pass token
+              })
+            });
+            const data = await res.json();
+            publishSuccess = res.ok;
+            publishError = data.error || null;
+          }
+        }
         else if (post.platform === 'discord') {
+          // For Discord, we need user metadata which is not in tokens
+          // Fetch user metadata separately
           const { data: user } = await supabase
             .from('users')
             .select('user_metadata')
             .eq('id', post.user_id)
             .single();
-            
+
           if (user?.user_metadata?.discord_webhook) {
             const res = await fetch(`${APP_URL}/api/post-discord`, {
               method: 'POST',
@@ -149,7 +185,7 @@ export async function GET(req: Request) {
           }
         }
 
-        // For non-X platforms, update status
+        // Update status for non‑X platforms
         if (post.platform !== 'x') {
           await supabase
             .from("scheduled_posts")
@@ -161,11 +197,11 @@ export async function GET(req: Request) {
             .eq("id", post.id);
         }
 
-        results.push({ 
-          id: post.id, 
+        results.push({
+          id: post.id,
           platform: post.platform,
           success: publishSuccess,
-          error: publishError 
+          error: publishError
         });
 
       } catch (postError: any) {
@@ -176,19 +212,19 @@ export async function GET(req: Request) {
             error_message: postError.message
           })
           .eq("id", post.id);
-        
-        results.push({ 
-          id: post.id, 
-          success: false, 
-          error: postError.message 
+
+        results.push({
+          id: post.id,
+          success: false,
+          error: postError.message
         });
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       processed: results.length,
-      results 
+      results
     });
 
   } catch (error: any) {
