@@ -1,26 +1,34 @@
 // app/api/post-discord/route.ts
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
   try {
-    // Authenticate user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { content, webhookUrl: providedWebhook, userId: providedUserId } = await req.json();
+
+    // Determine webhook URL
+    let webhookUrl = providedWebhook;
+    let userId = providedUserId;
+
+    if (!webhookUrl) {
+      // No webhook provided, try to get from authenticated user
+      const { createClient } = await import("@/lib/supabase/server");
+      const supabase = await createClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      userId = user.id;
+      webhookUrl = user.user_metadata?.discord_webhook;
+      if (!webhookUrl) {
+        return NextResponse.json(
+          { error: "No Discord webhook configured." },
+          { status: 400 }
+        );
+      }
     }
 
-    const { content, webhookUrl } = await req.json();
-
-    if (!webhookUrl || typeof webhookUrl !== 'string') {
-      return NextResponse.json(
-        { error: "No Discord webhook configured or invalid format." },
-        { status: 400 }
-      );
-    }
-
-    // SSRF PROTECTION
+    // Validate webhook URL (SSRF protection)
     let parsedUrl: URL;
     try {
       parsedUrl = new URL(webhookUrl);
@@ -42,16 +50,25 @@ export async function POST(req: Request) {
       );
     }
 
+    // Send to Discord
     const response = await fetch(parsedUrl.toString(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content }),
     });
 
-    if (!response.ok) throw new Error("Discord rejected the payload.");
+    if (!response.ok) {
+      throw new Error("Discord rejected the payload.");
+    }
 
-    // Increment posts_published
-    await supabase.rpc("increment_posts_published", { user_id_input: user.id });
+    // Increment posts_published if we have userId
+    if (userId) {
+      const supabaseAdmin = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      await supabaseAdmin.rpc("increment_posts_published", { user_id_input: userId });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

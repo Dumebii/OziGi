@@ -5,9 +5,8 @@ import { SendMailClient } from "zeptomail";
 const CRON_SECRET = process.env.CRON_SECRET;
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
-// ZeptoMail configuration
-// Keep the base URL without the path
-const ZEPTOMAIL_BASE_URL = "https://api.zeptomail.com/v1.1/email"; // or "api.zeptomail.eu", "api.zeptomail.in"
+// ZeptoMail configuration – use base domain only, library appends path
+const ZEPTOMAIL_BASE_URL = "https://api.zeptomail.com/v1.1/email"; // or "api.zeptomail.eu", "api.zeptomail.in" based on your region
 const ZEPTOMAIL_RAW_TOKEN = process.env.ZEPTOMAIL_API_KEY!;
 
 const mailClient = new SendMailClient({
@@ -169,30 +168,32 @@ export async function GET(req: Request) {
           }
         }
         else if (post.platform === 'discord') {
-  // Fetch webhook from profiles
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('discord_webhook')
-    .eq('id', post.user_id)
-    .single();
+          // Fetch webhook from profiles
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('discord_webhook')
+            .eq('id', post.user_id)
+            .single();
 
-  if (profile?.discord_webhook) {
-    const res = await fetch(`${APP_URL}/api/post-discord`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: post.content,
-        webhookUrl: profile.discord_webhook
-      })
-    });
-    const data = await res.json();
-    publishSuccess = res.ok;
-    publishError = data.error || null;
-  } else {
-    publishSuccess = false;
-    publishError = "No Discord webhook configured";
-  }
-}
+          if (profile?.discord_webhook) {
+            const res = await fetch(`${APP_URL}/api/post-discord`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                content: post.content,
+                webhookUrl: profile.discord_webhook,
+                userId: post.user_id
+              })
+            });
+            const data = await res.json();
+            publishSuccess = res.ok;
+            publishError = data.error || null;
+          } else {
+            publishSuccess = false;
+            publishError = "No Discord webhook configured";
+          }
+        }
+
         // Update status for non‑X platforms
         if (post.platform !== 'x') {
           await supabase
