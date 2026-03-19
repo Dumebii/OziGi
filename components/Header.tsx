@@ -5,33 +5,48 @@ import { usePathname } from "next/navigation";
 import SettingsModal from "./SettingsModal";
 import { supabase } from "@/lib/supabase/client";
 
-export default function Header({
-  session,
-  onOpenHistory,
-  onSignIn,
-  onOpenScheduled,
-}: {
-  session: any;
-  onOpenHistory: () => void;
-  onSignIn: () => void;
-  onOpenScheduled: () => void;
-}) {
+interface HeaderProps {
+  session?: any;
+  onSignIn?: () => void;
+  onOpenMobileSidebar?: () => void; // only used on dashboard
+}
+
+export default function Header({ session: propSession, onSignIn, onOpenMobileSidebar }: HeaderProps) {
+  const [session, setSession] = useState<any>(propSession || null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false); // 👈 loading state for logout
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const isDashboard = pathname === "/dashboard";
 
+  // Fetch session internally if the parent component didn't pass it
   useEffect(() => {
-    const handleOpenSettings = () => {
-      setIsSettingsOpen(true);
-    };
+    if (!propSession) {
+      const getSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+      };
+      getSession();
+    } else {
+      setSession(propSession);
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [propSession]);
+
+  // Handle global settings modal trigger
+  useEffect(() => {
+    const handleOpenSettings = () => setIsSettingsOpen(true);
     window.addEventListener("openSettingsModal", handleOpenSettings);
-    return () => {
-      window.removeEventListener("openSettingsModal", handleOpenSettings);
-    };
+    return () => window.removeEventListener("openSettingsModal", handleOpenSettings);
   }, []);
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -44,153 +59,130 @@ export default function Header({
 
   const signOut = async () => {
     setIsLoggingOut(true);
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      // The onAuthStateChange listener will update the session
-    } catch (error) {
-      console.error("Sign out error:", error);
-      alert("Failed to sign out. Please try again.");
-    } finally {
-      setIsLoggingOut(false);
-      setIsDropdownOpen(false);
-    }
+    await supabase.auth.signOut();
+    window.location.href = "/";
   };
-
-  const avatarUrl = session?.user?.user_metadata?.avatar_url;
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none flex flex-col items-center pt-5 gap-4">
-        {pathname === "/" && (
-          <Link
-            href="/dashboard"
-            className="pointer-events-auto inline-flex items-center justify-center bg-slate-900 px-5 py-1.5 text-xs sm:text-sm font-semibold text-slate-100 rounded-full shadow-md hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg transition-all group border border-slate-700/50"
-          >
-            <span className="flex items-center gap-2">
-              <span className="text-amber-400">⚡</span> 
-              Ozigi is live — try it free today
-              <span className="group-hover:translate-x-1 transition-transform opacity-60 ml-1">&rarr;</span>
-            </span>
-          </Link>
-        )}
-        <div className="w-full px-4 md:px-8 pointer-events-none">
-          <div className="max-w-7xl mx-auto flex justify-between items-center bg-white/80 backdrop-blur-xl border-2 border-slate-900 rounded-[2rem] p-3 md:p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] pointer-events-auto transition-all">
-            <Link
-              href="/"
-              className="flex items-center gap-2 group cursor-pointer"
-            >
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-red-700 rounded-xl md:rounded-2xl rotate-3 group-hover:rotate-12 transition-all flex items-center justify-center shadow-lg shadow-red-900/20">
-                <img
-                  src="/icon.svg"
-                  alt="Ozigi Logo"
-                  className="w-8 h-8 md:w-10 md:h-10 object-contain transition-transform group-hover:scale-105"
-                />
-              </div>
-              <span className="font-black italic uppercase tracking-tighter text-xl md:text-2xl hidden sm:block text-slate-900">
-                Ozigi
-              </span>
-            </Link>
+      <header className={`w-full z-40 transition-all ${isDashboard ? 'bg-transparent' : 'bg-white border-b border-slate-200'}`}>
+        <div className={`mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between ${isDashboard ? 'w-full' : 'max-w-7xl'}`}>
+          
+          {/* --- LEFT SIDE: Brand & Mobile Toggle --- */}
+          <div className="flex items-center gap-4">
+            {/* Show Hamburger ONLY on Dashboard for Mobile */}
+            {isDashboard && (
+              <button 
+                onClick={onOpenMobileSidebar}
+                className="md:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none bg-white rounded-lg shadow-sm border border-slate-200"
+                aria-label="Open sidebar"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            )}
 
-            <div className="flex items-center gap-2 md:gap-4">
-              <nav className="hidden md:flex items-center gap-4 mr-2 border-r border-slate-200 pr-4">
-                <Link 
-                  href="/docs" 
-                  className={`text-[10px] md:text-xs font-black uppercase tracking-widest transition-colors ${pathname === '/docs' ? 'text-red-700' : 'text-slate-500 hover:text-slate-900'}`}
-                >
-                  Docs
-                </Link>
-                <Link 
-                  href="/architecture" 
-                  className={`text-[10px] md:text-xs font-black uppercase tracking-widest transition-colors ${pathname === '/architecture' ? 'text-red-700' : 'text-slate-500 hover:text-slate-900'}`}
-                >
-                  Architecture
-                </Link>
+            {/* Show Brand ONLY when NOT on Dashboard (sidebar handles dashboard logo) */}
+            {!isDashboard && (
+              <Link href="/" className="text-2xl font-black text-slate-800 tracking-tighter">
+                Ozigi.
+              </Link>
+            )}
+          </div>
+
+          {/* --- RIGHT SIDE: Navigation & Profile --- */}
+          <div className="flex items-center gap-4">
+            {/* Landing Page Navigation */}
+            {!isDashboard && !session && (
+              <nav className="hidden md:flex gap-6 mr-4 text-sm font-semibold text-slate-600">
+                <Link href="/pricing" className="hover:text-slate-900 transition">Pricing</Link>
+                <Link href="/demo" className="hover:text-slate-900 transition">Demo</Link>
               </nav>
-              {pathname === "/" ? (
-                <Link
-                  href="/demo"
-                  className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-500 hover:text-red-700 transition-colors px-2 md:px-4"
-                >
-                  Live Demo
-                </Link>
-              ) : (
-                session && (
-                  <>
-                    <button
-                      onClick={onOpenHistory}
-                      className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-500 hover:text-red-700 transition-colors px-2 md:px-4 hidden sm:block"
-                    >
-                      History
-                    </button>
-                    <button
-                      onClick={onOpenScheduled}
-                      className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-500 hover:text-red-700 transition-colors px-2 md:px-4 hidden sm:block"
-                    >
-                      Scheduled
-                    </button>
-                  </>
-                )
-              )}
+            )}
 
-              {!session ? (
+            {/* User Profile Dropdown (when logged in) */}
+            {session ? (
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={onSignIn}
-                  className="bg-red-700 text-white px-5 md:px-8 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-red-800 transition-all shadow-lg active:scale-95 shrink-0"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-white border-2 border-slate-200 hover:border-slate-400 transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 overflow-hidden shadow-sm"
                 >
-                  Sign In
+                  {session.user.user_metadata?.avatar_url ? (
+                    <img
+                      src={session.user.user_metadata.avatar_url}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-black text-slate-500 uppercase">
+                      {session.user.email?.[0] || "U"}
+                    </span>
+                  )}
                 </button>
-              ) : (
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-300 overflow-hidden border-2 border-white hover:border-red-400 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shrink-0"
-                    disabled={isLoggingOut}
-                  >
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt="Avatar"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white font-bold text-xs">
-                        {session.user.email?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </button>
 
-                  {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                    <div className="px-4 py-3 border-b border-slate-100">
+                      <p className="text-sm font-bold text-slate-800 truncate">
+                        {session.user.user_metadata?.full_name || "Account"}
+                      </p>
+                      <p className="text-xs text-slate-500 truncate mt-0.5">
+                        {session.user.email}
+                      </p>
+                    </div>
+
+                    {!isDashboard && (
                       <Link
                         href="/dashboard"
-                        className="block px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="block w-full text-left px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         Dashboard
                       </Link>
-                      <button
-                        onClick={() => {
-                          setIsSettingsOpen(true);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-                      >
-                        Settings
-                      </button>
-                      <hr className="my-2 border-slate-100" />
-                      <button
-                        onClick={signOut}
-                        disabled={isLoggingOut}
-                        className="block w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isLoggingOut ? "Logging out..." : "Log Out"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        setIsSettingsOpen(true);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                    >
+                      Settings
+                    </button>
+                    
+                    <div className="h-px bg-slate-100 my-1" />
+                    
+                    <button
+                      onClick={signOut}
+                      disabled={isLoggingOut}
+                      className="block w-full text-left px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center justify-between group"
+                    >
+                      {isLoggingOut ? "Logging out..." : "Log Out"}
+                      <svg className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Not Logged In Actions (Landing Page) */
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={onSignIn}
+                  className="hidden md:block text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors px-4 py-2"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={onSignIn}
+                  className="bg-slate-900 text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-all hover:shadow-md active:scale-95"
+                >
+                  Try Ozigi Free
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -199,6 +191,9 @@ export default function Header({
         <SettingsModal
           session={session}
           onClose={() => setIsSettingsOpen(false)}
+          onEmailAdded={() => {
+            // Handle email added logic here if needed
+          }}
         />
       )}
     </>

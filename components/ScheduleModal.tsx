@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { toast } from "sonner"; 
 
 interface ScheduleModalProps {
   isOpen: boolean;
@@ -41,9 +42,11 @@ export default function ScheduleModal({
       const localDate = new Date(scheduledFor + ":00");
       const utcString = localDate.toISOString();
       await onSchedule(utcString, emailToUse); // pass email to parent
+      toast.success("Post successfully scheduled! 🚀"); // 👈 Trigger toast on success
       onClose();
     } catch (error) {
       console.error("Schedule failed:", error);
+      toast.error("Failed to schedule post. Please try again."); // 👈 Error toast
     } finally {
       setLoading(false);
     }

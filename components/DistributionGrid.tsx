@@ -1,11 +1,18 @@
-"use client";
-import { useEffect, useState } from "react";
+// components/DistributionGrid.tsx
+import { useState } from "react";
 import { motion, Variants } from "framer-motion";
 import { CampaignDay } from "../lib/types";
 import ScheduleModal from "./ScheduleModal";
-import { supabase } from "@/lib/supabase/client";
 
-// --- Framer Motion Variants ---
+// Define props interface
+interface DistributionGridProps {
+  campaign: CampaignDay[];
+  session: any;
+  selectedPlatforms: string[];
+  onStatsChange?: () => void; // 👈 new optional prop
+}
+
+// Framer Motion variants
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: { 
@@ -23,11 +30,10 @@ const staggerContainer: Variants = {
   }
 };
 
-// 1. Expandable Text Component
+// Expandable Text Component
 function ExpandableText({ text }: { text: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLong = text.length > 250;
-
   return (
     <div className="flex-1 flex flex-col mb-4">
       <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap flex-1 leading-relaxed">
@@ -45,7 +51,7 @@ function ExpandableText({ text }: { text: string }) {
   );
 }
 
-// 2. Universal Social Card Component
+// Social Card Component
 function SocialCard({
   day,
   platformName,
@@ -54,11 +60,12 @@ function SocialCard({
   postStatus,
   session,
   actionButtonConfig,
+  onStatsChange, // 👈 receive callback
 }: {
   day: number;
   platformName: string;
   initialText: string;
-  session: any
+  session: any;
   onPost?: (text: string, day: number, imageUrl?: string) => void;
   postStatus?: "idle" | "loading" | "success" | "error";
   actionButtonConfig?: {
@@ -67,6 +74,7 @@ function SocialCard({
     success: string;
     classes: string;
   };
+  onStatsChange?: () => void; // 👈 add to props
 }) {
   const [text, setText] = useState(initialText);
   const [isEditing, setIsEditing] = useState(false);
@@ -75,22 +83,6 @@ function SocialCard({
   const [isGeneratingImg, setIsGeneratingImg] = useState(false);
   const [imageTitle, setImageTitle] = useState("");
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  // Add near other useState calls
-const [profileEmail, setProfileEmail] = useState<string | null>(null);
-
-useEffect(() => {
-  if (session?.user?.id) {
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', session.user.id)
-        .single();
-      if (data?.email) setProfileEmail(data.email);
-    };
-    fetchProfile();
-  }
-}, [session]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -132,37 +124,40 @@ useEffect(() => {
     document.body.removeChild(link);
   };
 
-const handleSchedule = async (scheduledFor: string, email?: string | null) => {
-  const token = session?.access_token;
-  if (!token) {
-    alert("You must be signed in to schedule posts.");
-    return;
-  }
+  const handleSchedule = async (scheduledFor: string, email?: string | null) => {
+    const token = session?.access_token;
+    if (!token) {
+      alert("You must be signed in to schedule posts.");
+      return;
+    }
 
-  const response = await fetch("/api/schedule", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      posts: [{
-        platform: platformName.toLowerCase(),
-        content: text,
-        imageUrl: imageUrl || undefined,
-        day: day,
-        email: email, // 👈 pass email if provided
-      }],
-      scheduledFor,
-      campaignId: null
-    })
-  });
+    const response = await fetch("/api/schedule", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        posts: [{
+          platform: platformName.toLowerCase(),
+          content: text,
+          imageUrl: imageUrl || undefined,
+          day: day,
+          email: email,
+        }],
+        scheduledFor,
+        campaignId: null,
+      }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to schedule");
-  }
-};
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to schedule");
+    }
+
+    if (onStatsChange) onStatsChange(); // 👈 refresh stats after schedule
+  };
+
   return (
     <motion.div variants={fadeUp} className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm flex flex-col p-5 hover:border-slate-300 hover:shadow-md transition-all">
       <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
@@ -182,7 +177,6 @@ const handleSchedule = async (scheduledFor: string, email?: string | null) => {
           >
             {copied ? "Copied!" : "Copy"}
           </button>
-          {/* Schedule button added */}
           <button
             onClick={() => setIsScheduleModalOpen(true)}
             className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-200 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors"
@@ -260,13 +254,10 @@ const handleSchedule = async (scheduledFor: string, email?: string | null) => {
         >
           {postStatus === "loading" && actionButtonConfig.loading}
           {postStatus === "success" && actionButtonConfig.success}
-          {postStatus !== "loading" &&
-            postStatus !== "success" &&
-            actionButtonConfig.idle}
+          {postStatus !== "loading" && postStatus !== "success" && actionButtonConfig.idle}
         </button>
       )}
 
-      {/* Schedule Modal */}
       {isScheduleModalOpen && (
         <ScheduleModal
           isOpen={isScheduleModalOpen}
@@ -276,25 +267,20 @@ const handleSchedule = async (scheduledFor: string, email?: string | null) => {
           platform={platformName}
           day={day}
           imageUrl={imageUrl || undefined}
-            userEmail={session?.user?.email}
-              profileEmail={profileEmail}  // 👈 new prop
-
+          userEmail={session?.user?.email}
         />
       )}
     </motion.div>
   );
 }
 
-// 3. Main Grid Component
+// Main DistributionGrid Component
 export default function DistributionGrid({
   campaign,
   session,
   selectedPlatforms,
-}: {
-  campaign: CampaignDay[];
-  session: any;
-  selectedPlatforms: string[];
-}) {
+  onStatsChange, // 👈 now properly typed
+}: DistributionGridProps) {
   const [xStatuses, setXStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
   const [discordStatuses, setDiscordStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
   const [liStatuses, setLiStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
@@ -362,43 +348,32 @@ export default function DistributionGrid({
       {/* X ROW */}
       {hasX && (
         <section>
-          <motion.div 
-            initial="hidden" animate="visible" variants={fadeUp} 
-            className="flex items-center gap-3 mb-5"
-          >
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} className="flex items-center gap-3 mb-5">
             <svg className="w-5 h-5" viewBox="0 0 1200 1227" fill="currentColor">
               <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" />
             </svg>
-            <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">
-              X Strategy
-            </h3>
+            <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">X Strategy</h3>
           </motion.div>
-          
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            {campaign.map(
-              (dayData) =>
-                dayData.x && (
-                  <SocialCard
-                    key={`x-${dayData.day}`}
-                    day={dayData.day}
-                    platformName="X"
-                      session={session} // 👈 pass it
-                    initialText={dayData.x}
-                    onPost={handlePostToX}
-                    postStatus={xStatuses[dayData.day]}
-                    actionButtonConfig={{
-                      idle: "🚀 Post to X",
-                      loading: "Posting...",
-                      success: "✅ Published!",
-                      classes: "bg-black text-white hover:bg-slate-800 active:scale-95",
-                    }}
-                  />
-                )
+          <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start" variants={staggerContainer} initial="hidden" animate="visible">
+            {campaign.map((dayData) =>
+              dayData.x && (
+                <SocialCard
+                  key={`x-${dayData.day}`}
+                  day={dayData.day}
+                  platformName="X"
+                  session={session}
+                  initialText={dayData.x}
+                  onPost={handlePostToX}
+                  postStatus={xStatuses[dayData.day]}
+                  actionButtonConfig={{
+                    idle: "🚀 Post to X",
+                    loading: "Posting...",
+                    success: "✅ Published!",
+                    classes: "bg-black text-white hover:bg-slate-800 active:scale-95",
+                  }}
+                  onStatsChange={onStatsChange} // 👈 pass callback
+                />
+              )
             )}
           </motion.div>
         </section>
@@ -407,43 +382,32 @@ export default function DistributionGrid({
       {/* LINKEDIN ROW */}
       {hasLinkedIn && (
         <section>
-          <motion.div 
-            initial="hidden" animate="visible" variants={fadeUp} 
-            className="flex items-center gap-3 mb-5"
-          >
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} className="flex items-center gap-3 mb-5">
             <svg className="w-5 h-5 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
             </svg>
-            <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">
-              LinkedIn Strategy
-            </h3>
+            <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">LinkedIn Strategy</h3>
           </motion.div>
-
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            {campaign.map(
-              (dayData) =>
-                dayData.linkedin && (
-                  <SocialCard
-                    key={`li-${dayData.day}`}
-                    day={dayData.day}
-                    platformName="LinkedIn"
-                      session={session} // 👈 pass it
-                    initialText={dayData.linkedin}
-                    onPost={handlePostToLinkedIn}
-                    postStatus={liStatuses[dayData.day]}
-                    actionButtonConfig={{
-                      idle: "💼 Post to LinkedIn",
-                      loading: "Posting...",
-                      success: "✅ Published!",
-                      classes: "bg-[#0A66C2] text-white hover:bg-[#004182] active:scale-95",
-                    }}
-                  />
-                )
+          <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start" variants={staggerContainer} initial="hidden" animate="visible">
+            {campaign.map((dayData) =>
+              dayData.linkedin && (
+                <SocialCard
+                  key={`li-${dayData.day}`}
+                  day={dayData.day}
+                  platformName="LinkedIn"
+                  session={session}
+                  initialText={dayData.linkedin}
+                  onPost={handlePostToLinkedIn}
+                  postStatus={liStatuses[dayData.day]}
+                  actionButtonConfig={{
+                    idle: "💼 Post to LinkedIn",
+                    loading: "Posting...",
+                    success: "✅ Published!",
+                    classes: "bg-[#0A66C2] text-white hover:bg-[#004182] active:scale-95",
+                  }}
+                  onStatsChange={onStatsChange} // 👈 pass callback
+                />
+              )
             )}
           </motion.div>
         </section>
@@ -452,77 +416,36 @@ export default function DistributionGrid({
       {/* DISCORD ROW */}
       {hasDiscord && (
         <section>
-          <motion.div 
-            initial="hidden" animate="visible" variants={fadeUp} 
-            className="flex items-center gap-3 mb-5"
-          >
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} className="flex items-center gap-3 mb-5">
             <svg className="w-5 h-5 text-[#5865F2]" viewBox="0 0 127.14 96.36" fill="currentColor">
               <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77.7,77.7,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.2,46,96.12,53,91.08,65.69,84.69,65.69Z" />
             </svg>
-            <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">
-              Discord Strategy
-            </h3>
+            <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">Discord Strategy</h3>
           </motion.div>
-
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            {campaign.map(
-              (dayData) =>
-                dayData.discord && (
-                  <SocialCard
-                    key={`disc-${dayData.day}`}
-                    day={dayData.day}
-                    platformName="Discord"
-                      session={session} // 👈 pass it
-                    initialText={dayData.discord}
-                    onPost={handlePostToDiscord}
-                    postStatus={discordStatuses[dayData.day]}
-                    actionButtonConfig={{
-                      idle: "👾 Send to Discord",
-                      loading: "Posting...",
-                      success: "✅ Sent!",
-                      classes: "bg-[#5865F2] text-white hover:bg-[#4752C4] active:scale-95",
-                    }}
-                  />
-                )
+          <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start" variants={staggerContainer} initial="hidden" animate="visible">
+            {campaign.map((dayData) =>
+              dayData.discord && (
+                <SocialCard
+                  key={`disc-${dayData.day}`}
+                  day={dayData.day}
+                  platformName="Discord"
+                  session={session}
+                  initialText={dayData.discord}
+                  onPost={handlePostToDiscord}
+                  postStatus={discordStatuses[dayData.day]}
+                  actionButtonConfig={{
+                    idle: "👾 Send to Discord",
+                    loading: "Posting...",
+                    success: "✅ Sent!",
+                    classes: "bg-[#5865F2] text-white hover:bg-[#4752C4] active:scale-95",
+                  }}
+                  onStatsChange={onStatsChange} // 👈 pass callback
+                />
+              )
             )}
           </motion.div>
         </section>
       )}
-
-      {/* VISUAL PLATFORMS ANNOUNCEMENT */}
-      <motion.section 
-        initial="hidden" animate="visible" variants={fadeUp} 
-        className="mt-20 border-t border-dashed border-slate-200 pt-16"
-      >
-         <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative group">
-            <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-slate-200/50 blur-3xl rounded-full pointer-events-none group-hover:bg-slate-300/50 transition-colors duration-500"></div>
-            
-            <div className="relative z-10 flex-1">
-               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm mb-4">
-                  <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Pipeline Expansion</span>
-               </div>
-               <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 mb-3">
-                  Visual Platforms Incoming.
-               </h3>
-               <p className="text-sm font-medium text-slate-500 max-w-xl leading-relaxed">
-                  The engine is expanding. We are currently architecting the routing logic for <span className="text-slate-900 font-bold">TikTok</span> scripts, <span className="text-slate-900 font-bold">Instagram</span> captions, and <span className="text-slate-900 font-bold">YouTube</span> descriptions. 
-               </p>
-            </div>
-            
-            <div className="relative z-10 flex gap-4 shrink-0">
-               <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm text-2xl opacity-50 grayscale transition-all group-hover:grayscale-0 group-hover:opacity-100 group-hover:-translate-y-1">📱</div>
-               <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm text-2xl opacity-50 grayscale transition-all delay-75 group-hover:grayscale-0 group-hover:opacity-100 group-hover:-translate-y-1">📸</div>
-               <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm text-2xl opacity-50 grayscale transition-all delay-150 group-hover:grayscale-0 group-hover:opacity-100 group-hover:-translate-y-1">▶️</div>
-            </div>
-         </div>
-      </motion.section>
-
     </div>
   );
 }

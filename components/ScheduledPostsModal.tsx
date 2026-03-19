@@ -11,7 +11,12 @@ interface ScheduledPost {
   campaign_id: string | null;
 }
 
-export default function ScheduledPostsModal({ onClose }: { onClose: () => void }) {
+interface ScheduledPostsModalProps {
+  onClose: () => void;
+  onStatsChange?: () => void; // 👈 add this
+}
+
+export default function ScheduledPostsModal({ onClose, onStatsChange }: ScheduledPostsModalProps) {
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState<string | null>(null);
@@ -48,6 +53,7 @@ export default function ScheduledPostsModal({ onClose }: { onClose: () => void }
       alert("Failed to cancel post. Please try again.");
     } else {
       setPosts(posts.filter(p => p.id !== postId));
+      if (onStatsChange) onStatsChange(); // 👈 refresh stats after cancellation
     }
     setCancelling(null);
   };

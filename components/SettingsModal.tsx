@@ -5,11 +5,14 @@ import { supabase } from "@/lib/supabase/client";
 interface SettingsModalProps {
   session: any;
   onClose: () => void;
+  onEmailAdded: () => void; // 👈 add this
 }
 
 export default function SettingsModal({
   session,
   onClose,
+    onEmailAdded, // 👈 add this
+
 }: SettingsModalProps) {
   // --- Workspace State ---
   const [persona, setPersona] = useState("");
@@ -70,18 +73,25 @@ export default function SettingsModal({
     const { error } = await supabase.auth.updateUser({
       data: { persona: persona.trim(), discord_webhook: webhook.trim() },
     });
+    
     // Save to profiles table
 await supabase
   .from('profiles')
   .update({ discord_webhook: webhook.trim() })
   .eq('id', session.user.id);
     setIsSaving(false);
+    
     if (!error) onClose();
     else console.error("Failed to update settings:", error.message);
     const { error: profileError } = await supabase
   .from('profiles')
   .update({ email: email.trim() || null })
   .eq('id', session.user.id);
+    if (profileError) {
+      console.error("Failed to update email in profiles:", profileError.message);
+    } else {
+      if (onEmailAdded) onEmailAdded(); // trigger callback to parent if email was added/updated
+    }
   };
 
   const handleSaveDatabasePersona = async () => {

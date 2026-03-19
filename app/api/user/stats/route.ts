@@ -9,6 +9,7 @@ export async function GET(req: Request) {
   // Try cookie auth
   const supabase = await createClient();
   const { data: { user: userFromCookie } } = await supabase.auth.getUser();
+  
   if (userFromCookie) {
     user = userFromCookie;
   } else {
@@ -29,7 +30,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [planStatus, statsResult, personaResult] = await Promise.all([
+  // --- NEW: Added scheduledResult to the Promise array ---
+  const [planStatus, statsResult, personaResult, scheduledResult] = await Promise.all([
     getPlanStatus(user.id),
     supabase
       .from("user_stats")
@@ -40,6 +42,11 @@ export async function GET(req: Request) {
       .from("personas")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id),
+    supabase
+      .from("scheduled_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("status", "pending")
   ]);
 
   return NextResponse.json({
@@ -48,12 +55,10 @@ export async function GET(req: Request) {
     isTrialExpired: planStatus.isTrialExpired,
     canGenerate: planStatus.canGenerate,
     generationsUsed: planStatus.generationsUsed,
-    generationsLimit: planStatus.generationsLimit,
-    trialEndsAt: planStatus.trialEndsAt,
-    stats: {
-      campaignsGenerated: statsResult.data?.campaigns_generated ?? 0,
-      postsPublished: statsResult.data?.posts_published ?? 0,
-      personasSaved: personaResult.count ?? 0,
-    },
+    // --- NEW: Appended stats data for the dashboard ---
+    campaignsGenerated: statsResult.data?.campaigns_generated || 0,
+    postsPublished: statsResult.data?.posts_published || 0,
+    personasSaved: personaResult.count || 0,
+    scheduledCount: scheduledResult.count || 0
   });
 }
