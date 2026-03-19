@@ -43,18 +43,19 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
           ×
         </button>
 
-        <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 mb-2">
-          Join Ozigi
-        </h2>
-        <p className="text-slate-500 text-sm font-medium mb-8 text-center px-4">
-          Choose your preferred provider to start generating agentic social
-          content.
-        </p>
+<h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 mb-2">
+  Sign in to Ozigi
+</h2>
+
+// Update the subtitle
+<p className="text-slate-500 text-sm font-medium mb-8 text-center px-4">
+  Choose your preferred provider to continue. New here? You'll be signed up automatically.
+</p>
 
 
 {/* 👇 New context message */}
 <p className="text-xs text-slate-400 mb-4 text-center border-t border-slate-100 pt-4">
-  Sign in to save personas, access campaign history, and publish directly to LinkedIn & Discord.
+  Sign in to save personas, access campaign history, and publish directly to LinkedIn, X & Discord.
 </p>
 
         <div className="w-full space-y-3">

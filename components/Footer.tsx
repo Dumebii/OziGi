@@ -50,7 +50,7 @@ export default function Footer() {
             </h4>
             <div className="flex flex-col gap-3">
               <a
-                href="https://github.com/dumebii"
+                href="https://github.com/dumebii/ozigi"
                 target="_blank"
                 rel="noreferrer"
                 className="text-sm text-slate-500 hover:text-white transition-colors"
@@ -83,7 +83,7 @@ export default function Footer() {
             </h4>
             <div className="flex flex-col gap-3">
               <a
-                href="mailto:okolodumebi@gmail.com"
+                href="mailto:hello@ozigi.app"
                 className="text-sm text-slate-500 hover:text-white transition-colors"
               >
                 Email Us
@@ -97,11 +97,17 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+<Link href="/privacy-policy" className="text-sm text-slate-500 hover:text-white transition-colors">
+  Privacy Policy
+</Link>
+<Link href="/terms" className="text-sm text-slate-500 hover:text-white transition-colors">
+  Terms of Service
+</Link>
           <p className="text-xs text-slate-600">
             © 2026 Ozigi. All rights reserved.
           </p>
           <p className="text-xs text-slate-700">
-            Built for Content Wizzes.
+            Built With You In Mind.
           </p>
         </div>
       </div>
