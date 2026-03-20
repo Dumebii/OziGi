@@ -185,7 +185,7 @@ const removeFile = (index: number) => {
                 Upload Reference Datasets
               </p>
               <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
-                Support for PDFs, TXTs, CSVs, Images
+                Support for PDFs, TXTs, CSVs, Images, Videos, Audio...up to 100MB!
               </p>
               <input
                 type="file"

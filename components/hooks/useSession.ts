@@ -13,8 +13,28 @@ export function useSession() {
       setSessionLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
+      
+      // Save OAuth tokens to user_tokens table
+      if (session?.provider_token) {
+        const identities = session.user.identities || [];
+        const latestIdentity = identities.reduce((prev, current) =>
+          new Date(prev.updated_at || 0).getTime() > new Date(current.updated_at || 0).getTime() ? prev : current
+        );
+        const provider = latestIdentity ? latestIdentity.provider : session.user.app_metadata.provider;
+
+        await supabase.from("user_tokens").upsert(
+          {
+            user_id: session.user.id,
+            provider: provider,
+            access_token: session.provider_token,
+            refresh_token: session.provider_refresh_token || null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id, provider" }
+        );
+      }
     });
 
     return () => subscription.unsubscribe();
