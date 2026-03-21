@@ -1,10 +1,10 @@
-// components/DistributionGrid.tsx
 import { useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import { CampaignDay } from "../lib/types";
 import ScheduleModal from "./ScheduleModal";
+import RichTextEditor from "./RichTextEditor";
 
-// Define props interface
+//props interface
 interface DistributionGridProps {
   campaign: CampaignDay[];
   session: any;
@@ -53,7 +53,7 @@ function ExpandableText({ text }: { text: string }) {
   );
 }
 
-// Social Card Component (unchanged, except we remove email‑specific code from here)
+// Social Card Component 
 function SocialCard({
   day,
   platformName,
@@ -627,19 +627,20 @@ const [isGeneratingEmailImage, setIsGeneratingEmailImage] = useState(false);
 
         {/* Email text editor */}
         {isEditingEmail ? (
-          <textarea
-            value={localEmailContent || ""}
-            onChange={(e) => {
-              setLocalEmailContent(e.target.value);
-              if (setEmailContent) setEmailContent(e.target.value);
-            }}
-            className="w-full text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 min-h-[200px] resize-y focus:outline-none focus:border-red-400"
-          />
-        ) : (
-          <div className="mb-4 whitespace-pre-wrap text-sm font-medium text-slate-700 leading-relaxed">
-            {localEmailContent}
-          </div>
-        )}
+  <RichTextEditor
+    content={localEmailContent || ""}
+    onChange={(html) => {
+      setLocalEmailContent(html);
+      if (setEmailContent) setEmailContent(html);
+    }}
+    placeholder="Write your newsletter content..."
+  />
+) : (
+  <div
+    className="mb-4 prose prose-sm max-w-none text-sm font-medium text-slate-700 leading-relaxed"
+    dangerouslySetInnerHTML={{ __html: localEmailContent || "" }}
+  />
+)}
 
         <button
           onClick={() => {
