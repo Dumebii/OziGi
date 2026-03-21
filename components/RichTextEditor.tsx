@@ -22,7 +22,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "Write
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4 text-slate-900 bg-white", // added bg-white and text color
       },
     },
   });
@@ -97,7 +97,9 @@ export default function RichTextEditor({ content, onChange, placeholder = "Write
           ↻
         </button>
       </div>
-      <EditorContent editor={editor} />
+      <div className="bg-white">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }

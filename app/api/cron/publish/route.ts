@@ -93,6 +93,7 @@ export async function GET(req: Request) {
 
           const senderName = profile?.email_sender_name || 'Ozigi User';
           const replyTo = profile?.email || 'support@ozigi.app';
+          
 
           // Fetch active subscribers for this user
           const { data: subscribers, error: subsError } = await supabase
@@ -102,7 +103,7 @@ export async function GET(req: Request) {
             .eq('status', 'active');
 
           if (subsError || !subscribers || subscribers.length === 0) {
-            publishSuccess = true; // nothing to send
+            publishSuccess = true; // No subscribers, consider it a success
           } else {
             const emailContent = post.content;
             const subjectMatch = emailContent.match(/^Subject:\s*(.+)$/m);
@@ -121,8 +122,14 @@ export async function GET(req: Request) {
                     You're receiving this because you subscribed to this newsletter.
                     <a href="${unsubscribeLink}" style="color: #ef4444;">Unsubscribe</a>
                   </p>
+                  <p>POWERED BY OZIGI, WITH ❤️</p>
                 </div>
               `;
+              let personalizedBody = htmlBody;
+// Extract first name from email (or use stored first_name later)
+const firstName = subscriber.email.split('@')[0];
+personalizedBody = personalizedBody.replace(/{{firstName}}/g, firstName);
+personalizedBody = personalizedBody.replace(/{{first_name}}/g, firstName);
 
               try {
                 if (USE_SMTP) {

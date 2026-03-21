@@ -18,6 +18,7 @@ export default function SettingsModal({
   const [webhook, setWebhook] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [email, setEmail] = useState("");
+  const [emailSenderName, setEmailSenderName] = useState(""); // 👈 new
 
   // --- Database Persona State ---
   const [newPersonaName, setNewPersonaName] = useState("");
@@ -28,22 +29,16 @@ export default function SettingsModal({
   const [connections, setConnections] = useState<string[]>([]);
   const [linkLoading, setLinkLoading] = useState<string | null>(null);
 
-  // --- Subscriber Management State ---
-  const [subscribers, setSubscribers] = useState<any[]>([]);
-  const [newEmails, setNewEmails] = useState("");
-  const [isAddingSubscribers, setIsAddingSubscribers] = useState(false);
-  const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(false);
-
   // --- Deletion State ---
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Fetch connections and profile data
   useEffect(() => {
     if (session?.user?.user_metadata) {
       setPersona(session.user.user_metadata.persona || "");
       setWebhook(session.user.user_metadata.discord_webhook || "");
     }
     fetchConnections();
-    fetchSubscribers(); // 👈 new
   }, [session]);
 
   useEffect(() => {
@@ -51,10 +46,11 @@ export default function SettingsModal({
       const fetchProfile = async () => {
         const { data } = await supabase
           .from('profiles')
-          .select('email')
+          .select('email, email_sender_name')
           .eq('id', session.user.id)
           .single();
         if (data?.email) setEmail(data.email);
+        if (data?.email_sender_name) setEmailSenderName(data.email_sender_name);
       };
       fetchProfile();
     }
@@ -73,46 +69,35 @@ export default function SettingsModal({
     }
   };
 
-  const fetchSubscribers = async () => {
-    setIsLoadingSubscribers(true);
-    try {
-      const res = await fetch('/api/subscribers');
-      if (res.ok) {
-        const data = await res.json();
-        setSubscribers(data.subscribers || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch subscribers", error);
-    } finally {
-      setIsLoadingSubscribers(false);
-    }
-  };
-
   const handleSaveWorkspace = async () => {
     setIsSaving(true);
-    const { error } = await supabase.auth.updateUser({
+
+    // Update user metadata (persona, discord webhook)
+    const { error: metadataError } = await supabase.auth.updateUser({
       data: { persona: persona.trim(), discord_webhook: webhook.trim() },
     });
 
-    await supabase
-      .from('profiles')
-      .update({ discord_webhook: webhook.trim() })
-      .eq('id', session.user.id);
-
+    // Update profiles table (email, email_sender_name, discord_webhook)
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ email: email.trim() || null })
+      .update({
+        email: email.trim() || null,
+        email_sender_name: emailSenderName.trim() || null,
+        discord_webhook: webhook.trim() || null,
+      })
       .eq('id', session.user.id);
 
     if (profileError) {
-      console.error("Failed to update email in profiles:", profileError.message);
+      console.error("Failed to update profile:", profileError.message);
     } else {
-      if (onEmailAdded) onEmailAdded();
+      if (email.trim() && email !== session?.user?.email) {
+        onEmailAdded(); // notify parent email was added/changed
+      }
     }
 
     setIsSaving(false);
-    if (!error) onClose();
-    else console.error("Failed to update settings:", error.message);
+    if (!metadataError && !profileError) onClose();
+    else console.error("Failed to update settings");
   };
 
   const handleSaveDatabasePersona = async () => {
@@ -155,50 +140,6 @@ export default function SettingsModal({
       console.error(`Error linking ${provider}:`, error);
       alert(`Failed to connect account: ${error.message}`);
       setLinkLoading(null);
-    }
-  };
-
-  // --- Subscriber Handlers ---
-  const handleAddSubscribers = async () => {
-    const emailList = newEmails
-      .split('\n')
-      .map(e => e.trim())
-      .filter(e => e.length > 0 && e.includes('@'));
-
-    if (emailList.length === 0) return;
-
-    setIsAddingSubscribers(true);
-    try {
-      const res = await fetch('/api/subscribers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emails: emailList })
-      });
-      if (res.ok) {
-        setNewEmails('');
-        await fetchSubscribers();
-      } else {
-        const data = await res.json();
-        alert(`Failed to add: ${data.error}`);
-      }
-    } catch (error) {
-      console.error("Error adding subscribers", error);
-    } finally {
-      setIsAddingSubscribers(false);
-    }
-  };
-
-  const handleDeleteSubscriber = async (id: string) => {
-    if (!confirm("Remove this subscriber from your list?")) return;
-    try {
-      const res = await fetch(`/api/subscribers/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setSubscribers(subscribers.filter(s => s.id !== id));
-      } else {
-        alert("Failed to remove subscriber");
-      }
-    } catch (error) {
-      console.error("Error deleting subscriber", error);
     }
   };
 
@@ -257,7 +198,6 @@ export default function SettingsModal({
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-2">
               Workspace Preferences
             </h3>
-            {/* existing workspace fields (persona, webhook, email) */}
             <div>
               <label htmlFor="defaultPersona" className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 mt-4">
                 Default Voice (Fallback)
@@ -284,6 +224,7 @@ export default function SettingsModal({
                 onChange={(e) => setWebhook(e.target.value)}
               />
             </div>
+
             <div>
               <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
                 Email Address (for X reminders)
@@ -298,6 +239,24 @@ export default function SettingsModal({
               />
             </div>
 
+            {/* 👇 NEW: Newsletter Sender Name */}
+            <div>
+              <label htmlFor="emailSenderName" className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                Newsletter Sender Name
+              </label>
+              <input
+                id="emailSenderName"
+                type="text"
+                className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-red-500/50 text-sm font-medium text-slate-900"
+                placeholder="e.g., Ozigi Weekly Roundups"
+                value={emailSenderName}
+                onChange={(e) => setEmailSenderName(e.target.value)}
+              />
+              <p className="text-[8px] text-slate-400 mt-1">
+                This name will appear as the sender in your newsletters.
+              </p>
+            </div>
+
             <button
               onClick={handleSaveWorkspace}
               disabled={isSaving}
@@ -307,7 +266,41 @@ export default function SettingsModal({
             </button>
           </div>
 
-          
+          {/* DATABASE PERSONAS FORM */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-2">
+              🗣️ Create Persona
+            </h3>
+            <div>
+              <label htmlFor="newPersonaName" className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 mt-4">Persona Name</label>
+              <input
+                id="newPersonaName"
+                type="text"
+                placeholder="e.g., Snarky DevRel"
+                className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-red-500/50 text-sm font-medium text-slate-900"
+                value={newPersonaName}
+                onChange={(e) => setNewPersonaName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="newPersonaPrompt" className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">System Prompt</label>
+              <textarea
+                id="newPersonaPrompt"
+                placeholder="You are a developer educator who hates corporate buzzwords..."
+                className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-red-500/50 text-sm font-medium min-h-[100px] resize-y text-slate-900"
+                value={newPersonaPrompt}
+                onChange={(e) => setNewPersonaPrompt(e.target.value)}
+              />
+            </div>
+            <button
+              disabled={!newPersonaName.trim() || !newPersonaPrompt.trim() || isSavingPersona}
+              onClick={handleSaveDatabasePersona}
+              className="w-full bg-red-700 text-white py-3 rounded-xl font-black uppercase tracking-widest hover:bg-red-800 transition-all disabled:opacity-50 disabled:bg-slate-300 text-[10px] sm:text-xs shadow-lg"
+            >
+              {isSavingPersona ? "Saving..." : "Save Persona"}
+            </button>
+          </div>
+
           {/* CONNECTED ACCOUNTS */}
           <div className="space-y-4">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-2">
@@ -331,7 +324,6 @@ export default function SettingsModal({
             </div>
           </div>
 
-          
           {/* DANGER ZONE */}
           <div className="space-y-4 mt-12 pt-8 border-t-2 border-red-100">
             <h3 className="text-xs font-black uppercase tracking-widest text-red-700 pb-2">
