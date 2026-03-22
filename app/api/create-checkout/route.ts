@@ -38,6 +38,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid plan or interval' }, { status: 400 });
     }
 
+   console.log('Dodo API Key present:', !!process.env.DODO_API_KEY);
+    console.log('Product ID:', productId);
+    console.log('User email:', user.email);
+
     // Dodo API expects `mode` to be 'subscription' for recurring plans
     const response = await fetch('https://api.dodopayments.com/v1/checkout', {
       method: 'POST',
