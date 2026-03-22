@@ -4,6 +4,7 @@ import { CampaignDay } from "../lib/types";
 import ScheduleModal from "./ScheduleModal";
 import RichTextEditor from "./RichTextEditor";
 import ScheduleEmailModal from "./ScheduleEmailModal";
+import { uploadBase64Image } from "@/lib/utils";
 
 
 //props interface
@@ -95,27 +96,29 @@ function SocialCard({
   };
 
   const handleGenerateImage = async () => {
-    setIsGeneratingImg(true);
-    try {
-      const res = await fetch("/api/generate-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          platform: platformName,
-          graphicTitle: imageTitle,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setImageUrl(data.imageUrl);
-    } catch (err: any) {
-      console.error(err);
-      alert(`Image Error: ${err.message}`);
-    } finally {
-      setIsGeneratingImg(false);
-    }
-  };
+  setIsGeneratingImg(true);
+  try {
+    const res = await fetch("/api/generate-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        platform: platformName,
+        graphicTitle: imageTitle,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    // Upload the base64 to R2 and set the public URL
+    const publicUrl = await uploadBase64Image(data.imageUrl);
+    setImageUrl(publicUrl);
+  } catch (err: any) {
+    console.error(err);
+    alert(`Image Error: ${err.message}`);
+  } finally {
+    setIsGeneratingImg(false);
+  }
+};
 
   const handleDownloadImage = (e: React.MouseEvent) => {
     e.stopPropagation();

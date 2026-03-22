@@ -8,6 +8,7 @@ import { motion, Variants } from "framer-motion";
 import PricingWaitlistModal from "./PricingWaitlistModal";
 import { supabase } from "@/lib/supabase/client";
 import CompetitorCompare from "./CompetitorCompare";
+import PricingCards from "./PricingCards";
 
 
 export default function Hero() {
@@ -357,77 +358,17 @@ const staggerContainer: Variants = {
             </motion.div>
           </div>
         </section>
-        <section id="pricing" className="w-full max-w-5xl mx-auto pt-12 pb-32 px-6 scroll-mt-32">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-black italic uppercase tracking-tighter text-slate-900">Pricing</h2>
-            <p className="mt-4 text-lg font-medium text-slate-500">Free to start. No credit card required.</p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch text-left">
-            {/* Free Tier */}
-            <div className="rounded-[2.5rem] border border-slate-200 bg-white p-10 flex flex-col shadow-sm hover:shadow-xl transition-shadow">
-              <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 mb-2">Free</h3>
-              <p className="text-slate-500 font-medium mb-8 pb-8 border-b border-slate-100">Perfect for getting started.</p>
-              
-              <ul className="space-y-5 text-slate-600 font-medium mb-10 flex-grow">
-                <li className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span> 
-                  5 campaigns/month
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span> 
-                  1 saved persona
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span> 
-                  X + Discord publishing
-                </li>
-              </ul>
-              
-              <Link href="/dashboard" className="w-full rounded-xl bg-slate-100 px-4 py-4 text-center text-sm font-bold text-slate-900 hover:bg-slate-200 transition-colors">
-                Get Started
-              </Link>
-            </div>
-
-            {/* Pro Tier */}
-            <div className="rounded-[2.5rem] border border-indigo-200 bg-indigo-50 p-10 relative overflow-hidden flex flex-col shadow-md">
-              <div className="flex items-baseline gap-3 mb-2">
-                <h3 className="text-3xl font-black italic uppercase tracking-tighter text-indigo-900">Pro</h3>
-                <span className="rounded-full bg-indigo-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600">
-                  Coming soon
-                </span>
-              </div>
-              <p className="text-slate-600 font-medium mb-8 pb-8 border-b border-indigo-100/50">For serious creators scaling up.</p>
-              
-              <ul className="space-y-5 text-slate-700 font-medium mb-10 flex-grow">
-                <li className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-200 text-indigo-700 text-xs">✓</span> 
-                  Unlimited campaigns
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-200 text-indigo-700 text-xs">✓</span> 
-                  Unlimited personas
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-200 text-indigo-700 text-xs">✓</span> 
-                  LinkedIn OAuth + Image Gen
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-200 text-indigo-700 text-xs">✓</span> 
-                  Priority model access
-                </li>
-              </ul>
-              
-              <button
-                onClick={() => setIsWaitlistOpen(true)}
-                className="w-full rounded-xl bg-indigo-200/50 px-4 py-4 text-center text-sm font-bold text-indigo-400 hover:bg-indigo-300/50 hover:text-indigo-600 transition-colors"
-              >
-                Join the Waitlist
-              </button>
-              {isWaitlistOpen && <PricingWaitlistModal onClose={() => setIsWaitlistOpen(false)} />}
-            </div>
-          </div>
-        </section>
+        <section id="pricing" className="w-full max-w-7xl mx-auto py-24 px-6 scroll-mt-32">
+  <div className="text-center mb-12">
+    <h2 className="text-4xl sm:text-5xl font-black italic uppercase tracking-tighter text-slate-900">
+      Simple, transparent pricing
+    </h2>
+    <p className="mt-4 text-lg font-medium text-slate-500 max-w-2xl mx-auto">
+      No credit card required to start. Upgrade when you're ready to scale.
+    </p>
+  </div>
+  <PricingCards />
+</section>
       </main>
       {isAuthModalOpen && <AuthModal onClose={() => setIsAuthModalOpen(false)} />}
     </div>

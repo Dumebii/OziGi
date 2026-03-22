@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, X, ArrowRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import TextareaAutosize from 'react-textarea-autosize';
 
 interface Message {
   role: "user" | "assistant";
@@ -27,6 +28,21 @@ export default function CopilotPanel({ isOpen, onClose, onSendToEngine }: Copilo
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // In CopilotPanel component, add:
+const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+useEffect(() => {
+  const textarea = textareaRef.current;
+  if (!textarea) return;
+  const adjustHeight = () => {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  };
+  adjustHeight();
+  textarea.addEventListener('input', adjustHeight);
+  return () => textarea.removeEventListener('input', adjustHeight);
+}, [input]); // re-run when input changes (though the event listener will handle dynamic changes)
 
   useEffect(() => {
     scrollToBottom();
@@ -140,14 +156,18 @@ export default function CopilotPanel({ isOpen, onClose, onSendToEngine }: Copilo
       {/* Input area */}
       <div className="border-t border-slate-200 p-4 bg-white">
         <div className="flex gap-2">
-          <textarea
-            rows={2}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask me anything..."
-            className="flex-1 resize-none bg-white rounded-xl px-4 py-3 text-sm text-slate-900 border border-slate-200 focus:outline-none focus:border-red-500 placeholder:text-slate-400"
-          />
+          import TextareaAutosize from 'react-textarea-autosize';
+
+// Inside the component, replace the textarea with:
+<TextareaAutosize
+  minRows={2}
+  maxRows={10}
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  onKeyDown={handleKeyDown}
+  placeholder="Ask me anything..."
+  className="flex-1 bg-white rounded-xl px-4 py-3 text-sm text-slate-900 border border-slate-200 focus:outline-none focus:border-red-500 placeholder:text-slate-400 resize-none"
+/>
           <button
             onClick={handleSend}
             disabled={isLoading || !input.trim()}

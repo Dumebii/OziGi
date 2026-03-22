@@ -1,22 +1,50 @@
 import { createClient } from '@supabase/supabase-js';
 
-export type Plan = "trial" | "free" | "pro" | "power";
+export type Plan = "free" | "team" | "organization" | "enterprise";
 
 export interface PlanStatus {
   plan: Plan;
   isTrialActive: boolean;
   isTrialExpired: boolean;
+  trialEndsAt: Date | null;
   canGenerate: boolean;
   generationsUsed: number;
-  generationsLimit: number; // -1 means unlimited
-  trialEndsAt: Date | null;
+  generationsLimit: number;
+  imageGenUsed: number;
+  imageGenLimit: number;
+  emailSendsUsed: number;
+  emailSendsLimit: number;
+  hasCopilot: boolean;
+  isEnterprise: boolean;
 }
 
+// Limits per plan (base limits – trial uses team limits)
 const GENERATION_LIMITS: Record<Plan, number> = {
-  trial: Infinity,
   free: 5,
-  pro: 30,
-  power: Infinity,
+  team: 30,
+  organization: -1,
+  enterprise: -1,
+};
+
+const IMAGE_GEN_LIMITS: Record<Plan, number> = {
+  free: 0,
+  team: 2,
+  organization: -1,
+  enterprise: -1,
+};
+
+const EMAIL_SEND_LIMITS: Record<Plan, number> = {
+  free: 0,
+  team: 500,
+  organization: -1,
+  enterprise: -1,
+};
+
+const COPILOT_ACCESS: Record<Plan, boolean> = {
+  free: false,
+  team: false,
+  organization: true,
+  enterprise: true,
 };
 
 export async function getPlanStatus(userId: string): Promise<PlanStatus> {
@@ -25,100 +53,166 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { data: profile, error } = await supabaseAdmin
+  const now = new Date();
+
+  // Fetch profile
+  let { data: existingProfile, error: profileError } = await supabaseAdmin
     .from("profiles")
-    .select("plan, trial_ends_at, generations_used_this_month, generation_reset_at")
+    .select("plan, trial_started_at, trial_ends_at")
     .eq("id", userId)
-    .maybeSingle();
-if (error) {
-  console.error("Supabase profile fetch error:", error);
-  throw new Error("Could not fetch user profile.");
-}
-  // If no profile exists, create one (should be handled by trigger, but just in case)
-  if (!profile) {
-    const now = new Date();
+    .single();
+
+  let profile: any;
+
+  // If no profile exists, create one with trial
+  if (profileError && profileError.code === 'PGRST116') {
     const newProfile = {
       id: userId,
-      plan: "trial",
+      plan: "team",
       trial_started_at: now.toISOString(),
       trial_ends_at: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      generations_used_this_month: 0,
-      generation_reset_at: new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString(),
     };
     await supabaseAdmin.from("profiles").insert(newProfile);
-    return {
-      plan: "trial",
-      isTrialActive: true,
-      isTrialExpired: false,
-      canGenerate: true,
-      generationsUsed: 0,
-      generationsLimit: Infinity,
-      trialEndsAt: new Date(newProfile.trial_ends_at),
-    };
+    profile = newProfile;
+  } else if (profileError) {
+    throw new Error("Could not fetch user profile.");
+  } else {
+    profile = existingProfile;
   }
 
-  const now = new Date();
+  // Check trial status
   const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null;
-  const isTrialActive = profile.plan === "trial" && trialEndsAt !== null && now < trialEndsAt;
-  const isTrialExpired = profile.plan === "trial" && trialEndsAt !== null && now >= trialEndsAt;
+  const isTrialActive = profile.plan === "team" && trialEndsAt !== null && now < trialEndsAt;
+  const isTrialExpired = profile.plan === "team" && trialEndsAt !== null && now >= trialEndsAt;
 
-  // If trial expired, downgrade to free automatically
+  // If trial expired, downgrade to free and clear trial dates
   if (isTrialExpired) {
     await supabaseAdmin
       .from("profiles")
-      .update({ plan: "free" })
+      .update({ plan: "free", trial_ends_at: null, trial_started_at: null })
       .eq("id", userId);
+    profile.plan = "free";
+    profile.trial_ends_at = null;
+    profile.trial_started_at = null;
   }
 
-  const effectivePlan: Plan = isTrialExpired ? "free" : (profile.plan as Plan);
-  const limit = GENERATION_LIMITS[effectivePlan];
+  const effectivePlan: Plan = profile.plan as Plan;
+  const generationsLimit = GENERATION_LIMITS[effectivePlan];
+  const imageGenLimit = IMAGE_GEN_LIMITS[effectivePlan];
+  const emailSendsLimit = EMAIL_SEND_LIMITS[effectivePlan];
+  const hasCopilot = COPILOT_ACCESS[effectivePlan];
 
-  // Reset monthly generation count if past reset date
-  const resetAt = profile.generation_reset_at ? new Date(profile.generation_reset_at) : null;
-  let generationsUsed = profile.generations_used_this_month || 0;
+  // Fetch usage stats
+  let stats: {
+    campaigns_generated: number;
+    image_generations_this_month: number;
+    email_sends_this_month: number;
+  };
 
-  if (resetAt && now >= resetAt) {
-    await supabaseAdmin
-      .from("profiles")
-      .update({
-        generations_used_this_month: 0,
-        generation_reset_at: new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString(),
-      })
-      .eq("id", userId);
-    generationsUsed = 0;
+  const { data: existingStats, error: statsError } = await supabaseAdmin
+    .from("user_stats")
+    .select("campaigns_generated, image_generations_this_month, email_sends_this_month")
+    .eq("user_id", userId)
+    .single();
+
+  if (statsError && statsError.code === 'PGRST116') {
+    // Create stats row
+    const nowDate = new Date();
+    const newStats = {
+      user_id: userId,
+      campaigns_generated: 0,
+      image_generations_this_month: 0,
+      email_sends_this_month: 0,
+      generation_reset_at: new Date(nowDate.getFullYear(), nowDate.getMonth() + 1, 1).toISOString(),
+    };
+    await supabaseAdmin.from("user_stats").insert(newStats);
+    stats = {
+      campaigns_generated: 0,
+      image_generations_this_month: 0,
+      email_sends_this_month: 0,
+    };
+  } else if (statsError) {
+    console.error("Stats error:", statsError);
+    stats = { campaigns_generated: 0, image_generations_this_month: 0, email_sends_this_month: 0 };
+  } else {
+    stats = existingStats!;
   }
-
-  const canGenerate = limit === Infinity || generationsUsed < limit;
 
   return {
     plan: effectivePlan,
     isTrialActive,
     isTrialExpired,
-    canGenerate,
-    generationsUsed,
-    generationsLimit: limit === Infinity ? -1 : limit,
     trialEndsAt,
+    canGenerate: generationsLimit === -1 || stats.campaigns_generated < generationsLimit,
+    generationsUsed: stats.campaigns_generated,
+    generationsLimit: generationsLimit === -1 ? -1 : generationsLimit,
+    imageGenUsed: stats.image_generations_this_month,
+    imageGenLimit: imageGenLimit === -1 ? -1 : imageGenLimit,
+    emailSendsUsed: stats.email_sends_this_month,
+    emailSendsLimit: emailSendsLimit === -1 ? -1 : emailSendsLimit,
+    hasCopilot,
+    isEnterprise: effectivePlan === "enterprise",
   };
 }
 
-export async function incrementGenerationCount(userId: string): Promise<void> {
+// Increment functions (unchanged)
+export async function incrementCampaignGeneration(userId: string): Promise<void> {
+  await incrementStat(userId, "campaigns_generated");
+}
+
+export async function incrementImageGeneration(userId: string): Promise<void> {
+  await incrementStat(userId, "image_generations_this_month");
+}
+
+export async function incrementEmailSend(userId: string): Promise<void> {
+  await incrementStat(userId, "email_sends_this_month");
+}
+
+async function incrementStat(userId: string, column: string) {
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { error } = await supabaseAdmin.rpc("increment_generations", { user_id: userId });
-  if (error) {
-    console.warn("RPC increment failed, using manual update:", error);
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("generations_used_this_month")
-      .eq("id", userId)
-      .single();
-    const current = profile?.generations_used_this_month || 0;
-    await supabaseAdmin
-      .from("profiles")
-      .update({ generations_used_this_month: current + 1 })
-      .eq("id", userId);
+  // Fetch the full record
+  const { data: current, error: fetchError } = await supabaseAdmin
+    .from("user_stats")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    console.error("Error fetching stats for increment:", fetchError);
+    return;
+  }
+
+  const newStats: any = current ? { ...current } : { user_id: userId };
+
+  // Increment the correct column
+  if (column === 'campaigns_generated') {
+    newStats.campaigns_generated = (newStats.campaigns_generated || 0) + 1;
+  } else if (column === 'image_generations_this_month') {
+    newStats.image_generations_this_month = (newStats.image_generations_this_month || 0) + 1;
+  } else if (column === 'email_sends_this_month') {
+    newStats.email_sends_this_month = (newStats.email_sends_this_month || 0) + 1;
+  } else {
+    console.error("Invalid column for incrementStat:", column);
+    return;
+  }
+
+  // If the record didn't exist, set sensible defaults for other columns
+  if (!current) {
+    newStats.campaigns_generated = newStats.campaigns_generated || 0;
+    newStats.image_generations_this_month = newStats.image_generations_this_month || 0;
+    newStats.email_sends_this_month = newStats.email_sends_this_month || 0;
+    newStats.generation_reset_at = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString();
+  }
+
+  const { error: updateError } = await supabaseAdmin
+    .from("user_stats")
+    .upsert(newStats, { onConflict: 'user_id' });
+
+  if (updateError) {
+    console.error("Error updating stats:", updateError);
   }
 }
