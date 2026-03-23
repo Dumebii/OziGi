@@ -367,7 +367,8 @@ const staggerContainer: Variants = {
       No credit card required to start. Upgrade when you're ready to scale.
     </p>
   </div>
-  <PricingCards />
+<PricingCards onOpenAuthModal={() => setIsAuthModalOpen(true)} />
+  
 </section>
       </main>
       {isAuthModalOpen && <AuthModal onClose={() => setIsAuthModalOpen(false)} />}

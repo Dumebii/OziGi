@@ -1,14 +1,21 @@
 "use client";
 import SubscribersManager from "@/components/SubscribersManager";
+import { usePlanStatus } from "../hooks/usePlanStatus";
+import { useState } from "react";
 
 interface SubscribersModalProps {
   isOpen: boolean;
   onClose: () => void;
   session: any;
+  onOpenUpgradeModal?: () => void;
 }
+  const { planStatus, loading: planLoading } = usePlanStatus();
 
-export default function SubscribersModal({ isOpen, onClose, session }: SubscribersModalProps) {
+
+export default function SubscribersModal({ isOpen, onClose, session, onOpenUpgradeModal }: SubscribersModalProps) {
   if (!isOpen) return null;
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
@@ -19,7 +26,8 @@ export default function SubscribersModal({ isOpen, onClose, session }: Subscribe
         >
           ✕
         </button>
-        <SubscribersManager session={session} />
+        <SubscribersManager session={session}    onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+/>
       </div>
     </div>
   );

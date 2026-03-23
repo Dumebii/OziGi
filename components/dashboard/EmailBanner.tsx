@@ -21,12 +21,12 @@ export default function EmailBanner({ needsEmail, onDismiss, onGoToSettings }: E
       <div>
         <h3 className="font-bold text-sm">Action Required: Secure your account</h3>
         <p className="text-xs mt-1">
-          You signed in with X. Please add an email address in Settings for account recovery and newsletter features.
+          If you signed in with X. Please add an email address in Settings for account recovery and newsletter features.
         </p>
       </div>
       <button
         onClick={onGoToSettings}
-        className="shrink-0 bg-orange-600 text-white px-2 py-2 rounded-lg text-sm font-semibold hover:bg-orange-700 transition"
+        className="shrink-0 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700 transition"
       >
         Go to Settings
       </button>

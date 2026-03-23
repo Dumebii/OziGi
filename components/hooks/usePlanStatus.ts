@@ -35,7 +35,6 @@ export function usePlanStatus() {
         });
         if (res.ok) {
           const data = await res.json();
-          // The stats endpoint now includes all plan fields
           setPlanStatus({
             plan: data.plan,
             isTrialActive: data.isTrialActive,

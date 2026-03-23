@@ -138,7 +138,7 @@ export default function TrialGateModal({ isOpen, onClose }: TrialGateModalProps)
               href="/pricing"
               className="block w-full bg-slate-900 text-white text-center py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-slate-800 transition-colors"
             >
-              Upgrade to Pro — $12/month →
+              Upgrade to Pro — $15/month →
             </a>
             <button
               onClick={handleContinueFree}

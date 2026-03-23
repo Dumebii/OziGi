@@ -27,7 +27,8 @@ import CopilotSettingsModal from "@/components/CopilotSettingsModal";
 import { getPlanStatus, PlanStatus } from "@/lib/plan";
 import TrialBanner from "@/components/TrialBanner";
 import { usePlanStatus } from "@/components/hooks/usePlanStatus";
-import PricingCards from "@/components/PricingCards"; // or your upgrade modal content
+import PricingCards from "@/components/PricingCards"; 
+import UpgradeModal from "@/components/UpgradeModal";
 
 
 
@@ -38,7 +39,6 @@ export default function Dashboard() {
   // --- CORE STATE ---
   const [loading, setLoading] = useState(false);
   const { planStatus, loading: planLoading } = usePlanStatus();
-const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [campaign, setCampaign] = useState<any[]>([]);
   const [inputs, setInputs] = useState({
     url: "",
@@ -68,6 +68,8 @@ const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSubscribersOpen, setIsSubscribersOpen] = useState(false);
   const [isPersonasOpen, setIsPersonasOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+
 
   // --- SIDEBAR STATES ---
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -400,14 +402,28 @@ const handleGenerate = async () => {
       {isScheduledOpen && <ScheduledPostsModal onClose={() => setIsScheduledOpen(false)} onStatsChange={refreshStats} />}
       {isSettingsOpen && <SettingsModal session={session} onClose={() => setIsSettingsOpen(false)} onEmailAdded={handleEmailAdded} />}
       <HistoryModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} pastCampaigns={pastCampaigns} onRestore={(rec) => restoreCampaign(rec, setInputs, setCampaign)} />
-      <SubscribersModal isOpen={isSubscribersOpen} onClose={() => setIsSubscribersOpen(false)} session={session} />
+      <SubscribersModal isOpen={isSubscribersOpen} onClose={() => setIsSubscribersOpen(false)} session={session}   onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)} />
       <PersonasModal isOpen={isPersonasOpen} onClose={() => setIsPersonasOpen(false)} session={session} />
         <CopilotSettingsModal
   isOpen={isCopilotSettingsOpen}
   onClose={() => setIsCopilotSettingsOpen(false)}
   session={session}
 />
-        <CopilotPanel
+<UpgradeModal
+  isOpen={isUpgradeModalOpen}
+  onClose={() => setIsUpgradeModalOpen(false)}
+  onOpenAuthModal={() => setIsAuthModalOpen(true)}
+/>
+{planStatus?.hasCopilot && (
+  <>
+    <button
+      onClick={() => setIsCopilotOpen(true)}
+      className="fixed bottom-6 right-6 z-40 bg-indigo-600 text-white p-4 rounded-full shadow-2xl hover:bg-indigo-700 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+      aria-label="Open Copilot"
+    >
+      <span className="text-2xl">✨</span>
+    </button>
+            <CopilotPanel
   isOpen={isCopilotOpen}
   onClose={() => setIsCopilotOpen(false)}
   onSendToEngine={(text) => {
@@ -417,6 +433,8 @@ const handleGenerate = async () => {
     // Optionally scroll to Distillery
   }}
 />
+  </>
+)}
 
     </div>
   );

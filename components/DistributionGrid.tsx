@@ -5,6 +5,8 @@ import ScheduleModal from "./ScheduleModal";
 import RichTextEditor from "./RichTextEditor";
 import ScheduleEmailModal from "./ScheduleEmailModal";
 import { uploadBase64Image } from "@/lib/utils";
+import { PlanStatus, usePlanStatus } from "@/components/hooks/usePlanStatus";
+
 
 
 //props interface
@@ -34,6 +36,8 @@ const staggerContainer: Variants = {
     transition: { staggerChildren: 0.1 }
   }
 };
+
+const { planStatus, loading: planLoading } = usePlanStatus();
 
 // Expandable Text Component
 function ExpandableText({ text }: { text: string }) {
@@ -71,6 +75,7 @@ function SocialCard({
   platformName: string;
   initialText: string;
   session: any;
+    planStatus?: PlanStatus | null;
   onPost?: (text: string, day: number, imageUrl?: string) => void;
   postStatus?: "idle" | "loading" | "success" | "error";
   actionButtonConfig?: {
@@ -88,6 +93,7 @@ function SocialCard({
   const [isGeneratingImg, setIsGeneratingImg] = useState(false);
   const [imageTitle, setImageTitle] = useState("");
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const { planStatus, loading: planLoading } = usePlanStatus();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -212,13 +218,27 @@ function SocialCard({
               className="w-full h-auto object-cover aspect-video"
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <button
-                onClick={handleGenerateImage}
-                disabled={isGeneratingImg}
-                className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors shadow-lg"
-              >
-                {isGeneratingImg ? "Generating..." : "Regenerate"}
-              </button>
+              {planStatus?.imageGenLimit !== 0 ? (
+  <button
+    onClick={handleGenerateImage}
+    disabled={isGeneratingImg}
+    className="w-full mb-5 py-3 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-800 hover:border-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+  >
+    {isGeneratingImg ? "🎨 Painting pixels..." : "🎨 Generate Graphic"}
+  </button>
+) : (
+  <div className="relative group w-full mb-5">
+    <button
+      disabled
+      className="w-full py-3 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-not-allowed flex items-center justify-center gap-2"
+    >
+      🔒 Upgrade to Generate
+    </button>
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+      Upgrade to Team for image generation
+    </div>
+  </div>
+)}
             </div>
           </div>
           <button
@@ -301,6 +321,7 @@ export default function DistributionGrid({
   const [localEmailContent, setLocalEmailContent] = useState<string | null>(emailContent || null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
     const [emailImageUrl, setEmailImageUrl] = useState<string | null>(null);
+
 
   
 
@@ -427,6 +448,7 @@ export default function DistributionGrid({
                   key={`x-${dayData.day}`}
                   day={dayData.day}
                   platformName="X"
+                  planStatus={planStatus} // 👈 new
                   session={session}
                   initialText={dayData.x}
                   onPost={handlePostToX}
@@ -461,6 +483,7 @@ export default function DistributionGrid({
                   key={`li-${dayData.day}`}
                   day={dayData.day}
                   platformName="LinkedIn"
+                  planStatus={planStatus} // 👈 new
                   session={session}
                   initialText={dayData.linkedin}
                   onPost={handlePostToLinkedIn}
@@ -495,6 +518,7 @@ export default function DistributionGrid({
                   key={`disc-${dayData.day}`}
                   day={dayData.day}
                   platformName="Discord"
+                  planStatus={planStatus} // 👈 new
                   session={session}
                   initialText={dayData.discord}
                   onPost={handlePostToDiscord}
@@ -565,6 +589,7 @@ export default function DistributionGrid({
   />
 )}
 
+{planStatus?.emailSendsLimit !== 0 ? (
         <button
   onClick={() => setIsScheduleModalOpen(true)}
   disabled={emailStatus === "loading"}
@@ -572,6 +597,12 @@ export default function DistributionGrid({
 >
   {emailStatus === "loading" ? "Scheduling..." : "📧 Schedule Newsletter"}
 </button>
+) : (<div>
+  <div className="relative group">
+    <button disabled>🔒 Upgrade to Send</button>
+    <div className="tooltip">Upgrade to Team to send newsletters</div>
+  </div></div>
+)}
       </div>
     </motion.div>
   </section>

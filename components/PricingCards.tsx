@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase/client";
 import { Check } from "lucide-react";
 
 interface PricingTier {
   name: string;
-  priceMonthly: number | null;   // null for enterprise
+  priceMonthly: number | null;
   priceYearly: number | null;
   description: string;
   features: string[];
@@ -96,17 +97,35 @@ const tiers: PricingTier[] = [
   },
 ];
 
-export default function PricingCards() {
+interface PricingCardsProps {
+  onOpenAuthModal?: () => void;
+}
+
+export default function PricingCards({ onOpenAuthModal }: PricingCardsProps) {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   const router = useRouter();
 
   const handleUpgrade = async (plan: string, interval: "monthly" | "yearly") => {
+    // Check login status
+    const { data: { session } } = await supabase.auth.getSession();
+
     if (plan === "free") {
+      if (!session) {
+        onOpenAuthModal?.();
+        return;
+      }
       router.push("/dashboard");
       return;
     }
+
     if (plan === "enterprise") {
       window.location.href = "mailto:hello@ozigi.app?subject=Enterprise Inquiry";
+      return;
+    }
+
+    // Paid plans – require login
+    if (!session) {
+      onOpenAuthModal?.();
       return;
     }
 
@@ -120,7 +139,7 @@ export default function PricingCards() {
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
-        alert("Failed to create checkout");
+        alert("Failed to create checkout. Please try again later.");
       }
     } catch (err) {
       console.error(err);

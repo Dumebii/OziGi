@@ -1,16 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { usePlanStatus } from "@/components/hooks/usePlanStatus";
 
 interface SubscribersManagerProps {
   session: any;
+  onOpenUpgradeModal?: () => void;
+
 }
 
-export default function SubscribersManager({ session }: SubscribersManagerProps) {
+export default function SubscribersManager({ session, onOpenUpgradeModal }: SubscribersManagerProps) {
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const [newEmails, setNewEmails] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { planStatus, loading: planLoading } = usePlanStatus();
+
 
   useEffect(() => {
     fetchSubscribers();
@@ -73,6 +78,20 @@ export default function SubscribersManager({ session }: SubscribersManagerProps)
       console.error("Error deleting subscriber", error);
     }
   };
+    if (planStatus?.emailSendsLimit === 0) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-black mb-2">Upgrade to Manage Subscribers</h3>
+        <p className="text-sm text-slate-500 mb-6">Subscriber management is available on Team and Organization plans.</p>
+        <button
+          onClick={onOpenUpgradeModal}
+          className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold text-sm"
+        >
+          Upgrade Now
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

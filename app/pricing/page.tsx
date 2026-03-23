@@ -3,10 +3,13 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PricingCards from "@/components/PricingCards";
 import { redirect } from "next/navigation";
+import { useState } from "react";
 
 export default async function PricingPage() {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  
 
   return (
     <div className="bg-[#fafafa] min-h-screen flex flex-col">
@@ -21,8 +24,8 @@ export default async function PricingPage() {
               No credit card required to start. Upgrade when you're ready to scale.
             </p>
           </div>
-          <PricingCards />
-        </div>
+<PricingCards onOpenAuthModal={() => setIsAuthModalOpen(true)} />
+          </div>
       </main>
       <Footer />
     </div>
