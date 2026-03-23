@@ -24,7 +24,7 @@ import { useEmailBanner } from "@/components/hooks/useEmailBanner";
 import { supabase } from "@/lib/supabase/client";
 import CopilotPanel from "@/components/CopilotPannel";
 import CopilotSettingsModal from "@/components/CopilotSettingsModal";
-import { getPlanStatus, PlanStatus } from "@/lib/plan";
+import type { PlanStatus } from "@/lib/plan";
 import TrialBanner from "@/components/TrialBanner";
 import { usePlanStatus } from "@/components/hooks/usePlanStatus";
 import PricingCards from "@/components/PricingCards"; 

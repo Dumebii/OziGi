@@ -9,12 +9,12 @@ interface SubscribersModalProps {
   session: any;
   onOpenUpgradeModal?: () => void;
 }
-  const { planStatus, loading: planLoading } = usePlanStatus();
 
 
 export default function SubscribersModal({ isOpen, onClose, session, onOpenUpgradeModal }: SubscribersModalProps) {
-  if (!isOpen) return null;
+    const { planStatus, loading: planLoading } = usePlanStatus(); // move here
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  if (!isOpen) return null;
   
 
   return (

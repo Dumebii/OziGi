@@ -37,7 +37,6 @@ const staggerContainer: Variants = {
   }
 };
 
-const { planStatus, loading: planLoading } = usePlanStatus();
 
 // Expandable Text Component
 function ExpandableText({ text }: { text: string }) {
@@ -94,6 +93,7 @@ function SocialCard({
   const [imageTitle, setImageTitle] = useState("");
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const { planStatus, loading: planLoading } = usePlanStatus();
+  
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -321,6 +321,8 @@ export default function DistributionGrid({
   const [localEmailContent, setLocalEmailContent] = useState<string | null>(emailContent || null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
     const [emailImageUrl, setEmailImageUrl] = useState<string | null>(null);
+    const { planStatus, loading: planLoading } = usePlanStatus();
+
 
 
   
