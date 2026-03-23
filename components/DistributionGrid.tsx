@@ -5,17 +5,14 @@ import ScheduleModal from "./ScheduleModal";
 import RichTextEditor from "./RichTextEditor";
 import ScheduleEmailModal from "./ScheduleEmailModal";
 import { uploadBase64Image } from "@/lib/utils";
-import { PlanStatus, usePlanStatus } from "@/components/hooks/usePlanStatus";
+import { usePlanStatus } from "@/components/hooks/usePlanStatus";
 
-
-
-//props interface
 interface DistributionGridProps {
   campaign: CampaignDay[];
   session: any;
   selectedPlatforms: string[];
-  emailContent?: string | null;           // 👈 new prop
-  setEmailContent?: (content: string | null) => void; // 👈 new prop
+  emailContent?: string | null;
+  setEmailContent?: (content: string | null) => void;
   onStatsChange?: () => void;
 }
 
@@ -37,8 +34,6 @@ const staggerContainer: Variants = {
   }
 };
 
-
-// Expandable Text Component
 function ExpandableText({ text }: { text: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLong = text.length > 250;
@@ -59,7 +54,7 @@ function ExpandableText({ text }: { text: string }) {
   );
 }
 
-// Social Card Component 
+// Social Card Component
 function SocialCard({
   day,
   platformName,
@@ -69,12 +64,14 @@ function SocialCard({
   session,
   actionButtonConfig,
   onStatsChange,
+  imagesGeneratedCount,
+  incrementImageCount,
+  planStatus,
 }: {
   day: number;
   platformName: string;
   initialText: string;
   session: any;
-    planStatus?: PlanStatus | null;
   onPost?: (text: string, day: number, imageUrl?: string) => void;
   postStatus?: "idle" | "loading" | "success" | "error";
   actionButtonConfig?: {
@@ -84,6 +81,9 @@ function SocialCard({
     classes: string;
   };
   onStatsChange?: () => void;
+  imagesGeneratedCount: number;
+  incrementImageCount: () => void;
+  planStatus: any;
 }) {
   const [text, setText] = useState(initialText);
   const [isEditing, setIsEditing] = useState(false);
@@ -92,8 +92,6 @@ function SocialCard({
   const [isGeneratingImg, setIsGeneratingImg] = useState(false);
   const [imageTitle, setImageTitle] = useState("");
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const { planStatus, loading: planLoading } = usePlanStatus();
-  
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -102,29 +100,39 @@ function SocialCard({
   };
 
   const handleGenerateImage = async () => {
-  setIsGeneratingImg(true);
-  try {
-    const res = await fetch("/api/generate-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text,
-        platform: platformName,
-        graphicTitle: imageTitle,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    // Upload the base64 to R2 and set the public URL
-    const publicUrl = await uploadBase64Image(data.imageUrl);
-    setImageUrl(publicUrl);
-  } catch (err: any) {
-    console.error(err);
-    alert(`Image Error: ${err.message}`);
-  } finally {
-    setIsGeneratingImg(false);
-  }
-};
+    // Check per‑campaign limit (if limit is not unlimited)
+    if (planStatus?.imageGenLimit !== -1 && imagesGeneratedCount >= planStatus.imageGenLimit) {
+      alert(`You've reached your image generation limit (${planStatus.imageGenLimit} per campaign). Upgrade to generate more.`);
+      return;
+    }
+
+    setIsGeneratingImg(true);
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          platform: platformName,
+          graphicTitle: imageTitle,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const publicUrl = await uploadBase64Image(data.imageUrl);
+      setImageUrl(publicUrl);
+      incrementImageCount(); // increment the global count
+    } catch (err: any) {
+      console.error(err);
+      let errorMsg = `Image Error: ${err.message}`;
+      if (err.message.includes("Quota exceeded")) {
+        errorMsg = "Image generation quota exceeded. Please try again later or upgrade your plan.";
+      }
+      alert(errorMsg);
+    } finally {
+      setIsGeneratingImg(false);
+    }
+  };
 
   const handleDownloadImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -170,6 +178,28 @@ function SocialCard({
 
     if (onStatsChange) onStatsChange();
   };
+
+  const imageGenButton = planStatus?.imageGenLimit !== 0 ? (
+    <button
+      onClick={handleGenerateImage}
+      disabled={isGeneratingImg}
+      className="w-full mb-5 py-3 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-800 hover:border-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+    >
+      {isGeneratingImg ? "🎨 Painting pixels..." : "🎨 Generate Graphic"}
+    </button>
+  ) : (
+    <div className="relative group w-full mb-5">
+      <button
+        disabled
+        className="w-full py-3 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        🔒 Upgrade to Generate
+      </button>
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+        Upgrade to Team for image generation
+      </div>
+    </div>
+  );
 
   return (
     <motion.div variants={fadeUp} className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm flex flex-col p-5 hover:border-slate-300 hover:shadow-md transition-all">
@@ -217,28 +247,8 @@ function SocialCard({
               alt="Generated graphic"
               className="w-full h-auto object-cover aspect-video"
             />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              {planStatus?.imageGenLimit !== 0 ? (
-  <button
-    onClick={handleGenerateImage}
-    disabled={isGeneratingImg}
-    className="w-full mb-5 py-3 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-800 hover:border-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-  >
-    {isGeneratingImg ? "🎨 Painting pixels..." : "🎨 Generate Graphic"}
-  </button>
-) : (
-  <div className="relative group w-full mb-5">
-    <button
-      disabled
-      className="w-full py-3 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-not-allowed flex items-center justify-center gap-2"
-    >
-      🔒 Upgrade to Generate
-    </button>
-    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
-      Upgrade to Team for image generation
-    </div>
-  </div>
-)}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              {imageGenButton}
             </div>
           </div>
           <button
@@ -250,13 +260,7 @@ function SocialCard({
           </button>
         </div>
       ) : (
-        <button
-          onClick={handleGenerateImage}
-          disabled={isGeneratingImg}
-          className="w-full mb-5 py-3 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-800 hover:border-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-        >
-          {isGeneratingImg ? "🎨 Painting pixels..." : "🎨 Generate Graphic"}
-        </button>
+        imageGenButton
       )}
 
       {isEditing ? (
@@ -310,24 +314,23 @@ export default function DistributionGrid({
   setEmailContent,
   onStatsChange,
 }: DistributionGridProps) {
+  const { planStatus, loading: planLoading } = usePlanStatus();
   const [xStatuses, setXStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
   const [discordStatuses, setDiscordStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
   const [liStatuses, setLiStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
 
-  // Email‑specific states
+  // Email-specific states
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
   const [emailStatus, setEmailStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [localEmailContent, setLocalEmailContent] = useState<string | null>(emailContent || null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-    const [emailImageUrl, setEmailImageUrl] = useState<string | null>(null);
-    const { planStatus, loading: planLoading } = usePlanStatus();
+  const [emailImageUrl, setEmailImageUrl] = useState<string | null>(null);
 
+  // Image count tracking (per campaign)
+  const [imagesGeneratedCount, setImagesGeneratedCount] = useState(0);
+  const incrementImageCount = () => setImagesGeneratedCount(prev => prev + 1);
 
-
-  
-
-  // Sync local state when prop changes
   useEffect(() => {
     setLocalEmailContent(emailContent || null);
   }, [emailContent]);
@@ -341,35 +344,35 @@ export default function DistributionGrid({
   };
 
   const handleEmailSchedule = async (scheduledFor: string, imageUrl?: string) => {
-  if (!session?.access_token) return alert("Please sign in to schedule.");
-  setEmailStatus("loading");
-  try {
-    const res = await fetch("/api/schedule", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({
-        posts: [{
-          platform: "email",
-          content: localEmailContent,
-          imageUrl: imageUrl,
-          day: 0,
-        }],
-        scheduledFor,
-        campaignId: null,
-      }),
-    });
-    if (!res.ok) throw new Error("Failed to schedule");
-    setEmailStatus("success");
-    setTimeout(() => setEmailStatus("idle"), 3000);
-    if (onStatsChange) onStatsChange();
-  } catch (err: any) {
-    alert(err.message);
-    setEmailStatus("error");
-  }
-};
+    if (!session?.access_token) return alert("Please sign in to schedule.");
+    setEmailStatus("loading");
+    try {
+      const res = await fetch("/api/schedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          posts: [{
+            platform: "email",
+            content: localEmailContent,
+            imageUrl: imageUrl,
+            day: 0,
+          }],
+          scheduledFor,
+          campaignId: null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to schedule");
+      setEmailStatus("success");
+      setTimeout(() => setEmailStatus("idle"), 3000);
+      if (onStatsChange) onStatsChange();
+    } catch (err: any) {
+      alert(err.message);
+      setEmailStatus("error");
+    }
+  };
 
   const handlePostToX = async (text: string, day: number) => {
     const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
@@ -424,8 +427,6 @@ export default function DistributionGrid({
     }
   };
 
-  
-
   const hasX = campaign.some((d) => d.x) && selectedPlatforms.includes('x');
   const hasLinkedIn = campaign.some((d) => d.linkedin) && selectedPlatforms.includes('linkedin');
   const hasDiscord = campaign.some((d) => d.discord) && selectedPlatforms.includes('discord');
@@ -433,7 +434,6 @@ export default function DistributionGrid({
 
   return (
     <div className="space-y-12">
-      
       {/* X ROW */}
       {hasX && (
         <section>
@@ -450,9 +450,11 @@ export default function DistributionGrid({
                   key={`x-${dayData.day}`}
                   day={dayData.day}
                   platformName="X"
-                  planStatus={planStatus} // 👈 new
                   session={session}
                   initialText={dayData.x}
+                  imagesGeneratedCount={imagesGeneratedCount}
+                  incrementImageCount={incrementImageCount}
+                  planStatus={planStatus}
                   onPost={handlePostToX}
                   postStatus={xStatuses[dayData.day]}
                   actionButtonConfig={{
@@ -485,9 +487,11 @@ export default function DistributionGrid({
                   key={`li-${dayData.day}`}
                   day={dayData.day}
                   platformName="LinkedIn"
-                  planStatus={planStatus} // 👈 new
                   session={session}
                   initialText={dayData.linkedin}
+                  imagesGeneratedCount={imagesGeneratedCount}
+                  incrementImageCount={incrementImageCount}
+                  planStatus={planStatus}
                   onPost={handlePostToLinkedIn}
                   postStatus={liStatuses[dayData.day]}
                   actionButtonConfig={{
@@ -520,9 +524,11 @@ export default function DistributionGrid({
                   key={`disc-${dayData.day}`}
                   day={dayData.day}
                   platformName="Discord"
-                  planStatus={planStatus} // 👈 new
                   session={session}
                   initialText={dayData.discord}
+                  imagesGeneratedCount={imagesGeneratedCount}
+                  incrementImageCount={incrementImageCount}
+                  planStatus={planStatus}
                   onPost={handlePostToDiscord}
                   postStatus={discordStatuses[dayData.day]}
                   actionButtonConfig={{
@@ -540,85 +546,88 @@ export default function DistributionGrid({
       )}
 
       {/* EMAIL NEWSLETTER SECTION */}
-{hasEmail && (
-  <section className="mt-12 pt-8 border-t-2 border-slate-100">
-    <motion.div initial="hidden" animate="visible" variants={fadeUp} className="flex items-center gap-3 mb-5">
-      <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-      <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">
-        Email Newsletter
-      </h3>
-    </motion.div>
-    <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="max-w-2xl">
-      <div className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm p-5">
-        <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
-          <span className="text-xs font-black uppercase tracking-widest text-slate-900">
-            Campaign Summary
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setIsEditingEmail(!isEditingEmail)}
-              className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-200 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              {isEditingEmail ? "Save" : "Edit"}
-            </button>
-            <button
-              onClick={handleEmailCopy}
-              className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-200 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              {emailCopied ? "Copied!" : "Copy"}
-            </button>
-         
-          </div>
-        </div>
+      {hasEmail && (
+        <section className="mt-12 pt-8 border-t-2 border-slate-100">
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} className="flex items-center gap-3 mb-5">
+            <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">
+              Email Newsletter
+            </h3>
+          </motion.div>
+          <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="max-w-2xl">
+            <div className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm p-5">
+              <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                <span className="text-xs font-black uppercase tracking-widest text-slate-900">
+                  Campaign Summary
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsEditingEmail(!isEditingEmail)}
+                    className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-200 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    {isEditingEmail ? "Save" : "Edit"}
+                  </button>
+                  <button
+                    onClick={handleEmailCopy}
+                    className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-200 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    {emailCopied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              </div>
 
-        
-        {/* Email text editor */}
-        {isEditingEmail ? (
-  <RichTextEditor
-    content={localEmailContent || ""}
-    onChange={(html) => {
-      setLocalEmailContent(html);
-      if (setEmailContent) setEmailContent(html);
-    }}
-    placeholder="Write your newsletter content..."
-  />
-) : (
-  <div
-    className="mb-4 prose prose-sm max-w-none text-sm font-medium text-slate-700 leading-relaxed"
-    dangerouslySetInnerHTML={{ __html: localEmailContent || "" }}
-  />
-)}
+              {isEditingEmail ? (
+                <RichTextEditor
+                  content={localEmailContent || ""}
+                  onChange={(html) => {
+                    setLocalEmailContent(html);
+                    if (setEmailContent) setEmailContent(html);
+                  }}
+                  placeholder="Write your newsletter content..."
+                />
+              ) : (
+                <div
+                  className="mb-4 prose prose-sm max-w-none text-sm font-medium text-slate-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: localEmailContent || "" }}
+                />
+              )}
 
-{planStatus?.emailSendsLimit !== 0 ? (
-        <button
-  onClick={() => setIsScheduleModalOpen(true)}
-  disabled={emailStatus === "loading"}
-  className="w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 flex items-center justify-center gap-2"
->
-  {emailStatus === "loading" ? "Scheduling..." : "📧 Schedule Newsletter"}
-</button>
-) : (<div>
-  <div className="relative group">
-    <button disabled>🔒 Upgrade to Send</button>
-    <div className="tooltip">Upgrade to Team to send newsletters</div>
-  </div></div>
-)}
-      </div>
-    </motion.div>
-  </section>
-
-)}
-    {isScheduleModalOpen && (
-  <ScheduleEmailModal
-    isOpen={isScheduleModalOpen}
-    onClose={() => setIsScheduleModalOpen(false)}
-    onSchedule={(isoString) => {
-      handleEmailSchedule(isoString, emailImageUrl || undefined);
-    }}
-  />
-)};
+              {planStatus?.emailSendsLimit !== 0 ? (
+                <button
+                  onClick={() => setIsScheduleModalOpen(true)}
+                  disabled={emailStatus === "loading"}
+                  className="w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  {emailStatus === "loading" ? "Scheduling..." : "📧 Schedule Newsletter"}
+                </button>
+              ) : (
+                <div className="relative group">
+                  <button
+                    disabled
+                    className="w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] bg-slate-200 text-slate-500 cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    🔒 Upgrade to Send
+                  </button>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                    Upgrade to Team to send newsletters
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </section>
+      )}
+      {isScheduleModalOpen && (
+        <ScheduleEmailModal
+          isOpen={isScheduleModalOpen}
+          onClose={() => setIsScheduleModalOpen(false)}
+          onSchedule={(isoString) => {
+            handleEmailSchedule(isoString, emailImageUrl || undefined);
+          }}
+        />
+      )}
     </div>
-    
-  )}
+  );
+}

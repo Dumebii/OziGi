@@ -29,6 +29,8 @@ import TrialBanner from "@/components/TrialBanner";
 import { usePlanStatus } from "@/components/hooks/usePlanStatus";
 import PricingCards from "@/components/PricingCards"; 
 import UpgradeModal from "@/components/UpgradeModal";
+import router from "next/dist/shared/lib/router/router";
+import { useRouter } from "next/dist/client/components/navigation";
 
 
 
@@ -236,6 +238,13 @@ const handleGenerate = async () => {
     if (session?.user?.email) setNeedsEmail(false);
   };
 
+  const MyComponent = () => {
+  const router = useRouter(); // Assign the return value of the hook
+
+  const navigateToPricing = () => {
+    router.push('/pricing'); // Now 'push' exists on the 'router' instance
+  };
+
   // --- EFFECTS ---
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -255,7 +264,6 @@ const handleGenerate = async () => {
   }
 }, []);
 
-  // --- RENDER ---
   if (sessionLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
@@ -310,10 +318,10 @@ const handleGenerate = async () => {
 
           {planStatus?.isTrialActive && planStatus.trialEndsAt && (
   <div className="mb-6">
-    <TrialBanner
-      trialEndsAt={planStatus.trialEndsAt}
-      onUpgradeClick={() => setIsUpgradeModalOpen(true)}
-    />
+<TrialBanner
+  trialEndsAt={planStatus.trialEndsAt}
+  onUpgradeClick={() => router.push('/pricing')}
+/>
   </div>
 )}
 
@@ -414,28 +422,29 @@ const handleGenerate = async () => {
   onClose={() => setIsUpgradeModalOpen(false)}
   onOpenAuthModal={() => setIsAuthModalOpen(true)}
 />
-{planStatus?.hasCopilot && (
-  <>
+{planStatus?.hasCopilot ? (
+  <button
+    onClick={() => setIsCopilotOpen(true)}
+    className="fixed bottom-6 right-6 z-40 bg-indigo-600 text-white p-4 rounded-full shadow-2xl hover:bg-indigo-700 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+    aria-label="Open Copilot"
+  >
+    <span className="text-2xl">✨</span>
+  </button>
+) : (
+  <div className="fixed bottom-6 right-6 z-40 group">
     <button
-      onClick={() => setIsCopilotOpen(true)}
-      className="fixed bottom-6 right-6 z-40 bg-indigo-600 text-white p-4 rounded-full shadow-2xl hover:bg-indigo-700 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-      aria-label="Open Copilot"
+      disabled
+      className="bg-slate-400 text-white p-4 rounded-full shadow-2xl cursor-not-allowed flex items-center justify-center opacity-50"
+      aria-label="Copilot unavailable"
     >
       <span className="text-2xl">✨</span>
     </button>
-            <CopilotPanel
-  isOpen={isCopilotOpen}
-  onClose={() => setIsCopilotOpen(false)}
-  onSendToEngine={(text) => {
-    // Pre-fill Distillery's text input with the assistant's message
-    setInputs(prev => ({ ...prev, text: text }));
-    setIsCopilotOpen(false);
-    // Optionally scroll to Distillery
-  }}
-/>
-  </>
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+      Upgrade to Organization to use Copilot
+    </div>
+  </div>
 )}
 
     </div>
   );
-}
+}}

@@ -299,7 +299,7 @@ export default function DocsPage() {
             {/* Section 6: Email Newsletters */}
 <section id="email" className="scroll-mt-28">
   <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">
-    7. Email Newsletters
+    6. Email Newsletters
   </h2>
   <p className="text-slate-600 font-medium leading-relaxed mb-4">
     Turn your campaign into a single, well‑crafted email newsletter. Ozigi generates a standalone piece that summarizes your key insights, written in your voice. You can then edit it with a rich text editor, add images, and schedule it for later delivery.
@@ -318,20 +318,20 @@ export default function DocsPage() {
       </p>
     </div>
   </div>
-  <div className="mt-6">
+  {/* <div className="mt-6">
     <Link
       href="/docs/email-newsletters"
       className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-5 py-3 rounded-full text-sm font-bold hover:bg-indigo-100 transition-colors"
     >
       Learn more about email distribution <span>→</span>
     </Link>
-  </div>
+  </div> */}
 </section>
 
 {/* Section 7: Ozigi Copilot */}
 <section id="copilot" className="scroll-mt-28">
   <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">
-    8. Ozigi Copilot
+    7. Ozigi Copilot
   </h2>
   <p className="text-slate-600 font-medium leading-relaxed mb-4">
     Your personal AI assistant inside the dashboard. Brainstorm ideas, refine drafts, or ask for strategic advice – all while keeping your own context. The Copilot remembers your business goals and can optionally search the web for real‑time information.
@@ -350,20 +350,20 @@ export default function DocsPage() {
       </p>
     </div>
   </div>
-  <div className="mt-6">
+  {/* <div className="mt-6">
     <Link
       href="/docs/copilot"
       className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-5 py-3 rounded-full text-sm font-bold hover:bg-indigo-100 transition-colors"
     >
       Dive into Copilot features <span>→</span>
     </Link>
-  </div>
+  </div> */}
 </section>
 
 {/* Section 8: Pricing & Gating */}
 <section id="pricing" className="scroll-mt-28">
   <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">
-    9. Pricing & Gating
+    8. Pricing & Gating
   </h2>
   <p className="text-slate-600 font-medium leading-relaxed mb-4">
     Ozigi offers a free tier to get started, with paid plans that unlock more features. All new users get a 7‑day trial of the Team plan – no credit card required.
@@ -414,7 +414,7 @@ export default function DocsPage() {
             {/* Section 9 */}
             <section id="publishing" className="scroll-mt-28">
               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">
-                6. Publishing Integrations
+                9. Publishing Integrations
               </h2>
               <p className="text-slate-600 font-medium leading-relaxed mb-6">
                 Ozigi does not post to your accounts without your final say. We

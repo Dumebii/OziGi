@@ -1,8 +1,6 @@
 export const uploadLargeAsset = async (file: File): Promise<string> => {
   const safeContentType = file.type || 'application/octet-stream';
 
-  
-
   const presignedRes = await fetch('/api/upload/presigned', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -15,7 +13,7 @@ export const uploadLargeAsset = async (file: File): Promise<string> => {
   const uploadRes = await fetch(signedUrl, {
     method: 'PUT',
     headers: { 'Content-Type': safeContentType },
-    body: file, 
+    body: file,
   });
 
   if (!uploadRes.ok) throw new Error('Failed to upload.');
@@ -27,8 +25,15 @@ export async function uploadBase64Image(base64Data: string): Promise<string> {
   const matches = base64Data.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/);
   if (!matches) throw new Error("Invalid base64 image data");
   const mimeType = `image/${matches[1]}`;
-  const buffer = Buffer.from(matches[2], 'base64');
-  const blob = new Blob([buffer], { type: mimeType });
+  const base64 = matches[2];
+  // Convert base64 to binary using browser APIs (no Node.js Buffer)
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: mimeType });
   const file = new File([blob], `image-${Date.now()}.${matches[1]}`, { type: mimeType });
   return await uploadLargeAsset(file);
 }

@@ -15,6 +15,7 @@ export default function SubscribersManager({ session, onOpenUpgradeModal }: Subs
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { planStatus, loading: planLoading } = usePlanStatus();
+const subscriberLimit = planStatus?.emailSendsLimit === -1 ? "unlimited" : planStatus?.emailSendsLimit;
 
 
   useEffect(() => {
@@ -78,20 +79,7 @@ export default function SubscribersManager({ session, onOpenUpgradeModal }: Subs
       console.error("Error deleting subscriber", error);
     }
   };
-    if (planStatus?.emailSendsLimit === 0) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-black mb-2">Upgrade to Manage Subscribers</h3>
-        <p className="text-sm text-slate-500 mb-6">Subscriber management is available on Team and Organization plans.</p>
-        <button
-          onClick={onOpenUpgradeModal}
-          className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold text-sm"
-        >
-          Upgrade Now
-        </button>
-      </div>
-    );
-  }
+ 
 
   return (
     <div className="space-y-6">
@@ -99,6 +87,11 @@ export default function SubscribersManager({ session, onOpenUpgradeModal }: Subs
         <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Email Subscribers</h2>
         <p className="text-slate-500 text-sm">Manage your email list. Subscribers will receive your generated newsletters.</p>
       </div>
+      {planStatus?.emailSendsLimit !== -1 && (
+  <p className="text-xs text-slate-500 mt-4">
+    Your plan includes up to {subscriberLimit} subscribers. Upgrade for unlimited.
+  </p>
+)}
 
       <div className="bg-white rounded-2xl border border-slate-200 p-6">
         <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
