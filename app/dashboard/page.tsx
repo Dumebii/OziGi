@@ -1,3 +1,4 @@
+"use client";
 import { useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import { CampaignDay } from "../../lib/types";
@@ -318,9 +319,9 @@ function SocialCard({
 
 // Main DistributionGrid Component
 export default function DistributionGrid({
-  campaign,
+  campaign = [],           // default empty array
   session,
-  selectedPlatforms,
+  selectedPlatforms = [],  // default empty array
   emailContent,
   setEmailContent,
   onStatsChange,
@@ -335,6 +336,9 @@ export default function DistributionGrid({
   const [liStatuses, setLiStatuses] = useState<
     { [day: number]: "idle" | "loading" | "success" | "error" }
   >({});
+    const hasX = campaign.some((d) => d.x) && selectedPlatforms.includes('x');
+  const hasLinkedIn = campaign.some((d) => d.linkedin) && selectedPlatforms.includes('linkedin');
+  const hasDiscord = campaign.some((d) => d.discord) && selectedPlatforms.includes('discord');
 
   // Email‑specific states
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -466,11 +470,11 @@ export default function DistributionGrid({
     }
   };
 
-  const hasX = campaign.some((d) => d.x) && selectedPlatforms.includes("x");
-  const hasLinkedIn =
-    campaign.some((d) => d.linkedin) && selectedPlatforms.includes("linkedin");
-  const hasDiscord =
-    campaign.some((d) => d.discord) && selectedPlatforms.includes("discord");
+  // const hasX = campaign.some((d) => d.x) && selectedPlatforms.includes("x");
+  // const hasLinkedIn =
+  //   campaign.some((d) => d.linkedin) && selectedPlatforms.includes("linkedin");
+  // const hasDiscord =
+  //   campaign.some((d) => d.discord) && selectedPlatforms.includes("discord");
   const hasEmail =
     !!localEmailContent && selectedPlatforms.includes("email");
 
