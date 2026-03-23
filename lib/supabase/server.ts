@@ -1,4 +1,3 @@
-// lib/supabase/server.ts
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -19,8 +18,7 @@ export const createClient = async () => {
               cookieStore.set(name, value, options)
             })
           } catch (error) {
-            // Called from a Server Component – ignore
-          }
+            console.error('Failed to set cookies', error)}
         },
       },
     }
