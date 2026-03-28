@@ -167,7 +167,7 @@ export default function Hero() {
                   transition={{ duration: 0.6, delay: 0.4 }}
                 />
               </span>
-            </h1>
+            </h1> 
             <p className="text-lg text-slate-600 max-w-lg mx-auto lg:mx-0">
               Drop notes, URLs, or PDFs. Ozigi generates posts for X, LinkedIn, and Discord in your voice. No prompt engineering. Just your ideas.
             </p>
