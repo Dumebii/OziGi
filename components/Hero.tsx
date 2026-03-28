@@ -165,7 +165,7 @@ export default function Hero() {
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ duration: 0.6, delay: 0.4 }}
-                />
+                /> 
               </span>
             </h1> 
             <p className="text-lg text-slate-600 max-w-lg mx-auto lg:mx-0">
