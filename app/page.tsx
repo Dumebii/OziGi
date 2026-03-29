@@ -424,7 +424,6 @@ export default function Home() {
             </div>
             <PricingCards onOpenAuthModal={() => setIsAuthModalOpen(true)} />
           </div>
-          </div>
         </section>
       </main>
       <Footer />
