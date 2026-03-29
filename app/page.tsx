@@ -59,10 +59,10 @@ export default function Home() {
               className="text-center mb-16 md:mb-20"
             >
               <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-brand-navy mb-4">
-                How The Engine Works
+                From chaos to clarity
               </h2>
               <p className="text-slate-500 font-medium text-lg">
-                Three steps from raw context to polished Content.
+                Your voice. Your insights. Polished and ready.
               </p>
             </motion.div>
 
@@ -76,18 +76,18 @@ export default function Home() {
               {[
                 {
                   number: 1,
-                  title: "Ingest Context",
-                  desc: "Paste a URL, dump unformatted meeting transcripts, or upload a PDF/image. Ozigi extracts the core narrative without you needing to summarize it first.",
+                  title: "Feed raw material",
+                  desc: "Paste a URL, paste meeting notes, upload a PDF. No need to clean it up. Ozigi strips the noise and extracts what matters.",
                 },
                 {
                   number: 2,
-                  title: "Apply Voice Persona",
-                  desc: "Create and save custom voice personas. The engine applies strict stylistic constraints to your selected persona, bypassing AI detection to sound exactly like you every time.",
+                  title: "Your voice applies",
+                  desc: "Set your persona once. Technical depth, tone, pacing, banned phrases—the engine locks in your style and enforces it perfectly every time.",
                 },
                 {
                   number: 3,
-                  title: "Multi-channel Routing",
-                  desc: "Instantly receive structured content. Push directly to X (Twitter) via Web Intents, LinkedIn, Email or drop straight into your Discord or Slack.",
+                  title: "Ship everywhere",
+                  desc: "Post to X, LinkedIn, Discord, email, or Slack directly. One click. Your content reaches your audience sounding exactly like you.",
                 },
               ].map((step, idx) => (
                 <motion.div
@@ -124,12 +124,12 @@ export default function Home() {
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-red/5 rounded-full blur-3xl" />
             <div className="max-w-2xl space-y-4 relative z-10">
               <h3 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-white">
-                AI handles the 90%. <br className="hidden md:block" />
-                You own the 10% that matters.
+                AI does the heavy lifting. <br className="hidden md:block" />
+                You add the secret sauce.
               </h3>
               <p className="text-slate-300 font-medium text-lg leading-relaxed">
-                Every generated post has an Edit button. Add the insider detail, the specific joke,
-                the context only you know. Publish when it&apos;s yours.
+                Every post comes with an edit button. Add the insider detail, the specific story,
+                the personal take that only you can make. Publish when it feels authentically yours.
               </p>
             </div>
             <Link
@@ -154,7 +154,7 @@ export default function Home() {
               variants={fadeUp}
               className="text-4xl sm:text-5xl font-black italic uppercase tracking-tighter text-brand-navy mb-12 text-center"
             >
-              Chaos In. Strategy Out.
+              The difference between sounding human and sounding like a chatbot
             </motion.h2>
 
             <div className="grid md:grid-cols-2 gap-8 w-full items-stretch">
@@ -213,10 +213,10 @@ export default function Home() {
               className="text-center mb-16 md:mb-24"
             >
               <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-brand-navy mb-4">
-                Built For Professionals
+                Works for your world
               </h2>
               <p className="text-slate-500 font-medium text-lg">
-                An engine built to adapt to your industry.
+                From technical founders to digital creators.
               </p>
             </motion.div>
 
@@ -229,20 +229,20 @@ export default function Home() {
             >
               {[
                 {
-                  title: "Technical Writing",
-                  desc: "Turn dry API documentation, GitHub release notes, or complex architectural concepts into highly engaging X threads and LinkedIn posts without losing technical accuracy.",
+                  title: "Developers & DevRel",
+                  desc: "Turn messy API docs or release notes into polished X threads that actually engage developers. Keep the rigor, lose the jargon.",
                 },
                 {
-                  title: "Founders & Marketing",
-                  desc: "Convert messy product strategy documents, customer interview transcripts, or rough ideas into polished thought leadership campaigns that drive Go-To-Market outcomes.",
+                  title: "Founders & Leaders",
+                  desc: "Take rough notes from a fundraising call or product meeting and generate thought leadership posts that move the needle on your go-to-market.",
                 },
                 {
-                  title: "Digital Educators",
-                  desc: "Upload a PDF of your latest course curriculum or workshop slides, and let Ozigi extract the core lessons to build an automated, multi-day promotional campaign.",
+                  title: "Educators & Trainers",
+                  desc: "Upload your course slides or workshop deck. Ozigi pulls the core lessons and builds a multi-week campaign around them.",
                 },
                 {
-                  title: "Content Creators",
-                  desc: "Paste the URL of your latest YouTube video or podcast episode. The engine will instantly read the transcript and spin out native hooks and posts for your audience.",
+                  title: "Creators & Writers",
+                  desc: "Publish a podcast, drop a video, or post a newsletter. Ozigi reads it and generates hooks and follow-ups that sound like you.",
                 },
               ].map((useCase, idx) => (
                 <motion.div
@@ -277,10 +277,10 @@ export default function Home() {
               className="text-center mb-12"
             >
               <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-brand-navy">
-                Designed for creators who ship
+                Built for speed, styled for authenticity
               </h2>
               <p className="text-slate-500 font-medium mt-4 max-w-2xl mx-auto">
-                No more staring at a blank page. Ozigi handles the heavy lifting.
+                Skip the blank page. Skip the awkward AI language. Just ship.
               </p>
             </motion.div>
 
@@ -293,16 +293,16 @@ export default function Home() {
             >
               {[
                 {
-                  title: "Multimodal Ingestion",
-                  desc: "Drop URLs, PDFs, or raw notes – the engine extracts the core narrative automatically.",
+                  title: "Messy input welcome",
+                  desc: "URLs, PDFs, voice notes, scattered thoughts—throw it all at Ozigi. It finds the signal in the noise.",
                 },
                 {
-                  title: "Your Voice, Enforced",
-                  desc: "Create reusable personas. The Banned Lexicon kills AI‑speak.",
+                  title: "Your voice locked in",
+                  desc: "Define your persona once. Tone, depth, banned words, style—the engine enforces it flawlessly.",
                 },
                 {
-                  title: "One‑Click Publishing",
-                  desc: "Post to X, LinkedIn, Discord, or email – directly from your dashboard.",
+                  title: "Instant publishing",
+                  desc: "Ship to X, LinkedIn, Discord, email, Slack from your dashboard in seconds. No more context switching.",
                 },
               ].map((feature, i) => (
                 <motion.div
@@ -332,10 +332,10 @@ export default function Home() {
               className="text-center mb-16"
             >
               <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-brand-navy mb-4">
-                Loved by creators who ship
+                Shipping faster, sounding smarter
               </h2>
               <p className="text-slate-500 font-medium text-lg max-w-2xl mx-auto">
-                Don't take our word for it — hear what our users have to say.
+                Real people. Real results. Real voice.
               </p>
             </motion.div>
 
@@ -350,19 +350,19 @@ export default function Home() {
                 {
                   name: "Priya Sharma",
                   role: "Senior Developer Advocate",
-                  quote: "Ozigi turned my messy API docs into a 3‑day X thread that got 10k impressions. The Banned Lexicon is a game‑changer — I finally sound like myself.",
+                  quote: "I paste my rough notes into Ozigi and get back a polished X thread that sounds like me, not a chatbot. It's the difference between shipping and not shipping.",
                   image: "/testimonials/priya.jpg",
                 },
                 {
                   name: "Marcus Chen",
                   role: "Technical Founder",
-                  quote: "I used to spend hours tweaking prompts to avoid AI‑speak. Ozigi does it for me. Now I just drop in my notes and get ready‑to‑publish content. Huge time saver.",
+                  quote: "Before Ozigi, I'd spend two hours tweaking prompts and still sound like ChatGPT. Now I feed in rough thoughts and ship authentic posts in minutes.",
                   image: "/testimonials/marcus.jpg",
                 },
                 {
                   name: "Sarah Okonkwo",
                   role: "DevRel Lead",
-                  quote: "The persona feature is incredible. I saved my voice once, and now every campaign sounds exactly like me. My engagement has doubled since I started using Ozigi.",
+                  quote: "Set my voice once. Now every post is on-brand, on-voice, and ready to go. My LinkedIn engagement tripled because I actually sound like me again.",
                   image: "/testimonials/sarah.jpg",
                 },
               ].map((testimonial, idx) => (
@@ -401,9 +401,9 @@ export default function Home() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-brand-navy">
-                Simple, transparent pricing
+                No surprises. Just results.
               </h2>
-              <p className="text-slate-500 font-medium mt-4">Start free, upgrade when you're ready.</p>
+              <p className="text-slate-500 font-medium mt-4">Try free forever. Scale when you ship.</p>
             </div>
             <PricingCards onOpenAuthModal={() => setIsAuthModalOpen(true)} />
           </div>
