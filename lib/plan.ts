@@ -113,9 +113,11 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
   }
 
   // Check trial status
+  // Support both "trial" and "team" as trial plans (handle legacy data)
   const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null;
-  const isTrialActive = profile.plan === "team" && trialEndsAt !== null && now < trialEndsAt;
-  const isTrialExpired = profile.plan === "team" && trialEndsAt !== null && now >= trialEndsAt;
+  const isTrialPlan = profile.plan === "team" || profile.plan === "trial";
+  const isTrialActive = isTrialPlan && trialEndsAt !== null && now < trialEndsAt;
+  const isTrialExpired = isTrialPlan && trialEndsAt !== null && now >= trialEndsAt;
 
   // If trial expired, downgrade to free and clear trial dates
   if (isTrialExpired) {
@@ -128,7 +130,8 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
     profile.trial_started_at = null;
   }
 
-  const effectivePlan: Plan = profile.plan as Plan;
+  // Map "trial" to "team" for limits lookup (trial users get team-level access)
+  const effectivePlan: Plan = (profile.plan === "trial" ? "team" : profile.plan) as Plan;
   const generationsLimit = GENERATION_LIMITS[effectivePlan];
   const imageGenLimit = IMAGE_GEN_LIMITS[effectivePlan];
   const emailSendsLimit = EMAIL_SEND_LIMITS[effectivePlan];
