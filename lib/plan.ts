@@ -113,9 +113,11 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
   }
 
   // Check trial status
+  // Support both "trial" and "team" as trial plans (handle legacy data)
   const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null;
-  const isTrialActive = profile.plan === "team" && trialEndsAt !== null && now < trialEndsAt;
-  const isTrialExpired = profile.plan === "team" && trialEndsAt !== null && now >= trialEndsAt;
+  const isTrialPlan = profile.plan === "team" || profile.plan === "trial";
+  const isTrialActive = isTrialPlan && trialEndsAt !== null && now < trialEndsAt;
+  const isTrialExpired = isTrialPlan && trialEndsAt !== null && now >= trialEndsAt;
 
   // If trial expired, downgrade to free and clear trial dates
   if (isTrialExpired) {
@@ -128,7 +130,8 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
     profile.trial_started_at = null;
   }
 
-  const effectivePlan: Plan = profile.plan as Plan;
+  // Map "trial" to "team" for limits lookup (trial users get team-level access)
+  const effectivePlan: Plan = (profile.plan === "trial" ? "team" : profile.plan) as Plan;
   const generationsLimit = GENERATION_LIMITS[effectivePlan];
   const imageGenLimit = IMAGE_GEN_LIMITS[effectivePlan];
   const emailSendsLimit = EMAIL_SEND_LIMITS[effectivePlan];
@@ -143,7 +146,7 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
 
   const { data: existingStats, error: statsError } = await supabaseAdmin
     .from("user_stats")
-    .select("campaigns_generated, image_generations_this_month, email_sends_this_month")
+    .select("campaigns_generated, image_generations_this_month, email_sends_this_month, generation_reset_at")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -163,7 +166,30 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
       email_sends_this_month: 0,
     };
   } else {
-    stats = existingStats;
+    // Check if we need to reset monthly counters
+    const resetAt = existingStats.generation_reset_at ? new Date(existingStats.generation_reset_at) : null;
+    if (resetAt && now >= resetAt) {
+      // Reset counters for the new month
+      const nextResetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      await supabaseAdmin
+        .from("user_stats")
+        .update({
+          campaigns_generated: 0,
+          image_generations_this_month: 0,
+          email_sends_this_month: 0,
+          generation_reset_at: nextResetDate.toISOString(),
+          updated_at: now.toISOString(),
+        })
+        .eq("user_id", userId);
+      
+      stats = {
+        campaigns_generated: 0,
+        image_generations_this_month: 0,
+        email_sends_this_month: 0,
+      };
+    } else {
+      stats = existingStats;
+    }
   }
 
   return {
