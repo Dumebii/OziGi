@@ -225,6 +225,7 @@ else if (post.platform === 'x') {
                     user: process.env.SMTP_USER,
                     pass: process.env.SMTP_PASS,
                   },
+                  
                 });
                 await transporter.sendMail({
                   from: `"${EMAIL_FROM_NAME}" <${EMAIL_FROM_ADDRESS}>`,
