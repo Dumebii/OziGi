@@ -143,7 +143,7 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
 
   const { data: existingStats, error: statsError } = await supabaseAdmin
     .from("user_stats")
-    .select("campaigns_generated, image_generations_this_month, email_sends_this_month")
+    .select("campaigns_generated, image_generations_this_month, email_sends_this_month, generation_reset_at")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -163,7 +163,30 @@ export async function getPlanStatus(userId: string): Promise<PlanStatus> {
       email_sends_this_month: 0,
     };
   } else {
-    stats = existingStats;
+    // Check if we need to reset monthly counters
+    const resetAt = existingStats.generation_reset_at ? new Date(existingStats.generation_reset_at) : null;
+    if (resetAt && now >= resetAt) {
+      // Reset counters for the new month
+      const nextResetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      await supabaseAdmin
+        .from("user_stats")
+        .update({
+          campaigns_generated: 0,
+          image_generations_this_month: 0,
+          email_sends_this_month: 0,
+          generation_reset_at: nextResetDate.toISOString(),
+          updated_at: now.toISOString(),
+        })
+        .eq("user_id", userId);
+      
+      stats = {
+        campaigns_generated: 0,
+        image_generations_this_month: 0,
+        email_sends_this_month: 0,
+      };
+    } else {
+      stats = existingStats;
+    }
   }
 
   return {
