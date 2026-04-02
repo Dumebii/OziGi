@@ -258,7 +258,7 @@ export default async function DocArticlePage({ params }: { params: Promise<{ slu
       </div>
 
 <Footer />
-      </div>
+    </div>
     </>
   );
 }
