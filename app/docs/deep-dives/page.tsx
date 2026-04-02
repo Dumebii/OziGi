@@ -51,7 +51,7 @@ export default function DeepDivesHub() {
 
       <main className="flex-1 max-w-4xl mx-auto px-6 py-16 w-full">
         <div className="mb-12 text-center">
-          <span className="bg-indigo-100 text-indigo-800 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-6 inline-block">
+          <span className="bg-red-100 text-brand-red text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-6 inline-block">
             Architecture & Philosophy
           </span>
           <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter mb-4 text-slate-900">
@@ -68,23 +68,23 @@ export default function DeepDivesHub() {
             <Link 
               key={dive.slug} 
               href={`/docs/${dive.slug}`}
-              className="group bg-white border-2 border-slate-100 hover:border-indigo-200 hover:shadow-xl transition-all duration-300 p-8 rounded-[2rem] flex flex-col h-full"
+              className="group bg-white border-2 border-slate-100 hover:border-red-200 hover:shadow-xl transition-all duration-300 p-8 rounded-[2rem] flex flex-col h-full"
             >
               <div className="flex justify-between items-start mb-6">
                 <div className="text-4xl bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   {dive.icon}
                 </div>
-                <span className="text-slate-300 font-black italic text-xl group-hover:text-indigo-200 transition-colors">
+                <span className="text-slate-300 font-black italic text-xl group-hover:text-red-200 transition-colors">
                   {dive.number}
                 </span>
               </div>
-              <h2 className="text-2xl font-black text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">
+              <h2 className="text-2xl font-black text-slate-900 mb-3 group-hover:text-brand-red transition-colors">
                 {dive.title}
               </h2>
               <p className="text-slate-500 font-medium leading-relaxed flex-1">
                 {dive.description}
               </p>
-              <div className="mt-6 flex items-center gap-2 text-sm font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
+              <div className="mt-6 flex items-center gap-2 text-sm font-bold text-slate-400 group-hover:text-brand-red transition-colors">
                 Read Article <span className="transform group-hover:translate-x-1 transition-transform">→</span>
               </div>
             </Link>
