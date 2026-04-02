@@ -10,7 +10,9 @@
     "test": "npx playwright test",
     "test:headless": "npx playwright test --headless",
     "test:ci": "npx playwright test --workers=1 --retries=2",
-    "report": "npm run allure-result && npm run allure-report"
+    "test:staging": "BASE_URL=https://staging.ozigi.app npx playwright test",
+    "test:prod": "BASE_URL=https://ozigi.app npx playwright test",
+    "test:report": "npx playwright show-report"
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "^4.0.95",
