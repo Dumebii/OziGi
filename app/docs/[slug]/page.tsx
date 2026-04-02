@@ -36,7 +36,7 @@ const mdxComponents = {
   h6: ({ node, children, ...props }: any) => <h6 id={toSlug(extractText(children))} className="scroll-mt-28 text-sm font-bold uppercase tracking-widest text-slate-500 mt-4 mb-2" {...props}>{children}</h6>,
   p: ({ node, ...props }: any) => <p className="mb-6 text-slate-700 font-medium leading-relaxed" {...props} />,
   strong: ({ node, ...props }: any) => <strong className="font-black text-slate-900" {...props} />,
-  blockquote: ({ node, ...props }: any) => <blockquote className="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-r-2xl text-indigo-900 italic font-medium my-8" {...props} />,
+  blockquote: ({ node, ...props }: any) => <blockquote className="bg-red-50 border-l-4 border-brand-red p-6 rounded-r-2xl text-slate-800 italic font-medium my-8" {...props} />,
   pre: ({ node, ...props }: any) => (
     <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-xl my-8 border border-slate-800">
       <div className="bg-slate-800/50 px-4 py-3 flex items-center border-b border-slate-700/50 gap-2">
@@ -65,7 +65,7 @@ export default async function DocArticlePage({ params }: { params: Promise<{ slu
 
   if (!content) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#fafafa]">
-      <Link href="/docs/deep-dives" className="mb-4 text-indigo-600 font-bold hover:underline">← Back to Hub</Link>
+      <Link href="/docs/deep-dives" className="mb-4 text-brand-red font-bold hover:underline">← Back to Hub</Link>
       <h1 className="text-2xl font-black italic text-slate-900">404 - Document not found</h1>
     </div>
   );
@@ -115,7 +115,7 @@ export default async function DocArticlePage({ params }: { params: Promise<{ slu
                   const fontSize = item.level <= 2 ? 'text-slate-700 font-bold' : 'text-slate-500';
                   return (
                     <li key={index} className={`${padding}`}>
-                      <a href={`#${item.slug}`} className={`${fontSize} hover:text-indigo-600 transition-colors block`}>{item.title}</a>
+                      <a href={`#${item.slug}`} className={`${fontSize} hover:text-brand-red transition-colors block`}>{item.title}</a>
                     </li>
                   )
                 })}
@@ -127,7 +127,7 @@ export default async function DocArticlePage({ params }: { params: Promise<{ slu
         <main className="flex-1 max-w-3xl overflow-hidden">
           <div className="mb-12 border-b-2 border-slate-100 pb-8">
             <div className="flex items-center gap-3 mb-6">
-              <span className="bg-indigo-100 text-indigo-800 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full">{tag}</span>
+              <span className="bg-red-100 text-brand-red text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full">{tag}</span>
               <span className="text-slate-400 text-sm font-medium">{readTime}</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900">{title}</h1>
@@ -142,12 +142,12 @@ export default async function DocArticlePage({ params }: { params: Promise<{ slu
             <div className="mt-16 pt-10 border-t-2 border-slate-100 flex justify-end">
               <Link 
                 href={`/docs/${nextArticle.slug}`} 
-                className="group flex flex-col items-end text-right bg-white hover:bg-indigo-50 border-2 border-slate-100 hover:border-indigo-200 p-6 rounded-[2rem] shadow-sm hover:shadow-lg transition-all w-full sm:w-auto min-w-[300px]"
+                className="group flex flex-col items-end text-right bg-white hover:bg-red-50 border-2 border-slate-100 hover:border-red-200 p-6 rounded-[2rem] shadow-sm hover:shadow-lg transition-all w-full sm:w-auto min-w-[300px]"
               >
-                <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 mb-2">
+                <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-brand-red mb-2">
                   Up Next
                 </span>
-                <span className="text-xl font-black italic text-slate-900 group-hover:text-indigo-700 flex items-center gap-3">
+                <span className="text-xl font-black italic text-slate-900 group-hover:text-brand-red flex items-center gap-3">
                   {nextArticle.title} 
                   <span className="bg-slate-900 text-white w-8 h-8 rounded-full flex items-center justify-center transform group-hover:translate-x-2 transition-transform not-italic">
                     →

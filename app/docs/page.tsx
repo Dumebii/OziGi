@@ -139,7 +139,7 @@ export default function DocsPage() {
                 </div>
               </div>
               <div className="mt-6">
-                <Link href="/docs/multimodal-pipeline" className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-5 py-3 rounded-full text-sm font-bold hover:bg-indigo-100 transition-colors">
+                <Link href="/docs/multimodal-pipeline" className="inline-flex items-center gap-2 bg-red-50 text-brand-red px-5 py-3 rounded-full text-sm font-bold hover:bg-red-100 transition-colors">
                   Read the Pipeline Deep Dive →
                 </Link>
               </div>
@@ -166,7 +166,7 @@ export default function DocsPage() {
                 </div>
               </div>
               <div className="mt-6">
-                <Link href="/docs/system-personas" className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-5 py-3 rounded-full text-sm font-bold hover:bg-indigo-100 transition-colors">
+                <Link href="/docs/system-personas" className="inline-flex items-center gap-2 bg-red-50 text-brand-red px-5 py-3 rounded-full text-sm font-bold hover:bg-red-100 transition-colors">
                   Read the Persona Deep Dive →
                 </Link>
               </div>
@@ -189,7 +189,7 @@ export default function DocsPage() {
               </div>
               <p className="text-slate-600 font-medium leading-relaxed">The result? Copy that passes AI detectors and sounds like it came from a subject matter expert, not a language model.</p>
               <div className="mt-6">
-                <Link href="/docs/the-banned-lexicon" className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-5 py-3 rounded-full text-sm font-bold hover:bg-indigo-100 transition-colors">
+                <Link href="/docs/the-banned-lexicon" className="inline-flex items-center gap-2 bg-red-50 text-brand-red px-5 py-3 rounded-full text-sm font-bold hover:bg-red-100 transition-colors">
                   Read the Architecture Deep Dive →
                 </Link>
               </div>
@@ -237,13 +237,13 @@ export default function DocsPage() {
               <p className="text-slate-600 font-medium leading-relaxed mb-6">
                 Ozigi is your co‑pilot, not your replacement. The engine handles extraction and structural drafting; you control the final polish.
               </p>
-              <div className="bg-indigo-50 border-2 border-indigo-100 p-6 rounded-2xl flex flex-col sm:flex-row gap-6 items-center">
-                <div className="flex-1 text-sm text-indigo-800/80 font-medium leading-relaxed">
+              <div className="bg-red-50 border-2 border-red-100 p-6 rounded-2xl flex flex-col sm:flex-row gap-6 items-center">
+                <div className="flex-1 text-sm text-slate-700 font-medium leading-relaxed">
                   <p className="mb-2">Before: <span className="line-through text-slate-400">"We're thrilled to announce..."</span></p>
                   <p>After: <span className="font-bold">"Shipped rate limiting today. Hard cap at 1,000 req/min."</span></p>
                   <p className="text-xs mt-3">Click <strong>Edit</strong> on any card, tweak the content, and save. Your changes are preserved.</p>
                 </div>
-                <div className="bg-white p-4 rounded-2xl shadow-xl border border-indigo-100 flex items-center gap-3 shrink-0">
+                <div className="bg-white p-4 rounded-2xl shadow-xl border border-red-100 flex items-center gap-3 shrink-0">
                   <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   </div>
@@ -251,7 +251,7 @@ export default function DocsPage() {
                 </div>
               </div>
               <div className="mt-6">
-                <Link href="/docs/human-in-the-loop" className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-5 py-3 rounded-full text-sm font-bold hover:bg-indigo-100 transition-colors">
+                <Link href="/docs/human-in-the-loop" className="inline-flex items-center gap-2 bg-red-50 text-brand-red px-5 py-3 rounded-full text-sm font-bold hover:bg-red-100 transition-colors">
                   Read the Architecture Deep Dive →
                 </Link>
               </div>
@@ -447,7 +447,7 @@ See full webhook guide →
               </p>
               <Link
                 href="/docs/deep-dives"
-                className="inline-flex items-center gap-3 bg-white text-slate-900 px-8 py-4 rounded-full text-sm font-black uppercase tracking-widest hover:bg-indigo-50 hover:scale-105 transition-all shadow-xl"
+                className="inline-flex items-center gap-3 bg-white text-slate-900 px-8 py-4 rounded-full text-sm font-black uppercase tracking-widest hover:bg-red-50 hover:scale-105 transition-all shadow-xl"
               >
                 View All Deep Dives →
               </Link>
