@@ -275,31 +275,44 @@ const handleRemoveImage = () => {
         </div>
       </div>
 
+      {/* Image Title Input */}
+      {planStatus?.imageGenLimit !== 0 && (
+        <div className="mb-3">
+          <input
+            type="text"
+            value={imageTitle}
+            onChange={(e) => setImageTitle(e.target.value)}
+            placeholder="Image headline (optional) - e.g., 'New Feature Launch'"
+            className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-red/50 placeholder:text-slate-400"
+          />
+        </div>
+      )}
+
       <div className="mb-4 flex gap-2">
-  <button
-    onClick={() => fileInputRef.current?.click()}
-    disabled={isUploadingImg}
-    className="flex-1 py-2 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-brand-red hover:border-brand-red hover:bg-red-50 transition-all flex items-center justify-center gap-2"
-  >
-    {isUploadingImg ? "📤 Uploading..." : <><ImagePlus size={12} /> Upload Image</>}
-  </button>
-  <input
-    type="file"
-    ref={fileInputRef}
-    className="hidden"
-    accept="image/*"
-    onChange={handleUploadImage}
-  />
-  {planStatus?.imageGenLimit !== 0 && (
-    <button
-      onClick={handleGenerateImage}
-      disabled={isGeneratingImg}
-      className="flex-1 py-2 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-brand-red hover:border-brand-red hover:bg-red-50 transition-all flex items-center justify-center gap-2"
-    >
-      {isGeneratingImg ? "🎨 Painting..." : "🎨 Generate Graphic"}
-    </button>
-  )}
-</div>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploadingImg}
+          className="flex-1 py-2 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-brand-red hover:border-brand-red hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+        >
+          {isUploadingImg ? "Uploading..." : <><ImagePlus size={12} /> Upload</>}
+        </button>
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="image/*"
+          onChange={handleUploadImage}
+        />
+        {planStatus?.imageGenLimit !== 0 && (
+          <button
+            onClick={handleGenerateImage}
+            disabled={isGeneratingImg}
+            className="flex-1 py-2 border border-dashed border-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-brand-red hover:border-brand-red hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+          >
+            {isGeneratingImg ? "Generating..." : "Generate Graphic"}
+          </button>
+        )}
+      </div>
 
 {imageUrl && (
   <div className="relative mb-4">

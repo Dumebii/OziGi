@@ -10,6 +10,40 @@ interface Message {
   content: string;
 }
 
+// Animated thinking indicator for Copilot
+function CopilotThinking() {
+  const [messageIndex, setMessageIndex] = useState(0);
+  const messages = [
+    "Thinking...",
+    "Researching...",
+    "Analyzing context...",
+    "Crafting response...",
+    "Almost there...",
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % messages.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-2 py-1">
+      <div className="flex items-center gap-2">
+        <div className="flex gap-1">
+          <span className="w-2 h-2 bg-brand-red rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+          <span className="w-2 h-2 bg-brand-red/70 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+          <span className="w-2 h-2 bg-brand-red/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+        </div>
+        <span className="text-xs font-medium text-slate-500 animate-pulse">
+          {messages[messageIndex]}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 interface CopilotPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -169,11 +203,7 @@ export default function CopilotPanel({ isOpen, onClose, onSendToEngine }: Copilo
                     : "bg-white border-slate-200 text-slate-800 rounded-tl-sm"
                 }`}>
                   {!isUser && msg.content === "" && isLoading ? (
-                    <div className="flex items-center gap-1 h-5">
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
-                    </div>
+                    <CopilotThinking />
                   ) : isUser ? (
                     <div className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</div>
                   ) : (
