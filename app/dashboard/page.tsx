@@ -207,18 +207,24 @@ const handleGenerate = async () => {
       if (done) break;
 
       const chunk = decoder.decode(value, { stream: true });
+      console.log("[v0] Received chunk:", chunk.substring(0, 100));
       const lines = chunk.split("\n");
 
       for (const line of lines) {
         if (line.startsWith("data: ")) {
           const data = line.slice(6);
-          if (data === "[DONE]") continue;
+          if (data === "[DONE]") {
+            console.log("[v0] Received DONE signal");
+            continue;
+          }
           try {
             const parsed = JSON.parse(data);
+            console.log("[v0] Parsed data:", parsed.status || (parsed.text ? `text length: ${parsed.text.length}` : 'unknown'));
             if (parsed.text) {
               fullText += parsed.text;
             }
             if (parsed.error) {
+              console.error("[v0] Stream error:", parsed.error);
               setErrorMessage(parsed.error);
               setLoading(false);
               return;
@@ -229,6 +235,8 @@ const handleGenerate = async () => {
         }
       }
     }
+    
+    console.log("[v0] Total text received:", fullText.length, "chars");
 
     // --- Robust JSON extraction ---
     let jsonString = fullText;
@@ -263,14 +271,19 @@ const handleGenerate = async () => {
 
     const finalCampaign = finalResponse.campaign || [];
     const finalEmail = finalResponse.email || null;
+    
+    console.log("[v0] Parsed campaign items:", finalCampaign.length);
+    console.log("[v0] Has email:", !!finalEmail);
 
     if (finalCampaign.length === 0) {
+      console.error("[v0] Empty campaign! Full response:", JSON.stringify(finalResponse).substring(0, 500));
       setErrorMessage("The AI returned an empty campaign. Please try again.");
       setLoading(false);
       return;
     }
 
     // Show the generated content immediately
+    console.log("[v0] Setting campaign state with", finalCampaign.length, "items");
     setCampaign(finalCampaign);
     setEmailContent(finalEmail);
     setTimeout(() => {
