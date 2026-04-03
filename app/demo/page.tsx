@@ -118,29 +118,23 @@ function DemoSidebar({
         </button>
       </div>
 
-      <nav className="flex-1 px-2 py-6 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-2 py-6 space-y-2 overflow-hidden">
         {DEMO_NAV_ITEMS.map((item) => (
-          <div key={item.label} className="relative group">
-            <button
-              onClick={onSignUp}
-              className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-50 rounded-xl transition-colors cursor-not-allowed ${
-                isSidebarCollapsed ? "justify-center" : ""
-              }`}
-            >
-              <span className={`${isSidebarCollapsed ? "mx-auto" : ""} opacity-50`}>{item.icon}</span>
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="opacity-50">{item.label}</span>
-                  <Lock size={12} className="ml-auto text-slate-300" />
-                </>
-              )}
-            </button>
-            {/* Tooltip - positioned below on mobile, right on desktop */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 md:left-full md:top-1/2 md:-translate-y-1/2 md:translate-x-0 md:ml-2 md:mt-0 px-3 py-2 bg-slate-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-[100] shadow-xl">
-              Sign up to unlock
-              <div className="absolute hidden md:block left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-slate-900 rotate-45" />
-            </div>
-          </div>
+          <button
+            key={item.label}
+            onClick={onSignUp}
+            className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-50 rounded-xl transition-colors ${
+              isSidebarCollapsed ? "justify-center" : ""
+            }`}
+          >
+            <span className={`${isSidebarCollapsed ? "mx-auto" : ""} opacity-50`}>{item.icon}</span>
+            {!isSidebarCollapsed && (
+              <>
+                <span className="opacity-50 truncate">{item.label}</span>
+                <Lock size={12} className="ml-auto text-slate-300 shrink-0" />
+              </>
+            )}
+          </button>
         ))}
       </nav>
 
