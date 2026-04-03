@@ -171,46 +171,67 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate with streaming
+    // Generate with NON-streaming for JSON schema (streaming + JSON schema has issues)
+    // We'll simulate streaming by sending progress updates
     const client = await getVertexAIClient();
-    const streamingResult = await client.models.generateContentStream({
-      model: 'gemini-2.5-flash',
-      contents: [{ role: 'user', parts }],
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: distributionSchema,
-      },
-    });
-
-    // Create a readable stream for the response
+    
+    console.log('[v0] Starting generation with Vertex AI...');
+    
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of streamingResult) {
-            // Extract text from chunk
-            let chunkText = '';
-            if (chunk.text) {
-              chunkText = typeof chunk.text === 'function' ? chunk.text() : chunk.text;
-            } else if (chunk.candidates?.[0]?.content?.parts?.[0]?.text) {
-              chunkText = chunk.candidates[0].content.parts[0].text;
-            }
-            
-            if (chunkText) {
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunkText })}\n\n`));
-            }
+          // Send initial progress
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ status: 'generating' })}\n\n`));
+          
+          // Use non-streaming for JSON schema responses (more reliable)
+          const response = await client.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [{ role: 'user', parts }],
+            config: {
+              responseMimeType: 'application/json',
+              responseSchema: distributionSchema,
+            },
+          });
+          
+          console.log('[v0] Generation response received');
+          
+          // Extract text from response - handle different formats
+          let responseText = '';
+          if (response.text) {
+            responseText = typeof response.text === 'function' ? response.text() : response.text;
+          } else if (response.candidates?.[0]?.content?.parts?.[0]?.text) {
+            responseText = response.candidates[0].content.parts[0].text;
+          } else if ((response as any).response?.text) {
+            const innerText = (response as any).response.text;
+            responseText = typeof innerText === 'function' ? innerText() : innerText;
+          } else if ((response as any).response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+            responseText = (response as any).response.candidates[0].content.parts[0].text;
           }
           
-          // Increment generation count for authenticated users
-          if (user) {
+          console.log('[v0] Extracted text length:', responseText?.length || 0);
+          
+          if (!responseText) {
+            console.error('[v0] No text in response. Full response:', JSON.stringify(response, null, 2));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'No content generated. Please try again.' })}\n\n`));
+            controller.close();
+            return;
+          }
+          
+          // Send the complete response as a single chunk
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: responseText })}\n\n`));
+          
+          // Increment generation count ONLY after successful generation
+          if (user && responseText.length > 0) {
             await incrementCampaignGeneration(user.id);
+            console.log('[v0] Incremented campaign count for user:', user.id);
           }
           
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
         } catch (error: any) {
-          console.error('Streaming error:', error);
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: error.message })}\n\n`));
+          console.error('[v0] Generation error:', error);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: error.message || 'Generation failed' })}\n\n`));
           controller.close();
         }
       },
@@ -224,7 +245,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error: any) {
-    console.error('Generate Stream Error:', error);
+    console.error('[v0] Generate Stream Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
