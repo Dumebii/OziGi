@@ -112,8 +112,8 @@ export default function CopilotPanel({ isOpen, onClose, onSendToEngine }: Copilo
       let done = false;
       let accumulated = "";
 
-      // Append an empty assistant message to act as the streaming target
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+      // Append an empty assistant message with a loading placeholder
+      setMessages(prev => [...prev, { role: "assistant", content: "__LOADING__" }]);
 
       while (!done) {
         const { value, done: doneReading } = await reader.read();
@@ -125,6 +125,7 @@ export default function CopilotPanel({ isOpen, onClose, onSendToEngine }: Copilo
 
           setMessages(prev => {
             const newMessages = [...prev];
+            // Replace loading placeholder or empty content with actual content
             newMessages[newMessages.length - 1].content = accumulated;
             return newMessages;
           });
@@ -202,7 +203,7 @@ export default function CopilotPanel({ isOpen, onClose, onSendToEngine }: Copilo
                     ? "bg-brand-red border-brand-red text-white rounded-tr-sm"
                     : "bg-white border-slate-200 text-slate-800 rounded-tl-sm"
                 }`}>
-                  {!isUser && msg.content === "" && isLoading ? (
+                  {!isUser && (msg.content === "" || msg.content === "__LOADING__") && isLoading ? (
                     <CopilotThinking />
                   ) : isUser ? (
                     <div className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</div>
