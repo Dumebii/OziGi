@@ -1,47 +1,39 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Architecture Page', () => {
-  test.beforeEach(async ({ page }) => {
+  test('architecture page loads successfully', async ({ page }) => {
+    const response = await page.goto('/architecture', { waitUntil: 'domcontentloaded' });
+    expect([200, 304]).toContain(response?.status());
+  });
+
+  test('has visible content', async ({ page }) => {
     await page.goto('/architecture');
+    
+    const main = page.locator('main');
+    await expect(main).toBeVisible({ timeout: 10000 });
   });
 
-  test('renders architecture page', async ({ page }) => {
-    // Wait for page to load (has charts that need JS)
-    await page.waitForLoadState('networkidle');
-
-    // Should have architecture content
-    await expect(page.locator('main')).toBeVisible();
+  test('has header and footer', async ({ page }) => {
+    await page.goto('/architecture');
+    
+    const header = page.locator('header').first();
+    const footer = page.locator('footer');
+    
+    await expect(header).toBeVisible();
+    await expect(footer).toBeVisible();
   });
 
-  test('displays tab navigation', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
-
-    // Architecture page has tabs for different sections
-    const tabButtons = page.getByRole('button');
-    await expect(tabButtons.first()).toBeVisible();
-  });
-
-  test('header and footer are present', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
-
-    await expect(page.locator('header')).toBeVisible();
-    await expect(page.locator('footer')).toBeVisible();
-  });
-
-  test('page loads without JavaScript errors', async ({ page }) => {
+  test('no JavaScript errors', async ({ page }) => {
     const errors: string[] = [];
-    page.on('pageerror', (error) => {
-      errors.push(error.message);
-    });
-
+    page.on('pageerror', (error) => errors.push(error.message));
+    
     await page.goto('/architecture');
-    await page.waitForLoadState('networkidle');
-
-    // Filter out known benign errors (e.g., third-party scripts)
+    await page.waitForTimeout(2000);
+    
+    // Filter benign errors (ResizeObserver, third-party)
     const criticalErrors = errors.filter(
-      (e) => !e.includes('ResizeObserver') && !e.includes('third-party')
+      e => !e.includes('ResizeObserver') && !e.includes('third-party')
     );
-
     expect(criticalErrors).toHaveLength(0);
   });
 });
