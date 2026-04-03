@@ -143,15 +143,32 @@ const fileInputRef = useRef<HTMLInputElement>(null);
     }
   };
 
-  const handleDownloadImage = (e: React.MouseEvent) => {
+  const handleDownloadImage = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!imageUrl) return;
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = `ozigi-campaign-day-${day}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    try {
+      // Fetch the image as a blob to handle cross-origin
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `ozigi-campaign-day-${day}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up blob URL
+      URL.revokeObjectURL(blobUrl);
+      toast.success("Image downloaded!");
+    } catch (err) {
+      console.error("Download failed:", err);
+      // Fallback: open in new tab
+      window.open(imageUrl, "_blank");
+      toast.info("Opening image in new tab");
+    }
   };
 
 const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
