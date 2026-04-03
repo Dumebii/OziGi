@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
 import SkeletonGrid from "@/components/SkeletonGrid";
+import GeneratingState from "@/components/GeneratingState";
 import ScheduledPostsModal from "@/components/ScheduledPostsModal";
 import SettingsModal from "@/components/SettingsModal";
 import Sidebar from "@/components/dashboard/Sidebar";
@@ -58,7 +59,7 @@ export default function Dashboard() {
   const { personas, refreshPersonas } = usePersonas(session?.user?.id);
   const { pastCampaigns, fetchHistory, restoreCampaign } = useCampaignHistory(session?.user?.id);
   const { stats, isLoadingStats, refreshStats } = useStats(session?.user?.id);
-  const { needsEmail, setNeedsEmail, dismissBanner } = useEmailBanner(!session?.user?.email);
+  const { needsEmail, setNeedsEmail, dismissBanner } = useEmailBanner(session);
   const [campaignName, setCampaignName] = useState("");
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -412,8 +413,8 @@ return () => clearTimeout(t);
             )}
 
             {loading && (
-              <div className="mt-8 flex justify-center">
-                <SkeletonGrid />
+              <div className="mt-8">
+                <GeneratingState />
               </div>
             )}
 

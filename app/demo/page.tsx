@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Mail, User, Sparkles, Lock, Zap } from "lucide-react";
 import Distillery from "../../components/ContextEngine";
 import DistributionGrid from "../../components/DistributionGrid";
+import GeneratingState from "../../components/GeneratingState";
 import Footer from "../../components/Footer";
 import AuthModal from "../../components/AuthModal";
 import { PLATFORMS } from "@/lib/platforms";
@@ -500,12 +501,7 @@ export default function DemoSandbox() {
                   </>
                 )}
 
-                {loading && (
-                  <div className="flex flex-col items-center justify-center py-16">
-                    <div className="w-12 h-12 border-4 border-slate-200 border-t-brand-red rounded-full animate-spin mb-4" />
-                    <p className="text-sm font-medium text-slate-500">Generating your campaign...</p>
-                  </div>
-                )}
+                {loading && <GeneratingState />}
 
                 {!loading && campaign.length > 0 && (
                   <div className="animate-in fade-in slide-in-from-bottom-8">
