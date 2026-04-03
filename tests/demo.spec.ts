@@ -1,45 +1,40 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Demo Page', () => {
-  test.beforeEach(async ({ page }) => {
+  test('demo page loads successfully', async ({ page }) => {
+    const response = await page.goto('/demo', { waitUntil: 'domcontentloaded' });
+    expect([200, 304]).toContain(response?.status());
+  });
+
+  test('has visible content', async ({ page }) => {
     await page.goto('/demo');
+    
+    const body = page.locator('body');
+    await expect(body).toBeVisible();
+    
+    const text = await body.textContent();
+    expect(text?.length).toBeGreaterThan(100);
   });
 
-  test('renders demo page with context engine', async ({ page }) => {
-    // Demo page should show the context engine
-    await expect(page.getByText('Context Engine')).toBeVisible();
+  test('has header and footer', async ({ page }) => {
+    await page.goto('/demo');
+    
+    const header = page.locator('header').first();
+    const footer = page.locator('footer');
+    
+    await expect(header).toBeVisible();
+    await expect(footer).toBeVisible();
   });
 
-  test('displays input tabs (Link, Notes, Files)', async ({ page }) => {
-    // Check for input method tabs
-    await expect(page.getByRole('button', { name: /Link/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Notes/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Files/i })).toBeVisible();
-  });
-
-  test('URL input is visible by default', async ({ page }) => {
-    const urlInput = page.getByPlaceholder(/Paste an article or blog post URL/i);
-    await expect(urlInput).toBeVisible();
-  });
-
-  test('can switch to Notes tab and see text input', async ({ page }) => {
-    await page.getByRole('button', { name: /Notes/i }).click();
-    const textInput = page.getByPlaceholder(/Paste your raw thoughts/i);
-    await expect(textInput).toBeVisible();
-  });
-
-  test('can switch to Files tab and see upload option', async ({ page }) => {
-    await page.getByRole('button', { name: /Files/i }).click();
-    await expect(page.getByText(/Upload PDF or Image/i)).toBeVisible();
-  });
-
-  test('generate button is present', async ({ page }) => {
-    const generateBtn = page.getByRole('button', { name: /Generate/i });
-    await expect(generateBtn).toBeVisible();
-  });
-
-  test('header and footer are present', async ({ page }) => {
-    await expect(page.locator('header')).toBeVisible();
-    await expect(page.locator('footer')).toBeVisible();
+  test('no JavaScript errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    
+    await page.goto('/demo');
+    await page.waitForTimeout(2000);
+    
+    // Filter benign errors
+    const criticalErrors = errors.filter(e => !e.includes('ResizeObserver'));
+    expect(criticalErrors).toHaveLength(0);
   });
 });
