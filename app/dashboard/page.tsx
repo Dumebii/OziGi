@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
 import SkeletonGrid from "@/components/SkeletonGrid";
 import GeneratingState from "@/components/GeneratingState";
+import DashboardLoading from "@/components/DashboardLoading";
 import ScheduledPostsModal from "@/components/ScheduledPostsModal";
 import SettingsModal from "@/components/SettingsModal";
 import Sidebar from "@/components/dashboard/Sidebar";
@@ -323,14 +324,7 @@ return () => clearTimeout(t);
 }, [sessionLoading, planLoading, session]);
 
   if (sessionLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm font-medium text-slate-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <DashboardLoading />;
   }
 
   if (!session) return null;

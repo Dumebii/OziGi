@@ -4,6 +4,7 @@ import Papa from "papaparse";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { usePlanStatus } from "@/components/hooks/usePlanStatus";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface SubscribersManagerProps {
   session: any;
@@ -17,6 +18,7 @@ export default function SubscribersManager({ session, onOpenUpgradeModal }: Subs
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadingCSV, setIsUploadingCSV] = useState(false);
   const { planStatus, loading: planLoading } = usePlanStatus();
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: string | null }>({ isOpen: false, id: null });
 
   useEffect(() => {
     fetchSubscribers();
@@ -74,12 +76,16 @@ export default function SubscribersManager({ session, onOpenUpgradeModal }: Subs
     }
   };
 
-  const handleDeleteSubscriber = async (id: string) => {
-    if (!confirm("Remove this subscriber from your list?")) return;
+  const handleDeleteClick = (id: string) => {
+    setDeleteConfirm({ isOpen: true, id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm.id) return;
     try {
-      const res = await fetch(`/api/subscribers/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/subscribers/${deleteConfirm.id}`, { method: 'DELETE' });
       if (res.ok) {
-        setSubscribers(subscribers.filter(s => s.id !== id));
+        setSubscribers(subscribers.filter(s => s.id !== deleteConfirm.id));
         toast.success("Subscriber removed.");
       } else {
         toast.error("Failed to remove subscriber. Please try again.");
@@ -88,6 +94,7 @@ export default function SubscribersManager({ session, onOpenUpgradeModal }: Subs
       console.error("Error deleting subscriber", error);
       toast.error("An error occurred. Please try again.");
     }
+    setDeleteConfirm({ isOpen: false, id: null });
   };
 
   const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -218,7 +225,7 @@ export default function SubscribersManager({ session, onOpenUpgradeModal }: Subs
                   <p className="text-[10px] text-slate-400 capitalize">{sub.status}</p>
                 </div>
                 <button
-                  onClick={() => handleDeleteSubscriber(sub.id)}
+                  onClick={() => handleDeleteClick(sub.id)}
                   className="text-red-500 hover:text-red-700 text-sm font-black px-2 py-1"
                   title="Remove"
                 >
@@ -234,6 +241,16 @@ export default function SubscribersManager({ session, onOpenUpgradeModal }: Subs
           </p>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        title="Remove Subscriber"
+        message="Are you sure you want to remove this subscriber from your list?"
+        confirmLabel="Remove"
+        variant="warning"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirm({ isOpen: false, id: null })}
+      />
     </div>
   );
 }

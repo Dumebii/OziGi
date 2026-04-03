@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { OAUTH_PROVIDERS, OAUTH_SCOPES } from "@/lib/platforms";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface SettingsModalProps {
   session: any;
@@ -38,6 +39,7 @@ export default function SettingsModal({
 
   // --- Deletion State ---
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Fetch connections and profile data
   useEffect(() => {
@@ -173,13 +175,12 @@ const handleConnectGitHub = async () => {
   }
 };
 
-  const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      "DANGER: Are you sure? This will permanently delete your account, all connected personas, and generated campaign history. This action CANNOT be undone."
-    );
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
 
-    if (!confirmed) return;
-
+  const handleDeleteConfirm = async () => {
+    setShowDeleteConfirm(false);
     setIsDeleting(true);
     try {
       const response = await fetch('/api/user/delete', {
@@ -391,7 +392,7 @@ const handleConnectGitHub = async () => {
               Once you delete your account, there is no going back. All personas, settings, and generated content will be instantly and permanently wiped from our servers.
             </p>
             <button
-              onClick={handleDeleteAccount}
+              onClick={handleDeleteClick}
               disabled={isDeleting}
               className="w-full bg-red-50 text-red-600 border border-red-200 py-3 rounded-xl font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all disabled:opacity-50 text-[10px] sm:text-xs"
             >
@@ -400,6 +401,16 @@ const handleConnectGitHub = async () => {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Account"
+        message="This will permanently delete your account, all personas, settings, and generated content. This action CANNOT be undone."
+        confirmLabel="Delete Forever"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }
