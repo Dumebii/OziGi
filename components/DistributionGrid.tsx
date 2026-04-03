@@ -99,7 +99,7 @@ function SocialCard({
   const [imageTitle, setImageTitle] = useState("");
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isUploadingImg, setIsUploadingImg] = useState(false);
-const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -146,20 +146,20 @@ const fileInputRef = useRef<HTMLInputElement>(null);
   const handleDownloadImage = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!imageUrl) return;
-    
+
     try {
       // Fetch the image as a blob to handle cross-origin
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
-      
+
       const link = document.createElement("a");
       link.href = blobUrl;
       link.download = `ozigi-campaign-day-${day}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up blob URL
       URL.revokeObjectURL(blobUrl);
       toast.success("Image downloaded!");
@@ -171,39 +171,39 @@ const fileInputRef = useRef<HTMLInputElement>(null);
     }
   };
 
-const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  // Optional: limit file size (e.g., 5MB) and type (images only)
-  if (!file.type.startsWith('image/')) {
-    toast.error("Please upload an image file (JPEG, PNG, etc.)");
-    return;
-  }
-  if (file.size > 10 * 1024 * 1024) {
-    toast.error("Image must be less than 10MB");
-    return;
-  }
+    // Optional: limit file size (e.g., 5MB) and type (images only)
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file (JPEG, PNG, etc.)");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be less than 10MB");
+      return;
+    }
 
-  setIsUploadingImg(true);
-  try {
-    const publicUrl = await uploadLargeAsset(file);
-    setImageUrl(publicUrl);
-    toast.success("Image uploaded!");
-  } catch (err: any) {
-    console.error("Upload error:", err);
-    toast.error("Failed to upload image.");
-  } finally {
-    setIsUploadingImg(false);
-    // Reset file input so same file can be uploaded again if needed
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-};
+    setIsUploadingImg(true);
+    try {
+      const publicUrl = await uploadLargeAsset(file);
+      setImageUrl(publicUrl);
+      toast.success("Image uploaded!");
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      toast.error("Failed to upload image.");
+    } finally {
+      setIsUploadingImg(false);
+      // Reset file input so same file can be uploaded again if needed
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
-const handleRemoveImage = () => {
-  setImageUrl(null);
-  toast.info("Image removed");
-};
+  const handleRemoveImage = () => {
+    setImageUrl(null);
+    toast.info("Image removed");
+  };
 
   const handleSchedule = async (scheduledFor: string, email?: string | null) => {
     const token = session?.access_token;
@@ -299,8 +299,8 @@ const handleRemoveImage = () => {
             type="text"
             value={imageTitle}
             onChange={(e) => setImageTitle(e.target.value)}
-            placeholder="Image headline (optional) - e.g., 'New Feature Launch'"
-            className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-red/50 placeholder:text-slate-400"
+            placeholder="Headline, e.g: 'New Feature Launch' (Optional)"
+            className="w-full px-3 py-2 text-sm bg-slate-950 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-red/50 placeholder:text-slate-600"
           />
         </div>
       )}
@@ -331,29 +331,29 @@ const handleRemoveImage = () => {
         )}
       </div>
 
-{imageUrl && (
-  <div className="relative mb-4 group">
-    <img src={imageUrl} alt="Campaign image" className="w-full rounded-lg border border-slate-200" />
-    <div className="absolute top-2 right-2 flex gap-1.5">
-      <button
-        onClick={handleDownloadImage}
-        className="bg-white/90 rounded-full p-1.5 shadow-md hover:bg-blue-100 transition-colors"
-        title="Download image"
-      >
-        <svg className="w-3.5 h-3.5 text-slate-600 hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg>
-      </button>
-      <button
-        onClick={handleRemoveImage}
-        className="bg-white/90 rounded-full p-1.5 shadow-md hover:bg-red-100 transition-colors"
-        title="Remove image"
-      >
-        <X size={14} className="text-slate-600 hover:text-red-600" />
-      </button>
-    </div>
-  </div>
-)}
+      {imageUrl && (
+        <div className="relative mb-4 group">
+          <img src={imageUrl} alt="Campaign image" className="w-full rounded-lg border border-slate-200" />
+          <div className="absolute top-2 right-2 flex gap-1.5">
+            <button
+              onClick={handleDownloadImage}
+              className="bg-white/90 rounded-full p-1.5 shadow-md hover:bg-blue-100 transition-colors"
+              title="Download image"
+            >
+              <svg className="w-3.5 h-3.5 text-slate-600 hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </button>
+            <button
+              onClick={handleRemoveImage}
+              className="bg-white/90 rounded-full p-1.5 shadow-md hover:bg-red-100 transition-colors"
+              title="Remove image"
+            >
+              <X size={14} className="text-slate-600 hover:text-red-600" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {isEditing ? (
         <textarea
@@ -369,11 +369,10 @@ const handleRemoveImage = () => {
         <button
           onClick={() => onPost(text, day, imageUrl || undefined)}
           disabled={postStatus === "loading" || postStatus === "success"}
-          className={`w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 mt-auto ${
-            postStatus === "success"
+          className={`w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 mt-auto ${postStatus === "success"
               ? "bg-green-100 text-green-700 border border-green-200"
               : actionButtonConfig.classes
-          }`}
+            }`}
         >
           {postStatus === "loading" && actionButtonConfig.loading}
           {postStatus === "success" && actionButtonConfig.success}
@@ -410,7 +409,7 @@ export default function DistributionGrid({
   const [xStatuses, setXStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
   const [discordStatuses, setDiscordStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
   const [liStatuses, setLiStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
-const [slackStatuses, setSlackStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
+  const [slackStatuses, setSlackStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
   const [emailStatus, setEmailStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -476,33 +475,33 @@ const [slackStatuses, setSlackStatuses] = useState<{ [day: number]: "idle" | "lo
     setTimeout(() => setXStatuses((prev) => ({ ...prev, [day]: "idle" })), 3000);
   };
 
-const handlePostToDiscord = async (text: string, day: number, imageUrl?: string) => {
-  const discordWebhook = session?.user?.user_metadata?.discord_webhook;
-  if (!discordWebhook) {
-    toast.error("Add your Discord webhook in Settings first.");
-    return;
-  }
-  setDiscordStatuses((prev) => ({ ...prev, [day]: "loading" }));
-  try {
+  const handlePostToDiscord = async (text: string, day: number, imageUrl?: string) => {
+    const discordWebhook = session?.user?.user_metadata?.discord_webhook;
+    if (!discordWebhook) {
+      toast.error("Add your Discord webhook in Settings first.");
+      return;
+    }
+    setDiscordStatuses((prev) => ({ ...prev, [day]: "loading" }));
+    try {
       const res = await fetch(getApiEndpoint(PLATFORMS.DISCORD), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: text,
-        webhookUrl: discordWebhook,
-        imageUrl,
-      }),
-    });
-    if (!res.ok) throw new Error("Discord rejected the webhook payload.");
-    setDiscordStatuses((prev) => ({ ...prev, [day]: "success" }));
-    setTimeout(() => setDiscordStatuses((prev) => ({ ...prev, [day]: "idle" })), 3000);
-    toast.success("Posted to Discord!");
-  } catch (error: any) {
-    console.error("Discord Error:", error);
-    setDiscordStatuses((prev) => ({ ...prev, [day]: "error" }));
-    toast.error(`Failed to post to Discord: ${error.message}`);
-  }
-};
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: text,
+          webhookUrl: discordWebhook,
+          imageUrl,
+        }),
+      });
+      if (!res.ok) throw new Error("Discord rejected the webhook payload.");
+      setDiscordStatuses((prev) => ({ ...prev, [day]: "success" }));
+      setTimeout(() => setDiscordStatuses((prev) => ({ ...prev, [day]: "idle" })), 3000);
+      toast.success("Posted to Discord!");
+    } catch (error: any) {
+      console.error("Discord Error:", error);
+      setDiscordStatuses((prev) => ({ ...prev, [day]: "error" }));
+      toast.error(`Failed to post to Discord: ${error.message}`);
+    }
+  };
 
   const handlePostToLinkedIn = async (text: string, day: number, imageUrl?: string) => {
     if (!session?.access_token) {
@@ -531,33 +530,33 @@ const handlePostToDiscord = async (text: string, day: number, imageUrl?: string)
     }
   };
 
-const handlePostToSlack = async (text: string, day: number, imageUrl?: string) => {
-  const slackWebhook = session?.user?.user_metadata?.slack_webhook;
-  if (!slackWebhook) {
-    toast.error("Add your Slack webhook in Settings first.");
-    return;
-  }
-  setSlackStatuses((prev) => ({ ...prev, [day]: "loading" }));
-  try {
+  const handlePostToSlack = async (text: string, day: number, imageUrl?: string) => {
+    const slackWebhook = session?.user?.user_metadata?.slack_webhook;
+    if (!slackWebhook) {
+      toast.error("Add your Slack webhook in Settings first.");
+      return;
+    }
+    setSlackStatuses((prev) => ({ ...prev, [day]: "loading" }));
+    try {
       const res = await fetch(getApiEndpoint(PLATFORMS.SLACK), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: text,
-        webhookUrl: slackWebhook,
-        imageUrl,
-      }),
-    });
-    if (!res.ok) throw new Error("Slack rejected the webhook payload.");
-    setSlackStatuses((prev) => ({ ...prev, [day]: "success" }));
-    setTimeout(() => setSlackStatuses((prev) => ({ ...prev, [day]: "idle" })), 3000);
-    toast.success("Posted to Slack!");
-  } catch (error: any) {
-    console.error("Slack Error:", error);
-    setSlackStatuses((prev) => ({ ...prev, [day]: "error" }));
-    toast.error(`Failed to post to Slack: ${error.message}`);
-  }
-};
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: text,
+          webhookUrl: slackWebhook,
+          imageUrl,
+        }),
+      });
+      if (!res.ok) throw new Error("Slack rejected the webhook payload.");
+      setSlackStatuses((prev) => ({ ...prev, [day]: "success" }));
+      setTimeout(() => setSlackStatuses((prev) => ({ ...prev, [day]: "idle" })), 3000);
+      toast.success("Posted to Slack!");
+    } catch (error: any) {
+      console.error("Slack Error:", error);
+      setSlackStatuses((prev) => ({ ...prev, [day]: "error" }));
+      toast.error(`Failed to post to Slack: ${error.message}`);
+    }
+  };
 
   const safeCampaign = campaign ?? [];
   const safePlatforms = selectedPlatforms ?? [];
@@ -712,51 +711,51 @@ const handlePostToSlack = async (text: string, day: number, imageUrl?: string) =
       )}
 
       {/* SLACK ROW */}
-{hasSlack && (
-  <section>
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={fadeUp}
-      className="flex items-center gap-3 mb-5"
-    >
-      <svg className="w-5 h-5 fill-current text-[#4A154B]" viewBox="0 0 24 24">
-        <path d="M5.5 12.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm4-4a2 2 0 1 1 4 0v5a2 2 0 1 1-4 0v-5zm4-4a2 2 0 1 1 0 4h-2V6.5a2 2 0 0 1 2-2zm-4 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
-      </svg>
-      <h3 className="text-xl font-black italic uppercase tracking-tighter text-brand-navy">Slack Strategy</h3>
-    </motion.div>
-    <motion.div
-      className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      {safeCampaign.map((dayData: CampaignDay) =>
-        dayData.slack && (
-          <SocialCard
-            key={`slack-${dayData.day}`}
-            day={dayData.day}
-            platformName="Slack"
-            session={session}
-            initialText={dayData.slack}
-            imagesGeneratedCount={imagesGeneratedCount}
-            incrementImageCount={incrementImageCount}
-            planStatus={planStatus}
-            onPost={handlePostToSlack}
-            postStatus={slackStatuses[dayData.day]}
-            actionButtonConfig={{
-              idle: "💬 Send to Slack",
-              loading: "Posting...",
-              success: "✅ Sent!",
-              classes: "bg-[#4A154B] text-white hover:bg-[#36123b] active:scale-95",
-            }}
-            onStatsChange={onStatsChange}
-          />
-        )
+      {hasSlack && (
+        <section>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            className="flex items-center gap-3 mb-5"
+          >
+            <svg className="w-5 h-5 fill-current text-[#4A154B]" viewBox="0 0 24 24">
+              <path d="M5.5 12.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm4-4a2 2 0 1 1 4 0v5a2 2 0 1 1-4 0v-5zm4-4a2 2 0 1 1 0 4h-2V6.5a2 2 0 0 1 2-2zm-4 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+            </svg>
+            <h3 className="text-xl font-black italic uppercase tracking-tighter text-brand-navy">Slack Strategy</h3>
+          </motion.div>
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
+            {safeCampaign.map((dayData: CampaignDay) =>
+              dayData.slack && (
+                <SocialCard
+                  key={`slack-${dayData.day}`}
+                  day={dayData.day}
+                  platformName="Slack"
+                  session={session}
+                  initialText={dayData.slack}
+                  imagesGeneratedCount={imagesGeneratedCount}
+                  incrementImageCount={incrementImageCount}
+                  planStatus={planStatus}
+                  onPost={handlePostToSlack}
+                  postStatus={slackStatuses[dayData.day]}
+                  actionButtonConfig={{
+                    idle: "💬 Send to Slack",
+                    loading: "Posting...",
+                    success: "✅ Sent!",
+                    classes: "bg-[#4A154B] text-white hover:bg-[#36123b] active:scale-95",
+                  }}
+                  onStatsChange={onStatsChange}
+                />
+              )
+            )}
+          </motion.div>
+        </section>
       )}
-    </motion.div>
-  </section>
-)}
 
       {/* EMAIL NEWSLETTER SECTION */}
       {hasEmail && (

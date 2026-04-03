@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface PersonasManagerProps {
   session: any;
@@ -13,6 +14,7 @@ export default function PersonasManager({ session }: PersonasManagerProps) {
   const [newPrompt, setNewPrompt] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: string | null }>({ isOpen: false, id: null });
 
   useEffect(() => {
     fetchPersonas();
@@ -49,13 +51,21 @@ export default function PersonasManager({ session }: PersonasManagerProps) {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this persona?")) return;
-    const { error } = await supabase.from("user_personas").delete().eq("id", id);
+  const handleDeleteClick = (id: string) => {
+    setDeleteConfirm({ isOpen: true, id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm.id) return;
+    const { error } = await supabase.from("user_personas").delete().eq("id", deleteConfirm.id);
     if (!error) {
-      setPersonas(personas.filter(p => p.id !== id));
+      setPersonas(personas.filter(p => p.id !== deleteConfirm.id));
       window.dispatchEvent(new Event("refreshPersonas"));
+      toast.success("Persona deleted");
+    } else {
+      toast.error("Failed to delete persona");
     }
+    setDeleteConfirm({ isOpen: false, id: null });
   };
 
   return (
@@ -115,7 +125,7 @@ export default function PersonasManager({ session }: PersonasManagerProps) {
                   <p className="text-xs text-slate-500 mt-1 line-clamp-2">{p.prompt}</p>
                 </div>
                 <button
-                  onClick={() => handleDelete(p.id)}
+                  onClick={() => handleDeleteClick(p.id)}
                   className="text-red-500 hover:text-red-700 text-sm font-black px-2 py-1 ml-4"
                   title="Delete"
                 >
@@ -126,6 +136,16 @@ export default function PersonasManager({ session }: PersonasManagerProps) {
           </ul>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        title="Delete Persona"
+        message="Are you sure you want to delete this persona? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirm({ isOpen: false, id: null })}
+      />
     </div>
   );
 }
