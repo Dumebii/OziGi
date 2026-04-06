@@ -80,10 +80,7 @@ export default function Hero() {
   const [session, setSession] = useState<any>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentCard, setCurrentCard] = useState(0);
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
   const prevSession = useRef<any>(null);
-  const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
@@ -108,42 +105,6 @@ export default function Hero() {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
-
-  const handleSliderDrag = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!sliderRef.current) return;
-    
-    const rect = sliderRef.current.getBoundingClientRect();
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const position = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-    setSliderPosition(position);
-  };
-
-  const handleMouseDown = () => setIsDragging(true);
-  const handleMouseUp = () => setIsDragging(false);
-
-  useEffect(() => {
-    if (!isDragging) return;
-    
-    const handleMouseMove = (e: MouseEvent) => {
-      handleSliderDrag(e as any);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      handleSliderDrag(e as any);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("touchmove", handleTouchMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("touchend", handleMouseUp);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("touchend", handleMouseUp);
-    };
-  }, [isDragging]);
 
   return (
     <section className="relative overflow-hidden bg-brand-offwhite py-12 md:py-20 min-h-screen flex items-center">
@@ -241,17 +202,6 @@ export default function Hero() {
                 See how it works
               </Link>
             </div>
-<div className="flex flex-wrap items-center gap-6 pt-4 justify-center lg:justify-start text-slate-500 hidden md:flex">
-  <div className="flex items-center gap-1 text-sm">
-    <span className="text-brand-red">✓</span> No credit card
-  </div>
-  <div className="flex items-center gap-1 text-sm">
-    <span className="text-brand-red">✓</span> 5 free campaigns
-  </div>
-  <div className="flex items-center gap-1 text-sm">
-    <span className="text-brand-red">✓</span> 7‑day Pro trial
-  </div>
-</div>
           </motion.div>
 
           {/* Right Column: Before/After Showcase */}
@@ -328,54 +278,7 @@ export default function Hero() {
     </div>
   </div>
 
-  {/* Interactive Draggable Slider */}
-  <div className="w-full max-w-full md:max-w-md">
-    <p className="text-xs uppercase font-bold text-slate-500 tracking-widest text-center mb-3">
-      Drag to reveal the difference
-    </p>
-    <div
-      ref={sliderRef}
-      className="relative h-40 rounded-2xl overflow-hidden border-2 border-slate-200 cursor-col-resize bg-white shadow-lg"
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleMouseDown}
-    >
-      {/* Before Content (Full width base) */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-50 to-slate-100 p-4 md:p-5 flex flex-col justify-center overflow-hidden">
-        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Generic AI</div>
-        <p className="text-xs text-slate-600 leading-tight line-clamp-3">
-          The systematic approach to infrastructure optimization requires comprehensive evaluation of multiple interconnected components and operational efficiency metrics...
-        </p>
-      </div>
 
-      {/* After Content (Revealed from right) */}
-      <div
-        className="absolute inset-0 bg-white p-4 md:p-5 flex flex-col justify-center overflow-hidden transition-all"
-        style={{ 
-          width: `${sliderPosition}%`,
-          right: 0,
-          left: 'auto'
-        }}
-      >
-        <div className="text-xs font-bold text-brand-red uppercase tracking-wider mb-2">With OziGi</div>
-        <p className="text-xs text-slate-800 leading-tight font-medium line-clamp-3">
-          Building real-time video in Next.js? Skip the fluff. We shipped a consultation app. Auth, data, video SDK—coordinated. That foundation matters.
-        </p>
-      </div>
-
-      {/* Slider Handle */}
-      <motion.div
-        className="absolute top-0 bottom-0 w-0.5 bg-gradient-to-r from-slate-300 to-brand-red cursor-col-resize shadow-lg"
-        style={{ left: `${sliderPosition}%` }}
-        transition={{ type: "tween", duration: 0, ease: "linear" }}
-      >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-2 shadow-xl border-2 border-brand-red hover:scale-110 transition-transform">
-          <svg className="w-4 h-4 text-brand-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7M15 5l7 7-7 7" />
-          </svg>
-        </div>
-      </motion.div>
-    </div>
-  </div>
 
   <div className="absolute -z-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-red/5 rounded-full blur-3xl" />
 </motion.div>

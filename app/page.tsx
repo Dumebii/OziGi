@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 import Hero from "../components/Hero";
 import AuthModal from "../components/AuthModal";
 import PricingCards from "../components/PricingCards";
+import BeforeAfterSlider from "../components/BeforeAfterSlider";
 import { supabase } from "@/lib/supabase/client";
 
 const fadeUp: Variants = {
@@ -204,6 +205,14 @@ export default function Home() {
                 </div>
               </motion.div>
             </div>
+
+            {/* Interactive Drag-to-Reveal Slider */}
+            <motion.div variants={fadeUp} className="mt-12 md:mt-16 w-full">
+              <p className="text-xs uppercase font-bold text-slate-500 tracking-widest text-center mb-4">
+                Try it yourself — drag to reveal
+              </p>
+              <BeforeAfterSlider />
+            </motion.div>
           </motion.div>
         </section>
 
