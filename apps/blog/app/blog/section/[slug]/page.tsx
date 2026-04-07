@@ -10,8 +10,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const sectionName = params.slug
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const sectionName = slug
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
@@ -22,8 +23,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function SectionPage({ params }: { params: { slug: string } }) {
-  const sectionName = params.slug
+export default async function SectionPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const sectionName = slug
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
