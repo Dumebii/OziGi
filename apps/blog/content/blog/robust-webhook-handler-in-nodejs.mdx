@@ -10,11 +10,21 @@ keywords: ["webhooks", "Node.js", "backend", "reliability"]
 section: "Engineering"
 ---
 
-Webhooks are everywhere. Stripe fires one when a payment succeeds. GitHub fires one when a PR is merged. Twilio fires one when an SMS lands. And when your handler is flaky — when it misses events, fails silently, or chokes under load — you lose data and trust.
+Webhooks are everywhere. [Stripe](https://stripe.com/docs/webhooks) fires one when a payment succeeds. [GitHub](https://docs.github.com/en/webhooks) fires one when a PR is merged. [Twilio](https://www.twilio.com/docs/usage/webhooks) fires one when an SMS lands. And when your handler is flaky — when it misses events, fails silently, or chokes under load — you lose data and trust.
 
 Most tutorials show you how to receive a webhook. Few show you how to handle it *properly*. This article covers the full picture: signature validation, idempotency, async queuing, and retry logic with exponential backoff.
 
-We'll use Node.js and Express throughout, with no external queue infrastructure required.
+We'll use Node.js and Express throughout, with no external queue infrastructure required. **One important caveat up front:** the queuing approach in this article is designed for a single, long-lived Node.js process. If you're running on serverless functions (Lambda, Cloud Run) or horizontally scaled deployments with multiple instances, in-memory queues are not reliable — skip ahead to the [When to Upgrade](#when-to-upgrade-to-a-real-queue) section for the right tool in those cases.
+
+## TL;DR Summary
+
+| Concern | Solution |
+|---|---|
+| Fake webhook senders | HMAC-SHA256 signature verification with `timingSafeEqual` |
+| Slow handlers timing out | Acknowledge `200` immediately, process async |
+| Cascading failures | In-process queue with concurrency limit |
+| Transient errors | Exponential backoff with jitter |
+| Duplicate events | Idempotency keys via Set or Redis |
 
 ---
 
@@ -32,7 +42,9 @@ A webhook handler that:
 
 ## Step 1: Signature Validation
 
-Never trust an incoming webhook without verifying it came from who you think it came from. Most webhook providers (Stripe, GitHub, Shopify) sign their payloads using HMAC-SHA256 with a shared secret.
+Never trust an incoming webhook without verifying it came from who you think it came from. Most webhook providers ([Stripe](https://stripe.com/docs/webhooks/signature-verification), [GitHub](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries), [Shopify](https://shopify.dev/docs/apps/build/webhooks/secure/validate-webhooks)) sign their payloads using [HMAC-SHA256](https://en.wikipedia.org/wiki/HMAC) with a shared secret.
+
+![Webhook pipeline flow — from incoming request through validation, queuing, handling, retry and dead letter](/images/blog/webhook-handler/webhook_pipeline_diagram.png)
 
 ```js
 const crypto = require('crypto');
@@ -53,9 +65,9 @@ function verifySignature(payload, signature, secret) {
 }
 ```
 
-**Why `timingSafeEqual`?** A simple `===` check leaks timing information — an attacker can brute-force signatures by measuring how long the comparison takes. `timingSafeEqual` always takes the same amount of time regardless of where the strings differ.
+**Why [`timingSafeEqual`](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b)?** A simple `===` check leaks timing information — an attacker can brute-force signatures by measuring how long the comparison takes. `timingSafeEqual` always takes the same amount of time regardless of where the strings differ.
 
-Now wire it into Express. A critical detail: you need the **raw body** for HMAC validation, not the parsed JSON. Express's `json()` middleware strips the raw body by default.
+Now wire it into [Express](https://expressjs.com). A critical detail: you need the **raw body** for HMAC validation, not the parsed JSON. Express's [`json()` middleware](https://expressjs.com/en/api.html#express.json) strips the raw body by default — use [`express.raw()`](https://expressjs.com/en/api.html#express.raw) on the webhook route instead.
 
 ```js
 const express = require('express');
@@ -87,7 +99,13 @@ The key discipline here: **acknowledge before you process**. If your business lo
 
 ## Step 2: An In-Process Job Queue
 
-You don't always need Redis or BullMQ for a job queue. For many use cases, an in-process queue with controlled concurrency is enough — and it's simpler to reason about.
+You don't always need [Redis](https://redis.io) or [BullMQ](https://bullmq.io) for a job queue. For a **single, persistent Node.js process**, an in-process queue with controlled concurrency is enough — and it's simpler to reason about.
+
+> ⚠️ **Limitations to understand before using this pattern:**
+> - **Jobs are lost on restart.** If your process crashes or is redeployed while events are queued, those jobs disappear silently. There is no persistence.
+> - **Not shared across instances.** If you run multiple server instances (behind a load balancer, in a cluster, or in any horizontally scaled setup), each instance has its own queue. Events are not distributed or deduplicated across them.
+>
+> If either of those constraints is a problem for your use case, go straight to a real queue like [BullMQ](https://bullmq.io) or [AWS SQS](https://aws.amazon.com/sqs/).
 
 ```js
 class WebhookQueue {
@@ -144,7 +162,9 @@ class WebhookQueue {
 const queue = new WebhookQueue({ concurrency: 3, maxRetries: 5 });
 ```
 
-The `backoff` method uses **exponential backoff with jitter**. Without jitter, all retrying jobs fire at the same moment and create a thundering herd. Adding a random jitter spreads the load.
+The `backoff` method uses **exponential backoff with jitter**. Without jitter, all retrying jobs fire at the same moment and create a [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem). Adding a random jitter spreads the load. See [AWS's writeup on backoff and jitter](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/) for a deeper look at why this matters at scale.
+
+![Exponential backoff with jitter — delay per retry attempt](/images/blog/webhook-handler/webhook_backoff_chart.png)
 
 ---
 
@@ -198,7 +218,7 @@ async function handleEvent(event) {
 }
 ```
 
-In production, replace the in-memory `Set` with a Redis `SET NX EX` call so idempotency survives process restarts:
+In production, replace the in-memory `Set` with a [Redis](https://redis.io) `SET NX EX` call via [ioredis](https://github.com/redis/ioredis) so idempotency survives process restarts:
 
 ```js
 const redis = require('ioredis');
@@ -303,7 +323,7 @@ app.listen(3000, () => console.log('Webhook server listening on :3000'));
 
 ## When to Upgrade to a Real Queue
 
-The in-process queue above is solid for moderate throughput, but you'll want to graduate to BullMQ (Redis-backed) or SQS when:
+The in-process queue above is acceptable for **a single persistent process with moderate throughput** — think a low-traffic internal tool or a side project where restarts are rare and you run one instance. You'll want to graduate to [BullMQ](https://bullmq.io) (Redis-backed) or [AWS SQS](https://aws.amazon.com/sqs/) when:
 
 - You're running **multiple server instances** (in-process state won't be shared)
 - You need **event history** and visibility into failed jobs
@@ -312,17 +332,6 @@ The in-process queue above is solid for moderate throughput, but you'll want to 
 
 The good news: the handler logic above (`handleEvent`, idempotency, backoff) carries over directly. You're just swapping the queue substrate.
 
----
-
-## Summary
-
-| Concern | Solution |
-|---|---|
-| Fake webhook senders | HMAC-SHA256 signature verification with `timingSafeEqual` |
-| Slow handlers timing out | Acknowledge `200` immediately, process async |
-| Cascading failures | In-process queue with concurrency limit |
-| Transient errors | Exponential backoff with jitter |
-| Duplicate events | Idempotency keys via Set or Redis |
 
 Webhooks are one of those things that look simple until they aren't. Getting these five concerns right means you can receive events reliably at scale — without losing data, without duplicating side effects, and without taking down your server under a burst of retries.
 
