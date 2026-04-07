@@ -44,7 +44,7 @@ A webhook handler that:
 
 Never trust an incoming webhook without verifying it came from who you think it came from. Most webhook providers ([Stripe](https://stripe.com/docs/webhooks/signature-verification), [GitHub](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries), [Shopify](https://shopify.dev/docs/apps/build/webhooks/secure/validate-webhooks)) sign their payloads using [HMAC-SHA256](https://en.wikipedia.org/wiki/HMAC) with a shared secret.
 
-![Webhook pipeline flow — from incoming request through validation, queuing, handling, retry and dead letter](/images/blog/webhook-handler/webhook_pipeline_diagram_v2.png)
+![Webhook pipeline flow — from incoming request through validation, queuing, handling, retry and dead letter](/images/blog/webhook-handler/webhook_pipeline_diagram.png)
 
 ```js
 const crypto = require('crypto');
