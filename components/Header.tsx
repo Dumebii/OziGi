@@ -80,11 +80,11 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
     <>
       <header className={`w-full z-40 transition-all ${isDashboard ? 'bg-transparent' : 'bg-white border-b border-slate-200'}`}>
         <div className={`mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between ${isDashboard ? 'w-full' : 'max-w-7xl'}`}>
-          
+
           {/* LEFT SIDE: Brand & Mobile Toggle */}
           <div className="flex items-center gap-4">
             {isDashboard && (
-              <button 
+              <button
                 onClick={onOpenMobileSidebar}
                 className="md:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none bg-white rounded-lg shadow-sm border border-slate-200"
                 aria-label="Open sidebar"
@@ -96,10 +96,10 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
             )}
 
             {!isDashboard && (
-<Link href="/" className="flex items-center gap-2">
-  <img src="/logo.png" alt="Ozigi" className="h-8 w-auto logo-spin" />
-  <span className="text-2xl font-black text-brand-navy tracking-tighter">Ozigi</span>
-</Link>
+              <Link href="/" className="flex items-center gap-2">
+                <img src="/logo.png" alt="Ozigi" className="h-8 w-auto logo-spin" />
+                <span className="text-2xl font-black text-brand-navy tracking-tighter">Ozigi</span>
+              </Link>
             )}
           </div>
 
@@ -113,46 +113,49 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
                 <Link href="/architecture" className="text-sm font-semibold text-slate-600 hover:text-brand-red transition">
                   Architecture
                 </Link>
+                <Link href="blog.ozigi.app" className="text-sm font-semibold text-slate-600 hover:text-brand-red transition">
+                  Blog
+                </Link>
                 <Link href="/pricing" className="text-sm font-semibold text-slate-600 hover:text-brand-red transition">
                   Pricing
                 </Link>
 
                 {/* Features Dropdown - opens on hover */}
-<div
-  className="relative"
-  ref={featuresDropdownRef}
-  onMouseEnter={() => setIsFeaturesDropdownOpen(true)}
-  onMouseLeave={() => setIsFeaturesDropdownOpen(false)}
->
-  <button className="text-sm font-semibold text-slate-600 hover:text-brand-red transition flex items-center gap-1">
-    Features
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-  {isFeaturesDropdownOpen && (
-    <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
-      {features.map((feature) => (
-        <Link
-          key={feature.href}
-          href={feature.href}
-          className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-red transition"
-          onClick={() => setIsFeaturesDropdownOpen(false)}
-        >
-          {feature.name}
-        </Link>
-      ))}
-    </div>
-  )}
-</div>
+                <div
+                  className="relative"
+                  ref={featuresDropdownRef}
+                  onMouseEnter={() => setIsFeaturesDropdownOpen(true)}
+                  onMouseLeave={() => setIsFeaturesDropdownOpen(false)}
+                >
+                  <button className="text-sm font-semibold text-slate-600 hover:text-brand-red transition flex items-center gap-1">
+                    Features
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isFeaturesDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+                      {features.map((feature) => (
+                        <Link
+                          key={feature.href}
+                          href={feature.href}
+                          className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-red transition"
+                          onClick={() => setIsFeaturesDropdownOpen(false)}
+                        >
+                          {feature.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-<Link
-  href={process.env.NEXT_PUBLIC_CALENDLY_URL || "mailto:hello@ozigi.app"}
-  target="_blank"
-  rel="noopener noreferrer"
-className="text-sm font-semibold text-slate-600 hover:text-brand-red transition">
-  Contact Sales
-</Link>
+                <Link
+                  href={process.env.NEXT_PUBLIC_CALENDLY_URL || "mailto:hello@ozigi.app"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold text-slate-600 hover:text-brand-red transition">
+                  Contact Sales
+                </Link>
               </nav>
             )}
 
@@ -197,9 +200,9 @@ className="text-sm font-semibold text-slate-600 hover:text-brand-red transition"
                         Dashboard
                       </Link>
                     )}
-                    
+
                     <div className="h-px bg-slate-100 my-1" />
-                    
+
                     <button
                       onClick={signOut}
                       disabled={isLoggingOut}
@@ -236,7 +239,7 @@ className="text-sm font-semibold text-slate-600 hover:text-brand-red transition"
       {isSettingsOpen && (
         <SettingsModal
           session={session}
-          onEmailAdded={() => {}}
+          onEmailAdded={() => { }}
           onClose={() => setIsSettingsOpen(false)}
         />
       )}

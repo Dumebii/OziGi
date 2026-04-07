@@ -21,30 +21,30 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
-              An Agentic Content Engine built to close the gap between raw research and structured distribution.
+              An Automated Content Engine built to close the gap between raw context and content, in your voice.
             </p>
           </div>
 
           {/* Product */}
-<div>
-  <h4 className="text-xs font-bold uppercase tracking-widest text-slate-300 mb-5">
-    Features
-  </h4>
-  <div className="flex flex-col gap-3">
-    <Link href="/docs/multimodal-pipeline" className="text-sm text-slate-500 hover:text-white transition-colors">
-      Multimodal Ingestion
-    </Link>
-    <Link href="/docs/the-banned-lexicon" className="text-sm text-slate-500 hover:text-white transition-colors">
-      Banned Lexicon
-    </Link>
-    <Link href="/docs/system-personas" className="text-sm text-slate-500 hover:text-white transition-colors">
-      System Personas
-    </Link>
-    <Link href="/docs/human-in-the-loop" className="text-sm text-slate-500 hover:text-white transition-colors">
-      Human‑in‑the‑Loop
-    </Link>
-  </div>
-</div>
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-300 mb-5">
+              Features
+            </h4>
+            <div className="flex flex-col gap-3">
+              <Link href="/docs/multimodal-pipeline" className="text-sm text-slate-500 hover:text-white transition-colors">
+                Multimodal Ingestion
+              </Link>
+              <Link href="/docs/the-banned-lexicon" className="text-sm text-slate-500 hover:text-white transition-colors">
+                Banned Lexicon
+              </Link>
+              <Link href="/docs/system-personas" className="text-sm text-slate-500 hover:text-white transition-colors">
+                System Personas
+              </Link>
+              <Link href="/docs/human-in-the-loop" className="text-sm text-slate-500 hover:text-white transition-colors">
+                Human‑in‑the‑Loop
+              </Link>
+            </div>
+          </div>
 
           {/* Community */}
           <div>
@@ -60,9 +60,9 @@ export default function Footer() {
               >
                 GitHub
               </a>
-<a href="https://blog.ozigi.app" className="text-sm font-semibold text-slate-600 hover:text-brand-red transition">
-  Blog
-</a>
+              <a href="https://blog.ozigi.app" className="text-sm font-semibold text-slate-600 hover:text-brand-red transition">
+                Blog
+              </a>
               <a
                 href="https://linkedin.com/in/dumebi-okolo"
                 target="_blank"
@@ -89,25 +89,25 @@ export default function Footer() {
               <Link href="/demo" className="text-sm text-slate-500 hover:text-white transition-colors">
                 Live Demo
               </Link>
-<a
-  href={process.env.NEXT_PUBLIC_CALENDLY_URL || "mailto:hello@ozigi.app"}
-  target="_blank"
-  rel="noopener noreferrer"
-className="text-sm text-slate-500 hover:text-white transition-colors">
-  Contact Sales
-</a>
+              <a
+                href={process.env.NEXT_PUBLIC_CALENDLY_URL || "mailto:hello@ozigi.app"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-slate-500 hover:text-white transition-colors">
+                Contact Sales
+              </a>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-<Link href="/privacy-policy" className="text-sm text-slate-500 hover:text-white transition-colors">
-  Privacy Policy
-</Link>
-<Link href="/terms" className="text-sm text-slate-500 hover:text-white transition-colors">
-  Terms of Service
-</Link>
+          <Link href="/privacy-policy" className="text-sm text-slate-500 hover:text-white transition-colors">
+            Privacy Policy
+          </Link>
+          <Link href="/terms" className="text-sm text-slate-500 hover:text-white transition-colors">
+            Terms of Service
+          </Link>
           <p className="text-xs text-slate-600">
             © 2026 Ozigi. All rights reserved.
           </p>
