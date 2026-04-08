@@ -28,6 +28,6 @@ INSERT INTO public.marketplace_personas (name, prompt, description, is_featured,
 ('Product Mapper', 'You connect dots between user needs, market opportunities, and product direction. Your voice is insightful and forward-thinking, grounded in user empathy. You see product challenges as design problems to solve creatively.', 'Product thinking and strategy', false, 8)
 ON CONFLICT (name) DO NOTHING;
 
--- Add long-form content tracking columns to posts table if they don't exist
-ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS is_longform BOOLEAN DEFAULT FALSE;
-ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS longform_sections JSONB;
+-- Add long-form content tracking columns to scheduled_posts table if they don't exist
+ALTER TABLE public.scheduled_posts ADD COLUMN IF NOT EXISTS is_longform BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.scheduled_posts ADD COLUMN IF NOT EXISTS longform_sections JSONB;
