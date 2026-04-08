@@ -379,7 +379,7 @@ export default function WritePage() {
             Use Ozigi to write better content
           </h2>
           <p className="text-lg text-slate-700 mb-8">
-            Many of our best contributors use Ozigi to draft, refine, and perfect their articles. Transform your rough ideas into polished, authentic pieces that sound like you.
+            Many of our best contributors use Ozigi to draft, refine, and perfect their social media content copy. Transform your rough ideas into polished, authentic pieces that sound like you.
           </p>
           <Link
             href="https://ozigi.app/dashboard"
