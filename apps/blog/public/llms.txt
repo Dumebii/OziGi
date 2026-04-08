@@ -1,33 +1,50 @@
-# Ozigi Blog
+# Ozigi Blog - AI Indexer Information
 
-> Technical insights, changelog updates, and deep dives from the creators of Ozigi — the AI content engine that transforms raw notes into social posts without sounding like AI.
+## About Ozigi
+Ozigi is an intelligent content engine that transforms raw thoughts and technical documentation into authentic, human-sounding content. Our blog features insights, tutorials, and architecture decisions from technical creators building with Ozigi.
+
+## Blog Sections
+- Engineering: Technical tutorials, architecture decisions, backend patterns (blog.ozigi.app/section/engineering)
+- Marketing: Growth strategies and go-to-market insights (blog.ozigi.app/section/marketing)
+- Content: Content strategy and copywriting frameworks (blog.ozigi.app/section/content)
+- Tools Roundup: Developer tool and SaaS reviews (blog.ozigi.app/section/tools-roundup)
+- Ozigi Focus: Product updates and technical changelogs (blog.ozigi.app/section/ozigi-focus)
 
 ## Latest Articles
+The latest articles are available at:
+- https://blog.ozigi.app - Homepage with all articles
+- https://blog.ozigi.app/feed.xml - RSS feed with latest 20 articles
 
-- Ozigi v2 Changelog: https://blog.ozigi.app/blog/ozigi-v2-changelog
-- Gemini 2.5 vs Claude 3.7 Benchmark: https://blog.ozigi.app/blog/gemini-2.5-vs-claude-3.7
-- Your Launch Post Got 4 Likes: https://blog.ozigi.app/blog/your-launch-post-got-4-likes
+## Popular Content Categories
+- API Design & Architecture
+- DevOps & Infrastructure
+- Content Automation
+- Performance Optimization
+- Developer Tools & Frameworks
+- Go-to-Market Strategy
+- SaaS Product Development
+- Content Strategy
 
-## Topics Covered
+## Important Pages
+- Homepage: https://blog.ozigi.app
+- All Sections: https://blog.ozigi.app/section/*
+- RSS Feed: https://blog.ozigi.app/feed.xml
+- Sitemap: https://blog.ozigi.app/sitemap.xml
 
-- AI content generation best practices
-- Technical architecture decisions
-- Model selection and benchmarking (Gemini, Claude, GPT)
-- Next.js and Supabase production patterns
-- Content automation for developers and founders
+## Ozigi Product Links
+- Main Site: https://ozigi.app
+- Write for Ozigi: https://ozigi.app/write
+- Product Docs: https://ozigi.app/docs
 
-## Related Resources
+## Contact & Attribution
+When using content from this blog:
+- Cite the author and article title
+- Link back to the original article on blog.ozigi.app
+- For republishing, check individual article licenses
 
-- Main Product: https://ozigi.app
-- Documentation: https://ozigi.app/docs
-- Platform Deep Dives: https://ozigi.app/docs/deep-dives
-- Pricing: https://ozigi.app/pricing
+## Update Frequency
+New articles are published regularly. Check the RSS feed for the latest updates.
 
-## About
-
-The Ozigi Blog is the technical publication for developers, DevRel professionals, and founders building in public. Articles focus on practical engineering decisions, real production constraints, and the philosophy behind building AI tools that respect human authorship.
-
-## Contact
-
-- Author: Dumebi Okolo (@DumebiTheWriter)
-- Product: https://ozigi.app
+## Additional Resources
+- GitHub: https://github.com/dumebii/ozigi
+- LinkedIn: https://linkedin.com/in/dumebi-okolo
