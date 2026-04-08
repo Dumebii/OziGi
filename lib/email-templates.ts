@@ -196,6 +196,145 @@ export function buildWelcomeEmail(userName?: string) {
   `;
 }
 
+// ==========================================
+// PLAN UPGRADE WELCOME EMAILS
+// ==========================================
+
+function escapeHtmlSafe(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+interface UpgradeEmailConfig {
+  userName: string;
+  plan: 'team' | 'organization' | 'enterprise';
+}
+
+export function buildUpgradeWelcomeEmail({ userName, plan }: UpgradeEmailConfig): string {
+  const appUrl = process.env.APP_URL || 'https://ozigi.app';
+  const dashboardUrl = `${appUrl}/dashboard`;
+  const displayName = userName || 'there';
+
+  const planConfigs = {
+    team: {
+      title: "Welcome to Team!",
+      subtitle: "You've unlocked serious creator tools",
+      color: "#1d4ed8",
+      features: [
+        { icon: "&#x1F680;", title: "30 campaigns/month", desc: "Create and distribute more content than ever" },
+        { icon: "&#x1F465;", title: "Unlimited personas", desc: "Save and switch between multiple voice profiles" },
+        { icon: "&#x1F3A8;", title: "Image generation (2/campaign)", desc: "AI-generated visuals for your posts" },
+        { icon: "&#x2709;&#xFE0F;", title: "Email newsletter generation", desc: "Turn your content into beautiful newsletters" },
+        { icon: "&#x1F4C5;", title: "Scheduling + X email reminder", desc: "Set it and forget it with smart reminders" },
+        { icon: "&#x1F4AC;", title: "Slack integration", desc: "Publish directly to your Slack channels" },
+      ],
+    },
+    organization: {
+      title: "Welcome to Organization!",
+      subtitle: "Full power, no limits",
+      color: "#7c3aed",
+      features: [
+        { icon: "&#x221E;", title: "Unlimited campaigns", desc: "No caps on your content creation" },
+        { icon: "&#x1F3A8;", title: "Unlimited image generation", desc: "As many AI visuals as you need" },
+        { icon: "&#x2709;&#xFE0F;", title: "Unlimited email sending", desc: "Grow your newsletter without restrictions" },
+        { icon: "&#x1F916;", title: "Ozigi Copilot (full context)", desc: "AI assistant with complete conversation memory" },
+        { icon: "&#x1F4CA;", title: "Campaign analytics", desc: "Track performance across all platforms" },
+        { icon: "&#x26A1;", title: "Priority model access", desc: "Faster, higher-quality AI generations" },
+      ],
+    },
+    enterprise: {
+      title: "Welcome to Enterprise!",
+      subtitle: "Your dedicated marketing powerhouse",
+      color: "#0f172a",
+      features: [
+        { icon: "&#x1F3E2;", title: "Custom campaign volume", desc: "Limits tailored to your organization" },
+        { icon: "&#x1F465;", title: "Team workspace + roles", desc: "Collaborate with your entire team" },
+        { icon: "&#x1F6E1;&#xFE0F;", title: "SLA + uptime guarantee", desc: "Enterprise-grade reliability" },
+        { icon: "&#x1F3A8;", title: "White-label option", desc: "Brand Ozigi as your own" },
+        { icon: "&#x1F4DE;", title: "Dedicated Slack support", desc: "Direct line to our team" },
+        { icon: "&#x1F91D;", title: "Dedicated onboarding", desc: "We'll get you up and running personally" },
+      ],
+    },
+  };
+
+  const config = planConfigs[plan];
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f4f4f5;">
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+        <div style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, ${config.color} 0%, ${config.color}dd 100%); padding: 40px 32px; text-align: center;">
+            <img src="https://ozigi.app/logo.png" alt="Ozigi" style="height: 48px; margin-bottom: 16px;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">${config.title}</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 12px 0 0 0; font-size: 16px;">${config.subtitle}</p>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 40px 32px;">
+            <p style="font-size: 18px; color: #0f172a; margin: 0 0 24px 0;">
+              Hey ${escapeHtmlSafe(displayName)},
+            </p>
+            <p style="font-size: 16px; color: #475569; line-height: 1.6; margin: 0 0 24px 0;">
+              Thanks for upgrading! Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan is now active. Here's what you've unlocked:
+            </p>
+            
+            <!-- Features -->
+            <h3 style="color: #0f172a; margin: 32px 0 20px 0; font-size: 18px; font-weight: 600;">Your new superpowers:</h3>
+            
+            ${config.features.map(f => `
+            <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+              <div style="background: ${config.color}15; border-radius: 10px; padding: 12px; margin-right: 16px; flex-shrink: 0;">
+                <span style="font-size: 24px;">${f.icon}</span>
+              </div>
+              <div>
+                <h4 style="color: #0f172a; margin: 0 0 4px 0; font-size: 15px; font-weight: 600;">${f.title}</h4>
+                <p style="color: #64748b; margin: 0; font-size: 14px; line-height: 1.5;">${f.desc}</p>
+              </div>
+            </div>
+            `).join('')}
+            
+            <!-- CTA -->
+            <div style="text-align: center; margin: 36px 0 24px;">
+              <a href="${dashboardUrl}" style="background: ${config.color}; color: #ffffff; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">
+                Go to Dashboard
+              </a>
+            </div>
+            
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 24px 0 0 0;">
+              Questions about your new features? Just reply to this email - we're here to help.
+            </p>
+            
+            <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 16px 0 0 0;">
+              Happy marketing!<br>
+              <strong>The Ozigi Team</strong>
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background: #f8fafc; padding: 24px 32px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #64748b; font-size: 12px; margin: 0;">
+              You received this email because you upgraded your Ozigi plan.<br>
+              &copy; ${new Date().getFullYear()} Ozigi. Made with care.
+            </p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 export function buildPromotionalEmail(
   subject: string,
   headline: string,
