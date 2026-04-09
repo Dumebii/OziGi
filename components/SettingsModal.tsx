@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { OAUTH_PROVIDERS, OAUTH_SCOPES } from "@/lib/platforms";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import CancellationModal from "@/components/CancellationModal";
 
 interface SettingsModalProps {
   session: any;
@@ -41,6 +42,10 @@ export default function SettingsModal({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // --- Subscription State ---
+  const [showCancellationModal, setShowCancellationModal] = useState(false);
+  const [userPlan, setUserPlan] = useState('free');
+
   // Fetch connections and profile data
   useEffect(() => {
     if (session?.user?.user_metadata) {
@@ -56,12 +61,13 @@ export default function SettingsModal({
       const fetchProfile = async () => {
         const { data } = await supabase
           .from('profiles')
-          .select('email, email_sender_name, reply_to_email')
+          .select('email, email_sender_name, reply_to_email, plan')
           .eq('id', session.user.id)
           .single();
         if (data?.email) setEmail(data.email);
         if (data?.email_sender_name) setEmailSenderName(data.email_sender_name);
         if (data?.reply_to_email) setReplyToEmail(data.reply_to_email);
+        if (data?.plan) setUserPlan(data.plan);
       };
       fetchProfile();
     }
@@ -383,6 +389,33 @@ const handleConnectGitHub = async () => {
 
           </div>
 
+          {/* SUBSCRIPTION MANAGEMENT */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-2">
+              Subscription
+            </h3>
+            <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl bg-slate-50">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-black uppercase tracking-widest text-slate-900">
+                  Current Plan: <span className="text-brand-red capitalize">{userPlan}</span>
+                </span>
+                {userPlan !== 'free' && (
+                  <span className="text-[10px] text-slate-500">
+                    Manage your subscription below
+                  </span>
+                )}
+              </div>
+              {userPlan !== 'free' && (
+                <button
+                  onClick={() => setShowCancellationModal(true)}
+                  className="text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg transition-all border border-red-200"
+                >
+                  Cancel Plan
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* DANGER ZONE */}
           <div className="space-y-4 mt-12 pt-8 border-t-2 border-red-100">
             <h3 className="text-xs font-black uppercase tracking-widest text-red-700 pb-2">
@@ -401,6 +434,18 @@ const handleConnectGitHub = async () => {
           </div>
         </div>
       </div>
+
+      {/* Cancellation Modal */}
+      {showCancellationModal && (
+        <CancellationModal
+          currentPlan={userPlan}
+          onClose={() => setShowCancellationModal(false)}
+          onSuccess={() => {
+            setUserPlan('free');
+            window.dispatchEvent(new Event('refreshPlanStatus'));
+          }}
+        />
+      )}
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}

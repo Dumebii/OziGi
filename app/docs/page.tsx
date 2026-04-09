@@ -34,6 +34,12 @@ export default function DocsPage() {
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">On this page</h3>
             <nav>
               <ul className="space-y-3 text-sm font-medium text-slate-500">
+                <li>
+                  <a href="#quick-start" className="hover:text-slate-900 transition-colors flex items-center gap-2">
+                    <span className="bg-brand-red text-white text-[10px] font-black uppercase px-1.5 py-0.5 rounded">Start here</span>
+                    Quick Start
+                  </a>
+                </li>
                 <li><a href="#getting-started" className="hover:text-slate-900 transition-colors block">1. Getting Started</a></li>
                 <li><a href="#ingestion" className="hover:text-slate-900 transition-colors block">2. Multimodal Ingestion</a></li>
                 <li><a href="#personas" className="hover:text-slate-900 transition-colors block">3. System Personas</a></li>
@@ -63,6 +69,122 @@ export default function DocsPage() {
           </div>
 
           <div className="space-y-20">
+            {/* Quick Start - First thing users see */}
+            <section id="quick-start" className="scroll-mt-28">
+              <div className="bg-gradient-to-br from-brand-red to-red-700 rounded-3xl p-8 text-white mb-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
+                <div className="relative">
+                  <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-xs font-black uppercase px-3 py-1 rounded-full mb-4">
+                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    Quick Start Guide
+                  </span>
+                  <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter mb-4">
+                    Your First Campaign in 2 Minutes
+                  </h2>
+                  <p className="text-white/80 text-lg max-w-xl">
+                    Go from zero to published content in five simple steps. No setup required for your first generation.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                {/* Step 1 */}
+                <div className="flex gap-4 items-start bg-white border-2 border-slate-200 rounded-2xl p-5 hover:border-brand-red/30 transition-colors group">
+                  <div className="w-10 h-10 bg-brand-red text-white rounded-full flex items-center justify-center font-black text-lg shrink-0 group-hover:scale-110 transition-transform">
+                    1
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="font-bold text-slate-900">Create your account</h3>
+                      <span className="text-xs text-slate-400 font-medium">~30 seconds</span>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Sign up with email or connect your X/LinkedIn account. You get 7 days of full access immediately.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex gap-4 items-start bg-white border-2 border-slate-200 rounded-2xl p-5 hover:border-brand-red/30 transition-colors group">
+                  <div className="w-10 h-10 bg-brand-red text-white rounded-full flex items-center justify-center font-black text-lg shrink-0 group-hover:scale-110 transition-transform">
+                    2
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="font-bold text-slate-900">Add your content source</h3>
+                      <span className="text-xs text-slate-400 font-medium">~1 minute</span>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Paste a URL, drop in raw notes, or upload a file (PDF, image, audio). The AI reads and understands it automatically.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="text-xs bg-slate-100 px-2 py-1 rounded font-mono">blog.dev/my-post</span>
+                      <span className="text-xs bg-slate-100 px-2 py-1 rounded">Meeting notes</span>
+                      <span className="text-xs bg-slate-100 px-2 py-1 rounded">whitepaper.pdf</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex gap-4 items-start bg-white border-2 border-slate-200 rounded-2xl p-5 hover:border-brand-red/30 transition-colors group">
+                  <div className="w-10 h-10 bg-brand-red text-white rounded-full flex items-center justify-center font-black text-lg shrink-0 group-hover:scale-110 transition-transform">
+                    3
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="font-bold text-slate-900">Pick a persona (optional)</h3>
+                      <span className="text-xs text-slate-400 font-medium">~10 seconds</span>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Choose from our <Link href="/dashboard/personas/marketplace" className="text-brand-red hover:underline font-medium">Persona Marketplace</Link> or create your own. This defines your writing voice.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div className="flex gap-4 items-start bg-white border-2 border-slate-200 rounded-2xl p-5 hover:border-brand-red/30 transition-colors group">
+                  <div className="w-10 h-10 bg-brand-red text-white rounded-full flex items-center justify-center font-black text-lg shrink-0 group-hover:scale-110 transition-transform">
+                    4
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="font-bold text-slate-900">Generate your campaign</h3>
+                      <span className="text-xs text-slate-400 font-medium">~30 seconds</span>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Click the big red button. Ozigi creates a 3-day content plan with posts for X, LinkedIn, Discord, Slack, and email.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 5 */}
+                <div className="flex gap-4 items-start bg-white border-2 border-slate-200 rounded-2xl p-5 hover:border-brand-red/30 transition-colors group">
+                  <div className="w-10 h-10 bg-brand-red text-white rounded-full flex items-center justify-center font-black text-lg shrink-0 group-hover:scale-110 transition-transform">
+                    5
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="font-bold text-slate-900">Publish or schedule</h3>
+                      <span className="text-xs text-slate-400 font-medium">~30 seconds</span>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Edit if needed, then publish directly or schedule for later. For X, we send you an email reminder with a one-click post link.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 items-center">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 bg-brand-red text-white px-6 py-3 rounded-full font-black uppercase tracking-widest text-sm hover:bg-red-700 transition-colors shadow-lg"
+                >
+                  Start Your First Campaign →
+                </Link>
+                <span className="text-sm text-slate-500">No credit card required for trial</span>
+              </div>
+            </section>
+
             {/* 1. Getting Started */}
             <section id="getting-started" className="scroll-mt-28">
               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">

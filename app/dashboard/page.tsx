@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Sparkles, User } from "lucide-react";
 import Distillery from "@/components/ContextEngine";
 import DistributionGrid from "@/components/DistributionGrid";
@@ -36,6 +36,7 @@ import { PLATFORMS } from "@/lib/platforms";
 
 export default function Dashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { session, sessionLoading } = useSession();
   const { planStatus, loading: planLoading } = usePlanStatus();
 
@@ -322,6 +323,23 @@ const t = setTimeout(() => setIsTourReady(true), 800);
 return () => clearTimeout(t);
 }
 }, [sessionLoading, planLoading, session]);
+
+// Handle persona pre-selection from URL (e.g., from marketplace redirect)
+useEffect(() => {
+  const personaParam = searchParams.get("persona");
+  if (personaParam && personas && personas.length > 0) {
+    // Find the persona by uuid
+    const found = personas.find((p: any) => p.uuid === personaParam);
+    if (found) {
+      setInputs((prev) => ({ ...prev, personaId: found.uuid }));
+      toast.success(`Persona "${found.name}" selected`);
+      // Clear the URL parameter
+      const url = new URL(window.location.href);
+      url.searchParams.delete("persona");
+      router.replace(url.pathname + url.search, { scroll: false });
+    }
+  }
+}, [searchParams, personas, router]);
 
   if (sessionLoading) {
     return <DashboardLoading />;

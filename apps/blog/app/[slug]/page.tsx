@@ -62,7 +62,7 @@ export default async function SectionPage({ params }: { params: Promise<{ slug: 
                 href={
                   isActive
                     ? "#"
-                    : `/blog/section/${section.toLowerCase().replace(/\s+/g, "-")}`
+                    : `/${section.toLowerCase().replace(/\s+/g, "-")}`
                 }
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
                   isActive
@@ -158,7 +158,7 @@ export default async function SectionPage({ params }: { params: Promise<{ slug: 
             Contributors earn a stipend and get featured on our platform.
           </p>
           <Link
-            href="https:ozigi.app/write"
+            href="https://ozigi.app/write"
             className="inline-block px-6 py-3 bg-brand-red text-white font-bold uppercase tracking-widest text-sm rounded-lg hover:bg-brand-red/90 transition-colors"
           >
             Apply to write
