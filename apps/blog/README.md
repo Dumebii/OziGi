@@ -2,7 +2,7 @@
 
 Technical insights, tutorials, and architecture decisions from the team building the intelligent content engine.
 
-**Live at [blog.ozigi.app](https://blog.ozigi.app)**
+**Live at [blog.ozigi.app](https://blog.ozigi.app).**
 
 ---
 
