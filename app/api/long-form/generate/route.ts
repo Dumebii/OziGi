@@ -3,6 +3,7 @@ export const maxDuration = 120; // Long-form needs more time
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { getPlanStatus } from '@/lib/plan';
@@ -193,6 +194,42 @@ export async function POST(req: Request) {
     };
 
     console.log(`[LongForm] Successfully generated ${parsed.totalWordCount}-word article: "${parsed.title}"`);
+
+    // Save to database for history/persistence
+    try {
+      const fullContent = parsed.sections.map(s => `## ${s.heading}\n\n${s.content}`).join('\n\n');
+      
+      const { error: saveError } = await supabaseAdmin
+        .from('scheduled_posts')
+        .insert({
+          user_id: user.id,
+          campaign_id: null, // Long-form is standalone, not tied to a campaign
+          platform: 'long-form',
+          content: fullContent,
+          caption: parsed.title,
+          hashtags: [],
+          scheduled_for: null, // Not scheduled, just saved
+          status: 'draft',
+          metadata: {
+            type: 'long-form',
+            subtitle: parsed.subtitle,
+            totalWordCount: parsed.totalWordCount,
+            tone,
+            structure,
+            sections: parsed.sections.length,
+          },
+        });
+
+      if (saveError) {
+        console.error('[LongForm] Failed to save to database:', saveError);
+        // Don't fail the request, just log the error
+      } else {
+        console.log('[LongForm] Saved to database successfully');
+      }
+    } catch (saveErr) {
+      console.error('[LongForm] Database save error:', saveErr);
+      // Continue even if save fails
+    }
 
     return NextResponse.json({
       success: true,

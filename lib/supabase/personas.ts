@@ -6,7 +6,7 @@ export interface MarketplacePersona {
   prompt: string;
   description: string;
   is_featured: boolean;
-  order_index: number;
+  order_index?: number;
 }
 
 /**
@@ -15,15 +15,22 @@ export interface MarketplacePersona {
 export async function getMarketplacePersonas(): Promise<MarketplacePersona[]> {
   const { data, error } = await supabase
     .from("marketplace_personas")
-    .select("*")
-    .order("order_index", { ascending: true });
+    .select("*");
 
   if (error) {
     console.error("[Personas] Error fetching marketplace personas:", error);
     return [];
   }
 
-  return data || [];
+  // Sort by order_index if it exists, otherwise by name
+  const sorted = (data || []).sort((a, b) => {
+    if (a.order_index !== undefined && b.order_index !== undefined) {
+      return a.order_index - b.order_index;
+    }
+    return a.name.localeCompare(b.name);
+  });
+
+  return sorted;
 }
 
 /**

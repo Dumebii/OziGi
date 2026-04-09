@@ -452,9 +452,12 @@ export default function LongFormPage() {
                           </button>
                         </div>
                         <div className="prose prose-slate prose-sm max-w-none">
-                          <p className="whitespace-pre-wrap text-slate-600 leading-relaxed">
-                            {section.content}
-                          </p>
+                <p className="whitespace-pre-wrap text-brand-slate leading-relaxed">
+                  {section.content}
+                </p>
+                <p className="text-xs text-slate-400 mt-4">
+                  ~{section.wordCount} words
+                </p>
                         </div>
                         <p className="text-xs text-slate-400 mt-4">
                           {section.wordCount} words

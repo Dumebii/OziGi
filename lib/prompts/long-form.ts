@@ -202,13 +202,21 @@ Return ONLY the JSON object, no additional text.
 export function parseLongFormResponse(response: string): LongFormOutput | null {
   try {
     // Extract JSON from response (handle markdown code blocks)
-    let jsonStr = response;
-    const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[1];
+    let jsonStr = response.trim();
+    
+    // Remove markdown code blocks if present
+    const codeBlockMatch = jsonStr.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/);
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1].trim();
     }
     
-    const parsed = JSON.parse(jsonStr.trim());
+    // Also try to extract if JSON is embedded in text
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (jsonMatch && !jsonStr.startsWith('{')) {
+      jsonStr = jsonMatch[0];
+    }
+    
+    const parsed = JSON.parse(jsonStr);
     
     // Validate required fields
     if (!parsed.title || !Array.isArray(parsed.sections)) {
