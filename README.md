@@ -7,6 +7,7 @@
 ![Ozigi Hero](https://ozigi.app/opengraph-image.png)
 
 
+
 ---
 
 ## What is Ozigi?
