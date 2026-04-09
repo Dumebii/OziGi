@@ -8,7 +8,6 @@ import {
   Sparkles, 
   Copy, 
   Check, 
-  ChevronDown, 
   ArrowLeft,
   Loader2,
   Lock
@@ -84,28 +83,21 @@ export default function LongFormPage() {
   const [history, setHistory] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Check access
   const hasAccess = planStatus?.plan === "organization" || planStatus?.plan === "enterprise";
 
-  // Fetch history on component mount
   useEffect(() => {
     if (!session) return;
     fetchHistory();
   }, [session]);
 
-  // Fetch user's long-form history
   const fetchHistory = async () => {
     if (!session) return;
     setIsLoadingHistory(true);
     try {
       const response = await fetch("/api/long-form/history", {
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-        },
+        headers: { "Authorization": `Bearer ${session.access_token}` },
       });
-
       if (!response.ok) throw new Error("Failed to fetch history");
-
       const data = await response.json();
       setHistory(data.articles || []);
     } catch (error) {
@@ -116,9 +108,7 @@ export default function LongFormPage() {
     }
   };
 
-  // Load article from history
   const handleLoadFromHistory = (historyArticle: any) => {
-    // Reconstruct the article object from history
     const parsedArticle: LongFormArticle = {
       title: historyArticle.title,
       subtitle: historyArticle.metadata?.subtitle,
@@ -135,7 +125,6 @@ export default function LongFormPage() {
     toast.success("Article loaded from history");
   };
 
-  // Handle generate
   const handleGenerate = async () => {
     if (!context.trim() || context.length < 50) {
       toast.error("Please enter at least 50 characters of context");
@@ -143,9 +132,7 @@ export default function LongFormPage() {
     }
 
     setIsGenerating(true);
-
     try {
-      // Get persona voice if selected
       let personaVoice: string | undefined;
       if (selectedPersonaId !== "default") {
         const persona = personas?.find(p => p.uuid === selectedPersonaId);
@@ -166,15 +153,11 @@ export default function LongFormPage() {
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to generate article");
-      }
+      if (!response.ok) throw new Error(data.error || "Failed to generate article");
 
       setArticle(data.article);
       setActiveTab("output");
       toast.success("Article generated successfully!");
-
     } catch (error: any) {
       console.error("[LongForm] Error:", error);
       toast.error(error.message || "Failed to generate article");
@@ -183,7 +166,6 @@ export default function LongFormPage() {
     }
   };
 
-  // Copy section to clipboard
   const handleCopySection = async (index: number, content: string) => {
     await navigator.clipboard.writeText(content);
     setCopiedSection(index);
@@ -191,7 +173,6 @@ export default function LongFormPage() {
     toast.success("Copied to clipboard");
   };
 
-  // Copy full article
   const handleCopyAll = async () => {
     if (!article) return;
     const fullText = [
@@ -200,12 +181,10 @@ export default function LongFormPage() {
       '',
       ...article.sections.map(s => `## ${s.heading}\n\n${s.content}`),
     ].filter(Boolean).join('\n\n');
-    
     await navigator.clipboard.writeText(fullText);
     toast.success("Full article copied to clipboard");
   };
 
-  // Loading state
   if (sessionLoading || planLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -214,7 +193,6 @@ export default function LongFormPage() {
     );
   }
 
-  // Not logged in
   if (!session) {
     router.push("/");
     return null;
@@ -243,7 +221,6 @@ export default function LongFormPage() {
         <main className={`flex-1 p-4 md:p-8 transition-all duration-300 ${
           isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
         }`}>
-          {/* Back button */}
           <button
             onClick={() => router.push("/dashboard")}
             className="flex items-center gap-2 text-slate-500 hover:text-slate-700 mb-6 text-sm font-medium"
@@ -252,7 +229,6 @@ export default function LongFormPage() {
             Back to Dashboard
           </button>
 
-          {/* Page Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <FileText className="w-8 h-8 text-brand-red" />
@@ -283,42 +259,25 @@ export default function LongFormPage() {
             <>
               {/* Tabs */}
               <div className="flex gap-2 mb-6">
-                <button
-                  onClick={() => setActiveTab("input")}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-colors ${
-                    activeTab === "input"
-                      ? "bg-brand-navy text-white"
-                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                  }`}
-                >
-                  Input
-                </button>
-                <button
-                  onClick={() => setActiveTab("output")}
-                  disabled={!article}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-colors disabled:opacity-50 ${
-                    activeTab === "output"
-                      ? "bg-brand-navy text-white"
-                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                  }`}
-                >
-                  Output
-                </button>
-                <button
-                  onClick={() => setActiveTab("history")}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-colors ${
-                    activeTab === "history"
-                      ? "bg-brand-navy text-white"
-                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                  }`}
-                >
-                  History ({history.length})
-                </button>
+                {(["input", "output", "history"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    disabled={tab === "output" && !article}
+                    className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-colors disabled:opacity-50 ${
+                      activeTab === tab
+                        ? "bg-brand-navy text-white"
+                        : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                    }`}
+                  >
+                    {tab === "history" ? `History (${history.length})` : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                ))}
               </div>
 
+              {/* Input Tab */}
               {activeTab === "input" && (
                 <div className="bg-white border-4 border-slate-200 rounded-2xl p-6 space-y-6">
-                  {/* Context Input */}
                   <div>
                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
                       Source Context *
@@ -334,9 +293,7 @@ export default function LongFormPage() {
                     </p>
                   </div>
 
-                  {/* Settings Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Persona */}
                     <div>
                       <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
                         Voice/Persona
@@ -348,14 +305,11 @@ export default function LongFormPage() {
                       >
                         <option value="default">Default (no specific voice)</option>
                         {personas?.map((p) => (
-                          <option key={p.uuid} value={p.uuid}>
-                            {p.name}
-                          </option>
+                          <option key={p.uuid} value={p.uuid}>{p.name}</option>
                         ))}
                       </select>
                     </div>
 
-                    {/* Tone */}
                     <div>
                       <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
                         Tone
@@ -366,14 +320,11 @@ export default function LongFormPage() {
                         className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-brand-red outline-none appearance-none bg-white text-brand-slate"
                       >
                         {TONE_OPTIONS.map((t) => (
-                          <option key={t.value} value={t.value}>
-                            {t.label} - {t.desc}
-                          </option>
+                          <option key={t.value} value={t.value}>{t.label} - {t.desc}</option>
                         ))}
                       </select>
                     </div>
 
-                    {/* Structure */}
                     <div>
                       <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
                         Structure
@@ -384,14 +335,11 @@ export default function LongFormPage() {
                         className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-brand-red outline-none appearance-none bg-white text-brand-slate"
                       >
                         {STRUCTURE_OPTIONS.map((s) => (
-                          <option key={s.value} value={s.value}>
-                            {s.label} - {s.desc}
-                          </option>
+                          <option key={s.value} value={s.value}>{s.label} - {s.desc}</option>
                         ))}
                       </select>
                     </div>
 
-                    {/* Length */}
                     <div>
                       <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
                         Target Length
@@ -402,16 +350,12 @@ export default function LongFormPage() {
                         className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-brand-red outline-none appearance-none bg-white text-brand-slate"
                       >
                         {LENGTH_OPTIONS.map((l) => (
-                          <option key={l.value} value={l.value} disabled={l.disabled}>
-                            {l.label}
-                            {l.disabled ? ` - ${l.tooltip}` : ""}
-                          </option>
+                          <option key={l.value} value={l.value}>{l.label}</option>
                         ))}
                       </select>
                     </div>
                   </div>
 
-                  {/* Additional Instructions */}
                   <div>
                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
                       Additional Instructions (Optional)
@@ -424,7 +368,6 @@ export default function LongFormPage() {
                     />
                   </div>
 
-                  {/* Generate Button */}
                   <button
                     onClick={handleGenerate}
                     disabled={isGenerating || context.length < 50}
@@ -445,15 +388,13 @@ export default function LongFormPage() {
                 </div>
               )}
 
+              {/* Output Tab */}
               {activeTab === "output" && article && (
                 <div className="space-y-6">
-                  {/* Article Header */}
                   <div className="bg-white border-4 border-slate-200 rounded-2xl p-6">
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div>
-                        <h2 className="text-2xl font-black text-slate-900 mb-1">
-                          {article.title}
-                        </h2>
+                        <h2 className="text-2xl font-black text-slate-900 mb-1">{article.title}</h2>
                         {article.subtitle && (
                           <p className="text-slate-500">{article.subtitle}</p>
                         )}
@@ -475,16 +416,10 @@ export default function LongFormPage() {
                     </div>
                   </div>
 
-                  {/* Sections */}
                   {article.sections.map((section, index) => (
-                    <div
-                      key={index}
-                      className="bg-white border border-slate-200 rounded-xl p-6 group"
-                    >
+                    <div key={index} className="bg-white border border-slate-200 rounded-xl p-6 group">
                       <div className="flex items-start justify-between gap-4 mb-4">
-                        <h3 className="text-lg font-bold text-slate-900">
-                          {section.heading}
-                        </h3>
+                        <h3 className="text-lg font-bold text-slate-900">{section.heading}</h3>
                         <button
                           onClick={() => handleCopySection(index, `## ${section.heading}\n\n${section.content}`)}
                           className="flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-brand-slate hover:text-white rounded-lg text-xs font-medium transition-colors"
@@ -507,13 +442,10 @@ export default function LongFormPage() {
                           {section.content}
                         </p>
                       </div>
-                      <p className="text-xs text-slate-400 mt-4">
-                        {section.wordCount} words
-                      </p>
+                      <p className="text-xs text-slate-400 mt-4">{section.wordCount} words</p>
                     </div>
                   ))}
 
-                  {/* New Generation Button */}
                   <button
                     onClick={() => {
                       setArticle(null);
@@ -526,6 +458,7 @@ export default function LongFormPage() {
                 </div>
               )}
 
+              {/* History Tab */}
               {activeTab === "history" && (
                 <div className="bg-white border-4 border-slate-200 rounded-2xl p-6">
                   {isLoadingHistory ? (
@@ -542,274 +475,25 @@ export default function LongFormPage() {
                     <div className="space-y-3">
                       <h3 className="font-bold text-slate-900 mb-4">Generated Articles</h3>
                       {history.map((historyArticle, idx) => (
-                        <div key={idx} className="p-4 border border-slate-200 rounded-xl hover:border-brand-red hover:bg-slate-50 transition-colors cursor-pointer group">
-                          <div onClick={() => handleLoadFromHistory(historyArticle)}>
-                            <h4 className="font-bold text-slate-900 group-hover:text-brand-red transition-colors">
-                              {historyArticle.title}
-                            </h4>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                              <span>{historyArticle.totalWordCount} words</span>
-                              <span className="capitalize">{historyArticle.structure}</span>
-                              <span className="capitalize">{historyArticle.tone}</span>
-                              <span>{new Date(historyArticle.createdAt).toLocaleDateString()}</span>
-                            </div>
+                        <div
+                          key={idx}
+                          onClick={() => handleLoadFromHistory(historyArticle)}
+                          className="p-4 border border-slate-200 rounded-xl hover:border-brand-red hover:bg-slate-50 transition-colors cursor-pointer group"
+                        >
+                          <h4 className="font-bold text-slate-900 group-hover:text-brand-red transition-colors">
+                            {historyArticle.title}
+                          </h4>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                            <span>{historyArticle.totalWordCount} words</span>
+                            <span className="capitalize">{historyArticle.structure}</span>
+                            <span className="capitalize">{historyArticle.tone}</span>
+                            <span>{new Date(historyArticle.createdAt).toLocaleDateString()}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              )}
-            </>
-          )}
-        </main>
-      </div>
-
-      <Footer />
-    </div>
-  );
-}
-                <button
-                  onClick={() => setActiveTab("input")}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-colors ${
-                    activeTab === "input"
-                      ? "bg-brand-navy text-white"
-                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                  }`}
-                >
-                  Input
-                </button>
-                <button
-                  onClick={() => setActiveTab("output")}
-                  disabled={!article}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-colors disabled:opacity-50 ${
-                    activeTab === "output"
-                      ? "bg-brand-navy text-white"
-                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                  }`}
-                >
-                  Output
-                </button>
-                <button
-                  onClick={() => setActiveTab("history")}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-colors ${
-                    activeTab === "history"
-                      ? "bg-brand-navy text-white"
-                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                  }`}
-                >
-                  History ({history.length})
-                </button>
-              </div>
-
-              {activeTab === "input" ? (
-                <div className="bg-white border-4 border-slate-200 rounded-2xl p-6 space-y-6">
-                  {/* Context Input */}
-                  <div>
-                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                      Source Context *
-                    </label>
-                    <textarea
-                      value={context}
-                      onChange={(e) => setContext(e.target.value)}
-                      placeholder="Paste your source material here: articles, notes, research, URLs content, etc. The more context you provide, the better the output."
-                      className="w-full h-48 p-4 border border-slate-200 rounded-xl text-sm resize-none focus:border-brand-red focus:ring-1 focus:ring-brand-red outline-none text-brand-slate placeholder:text-slate-400"
-                    />
-                    <p className="text-xs text-slate-400 mt-1">
-                      {context.length} characters ({context.length < 50 ? "min 50 required" : "ready"})
-                    </p>
-                  </div>
-
-                  {/* Settings Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Persona */}
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                        Voice/Persona
-                      </label>
-                      <select
-                        value={selectedPersonaId}
-                        onChange={(e) => setSelectedPersonaId(e.target.value)}
-                        className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-brand-red outline-none appearance-none bg-white text-brand-slate"
-                      >
-                        <option value="default">Default (no specific voice)</option>
-                        {personas?.map((p) => (
-                          <option key={p.uuid} value={p.uuid}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Tone */}
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                        Tone
-                      </label>
-                      <select
-                        value={tone}
-                        onChange={(e) => setTone(e.target.value)}
-                        className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-brand-red outline-none appearance-none bg-white text-brand-slate"
-                      >
-                        {TONE_OPTIONS.map((t) => (
-                          <option key={t.value} value={t.value}>
-                            {t.label} - {t.desc}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Structure */}
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                        Structure
-                      </label>
-                      <select
-                        value={structure}
-                        onChange={(e) => setStructure(e.target.value)}
-                        className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-brand-red outline-none appearance-none bg-white text-brand-slate"
-                      >
-                        {STRUCTURE_OPTIONS.map((s) => (
-                          <option key={s.value} value={s.value}>
-                            {s.label} - {s.desc}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Length */}
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                        Target Length
-                      </label>
-                      <select
-                        value={targetLength}
-                        onChange={(e) => setTargetLength(Number(e.target.value))}
-                        className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-brand-red outline-none appearance-none bg-white text-brand-slate"
-                      >
-                        {LENGTH_OPTIONS.map((l) => (
-                          <option key={l.value} value={l.value}>
-                            {l.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Additional Instructions */}
-                  <div>
-                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                      Additional Instructions (Optional)
-                    </label>
-                    <textarea
-                      value={additionalInstructions}
-                      onChange={(e) => setAdditionalInstructions(e.target.value)}
-                      placeholder="Any specific requirements, focus areas, or constraints..."
-                      className="w-full h-24 p-4 border border-slate-200 rounded-xl text-sm resize-none focus:border-brand-red focus:ring-1 focus:ring-brand-red outline-none text-brand-slate placeholder:text-slate-400"
-                    />
-                  </div>
-
-                  {/* Generate Button */}
-                  <button
-                    onClick={handleGenerate}
-                    disabled={isGenerating || context.length < 50}
-                    className="w-full bg-brand-red text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Generating Article...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5" />
-                        Generate Long-Form Content
-                      </>
-                    )}
-                  </button>
-                </div>
-              ) : (
-                /* Output Tab */
-                article && (
-                  <div className="space-y-6">
-                    {/* Article Header */}
-                    <div className="bg-white border-4 border-slate-200 rounded-2xl p-6">
-                      <div className="flex items-start justify-between gap-4 mb-4">
-                        <div>
-                          <h2 className="text-2xl font-black text-slate-900 mb-1">
-                            {article.title}
-                          </h2>
-                          {article.subtitle && (
-                            <p className="text-slate-500">{article.subtitle}</p>
-                          )}
-                        </div>
-                        <button
-                          onClick={handleCopyAll}
-                          className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-brand-slate hover:text-white rounded-lg text-sm font-medium transition-colors"
-                        >
-                          <Copy className="w-4 h-4" />
-                          Copy All
-                        </button>
-                      </div>
-                      <div className="flex gap-4 text-xs text-slate-500">
-                        <span>{article.totalWordCount} words</span>
-                        <span>|</span>
-                        <span className="capitalize">{article.metadata.tone} tone</span>
-                        <span>|</span>
-                        <span className="capitalize">{article.metadata.structure} structure</span>
-                      </div>
-                    </div>
-
-                    {/* Sections */}
-                    {article.sections.map((section, index) => (
-                      <div
-                        key={index}
-                        className="bg-white border border-slate-200 rounded-xl p-6 group"
-                      >
-                        <div className="flex items-start justify-between gap-4 mb-4">
-                          <h3 className="text-lg font-bold text-slate-900">
-                            {section.heading}
-                          </h3>
-                          <button
-                            onClick={() => handleCopySection(index, `## ${section.heading}\n\n${section.content}`)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-brand-slate hover:text-white rounded-lg text-xs font-medium transition-colors"
-                          >
-                            {copiedSection === index ? (
-                              <>
-                                <Check className="w-3 h-3 text-green-400" />
-                                Copied
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3 h-3" />
-                                Copy
-                              </>
-                            )}
-                          </button>
-                        </div>
-                        <div className="prose prose-slate prose-sm max-w-none">
-                <p className="whitespace-pre-wrap text-brand-slate leading-relaxed">
-                  {section.content}
-                </p>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-4">
-                          {section.wordCount} words
-                        </p>
-                      </div>
-                    ))}
-
-                    {/* New Generation Button */}
-                    <button
-                      onClick={() => {
-                        setArticle(null);
-                        setActiveTab("input");
-                      }}
-                      className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-brand-red hover:text-brand-red transition-colors font-medium"
-                    >
-                      Generate Another Article
-                    </button>
-                  </div>
-                )
               )}
             </>
           )}
