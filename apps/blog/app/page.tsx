@@ -66,8 +66,8 @@ export default async function BlogPage() {
                 )}
                 <div className="p-6">
                   <div className="flex items-center gap-2 text-xs text-slate-500 mb-3 flex-wrap">
-                    <span>{format(new Date(post.date), "MMM dd, yyyy")}</span>
-                    <span>•</span>
+                    {post.date && <span>{format(new Date(post.date + "T00:00:00Z"), "MMM dd, yyyy")}</span>}
+                    {post.date && <span>•</span>}
                     <span>{post.readTime || "5 min read"}</span>
                     {post.section && (
                       <>
