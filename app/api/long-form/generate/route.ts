@@ -19,7 +19,7 @@ const redis = new Redis({
 // Rate limits: 5/day for Org, unlimited for Enterprise
 const orgRatelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(15, '24 h'),
+  limiter: Ratelimit.slidingWindow(20, '24 h'),
   prefix: 'longform:org',
 });
 
@@ -153,7 +153,7 @@ export async function POST(req: Request) {
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         temperature: 0.7,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 32768,
       },
     });
 
@@ -179,32 +179,44 @@ export async function POST(req: Request) {
     // If parsing failed and response seems incomplete, try to recover
     if (!parsed && responseText.length > 1000) {
       console.log("[LongForm] First parse failed, attempting JSON recovery...");
-      
-      // Try to close any unclosed JSON structures by adding closing braces
+
       let recovered = responseText.trim();
-      
-      // Count open braces and brackets
+
+      // Strip markdown code fences if present
+      recovered = recovered.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+
+      // Count open braces and brackets, tracking string state to handle unterminated strings
       let braceCount = 0;
       let bracketCount = 0;
+      let inString = false;
+      let escaped = false;
+
       for (const char of recovered) {
+        if (escaped) { escaped = false; continue; }
+        if (char === '\\' && inString) { escaped = true; continue; }
+        if (char === '"') { inString = !inString; continue; }
+        if (inString) continue;
         if (char === '{') braceCount++;
-        if (char === '}') braceCount--;
-        if (char === '[') bracketCount++;
-        if (char === ']') bracketCount--;
+        else if (char === '}') braceCount--;
+        else if (char === '[') bracketCount++;
+        else if (char === ']') bracketCount--;
       }
-      
+
+      // If we ended inside a string, close it first
+      if (inString) recovered += '"';
+
+      // Close any incomplete value (trailing comma or colon means we need a placeholder)
+      const trimmed = recovered.trimEnd();
+      if (trimmed.endsWith(':') || trimmed.endsWith(',')) {
+        recovered = trimmed.slice(0, -1);
+      }
+
       // Add missing closing characters
-      while (braceCount > 0) {
-        recovered += '}';
-        braceCount--;
-      }
-      while (bracketCount > 0) {
-        recovered += ']';
-        bracketCount--;
-      }
-      
+      while (bracketCount > 0) { recovered += ']'; bracketCount--; }
+      while (braceCount > 0) { recovered += '}'; braceCount--; }
+
       parsed = parseLongFormResponse(recovered);
-      
+
       if (parsed) {
         console.log("[LongForm] JSON recovery successful!");
       } else {
