@@ -327,10 +327,10 @@ app.listen(3000, () => console.log('Webhook server listening on :3000'));
 
 The in-process queue above is acceptable for **a single persistent process with moderate throughput** — think a low-traffic internal tool or a side project where restarts are rare and you run one instance. You'll want to graduate to [BullMQ](https://bullmq.io) (Redis-backed) or [AWS SQS](https://aws.amazon.com/sqs/) when:
 
-- You're running **multiple server instances** (in-process state won't be shared)
-- You need **event history** and visibility into failed jobs
-- Your event volume exceeds a few hundred per minute consistently
-- You need **scheduled retries** that survive process restarts
+- You're running **multiple server instances** (in-process state won't be shared).
+- You need **event history** and visibility into failed jobs.
+- Your event volume exceeds a few hundred per minute consistently.
+- You need **scheduled retries** that survive process restarts.
 
 The good news: the handler logic above (`handleEvent`, idempotency, backoff) carries over directly. You're just swapping the queue substrate.
 
