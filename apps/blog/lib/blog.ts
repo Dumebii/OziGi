@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 
-const postsDirectory = path.join(process.cwd(), "content/blog");
+const postsDirectory = path.join(process.cwd(), "apps", "blog", "content", "blog");
 
 export interface Heading {
   text: string;
@@ -32,10 +32,13 @@ export interface BlogPost {
 }
 
 export function extractHeadings(content: string): Heading[] {
+  // Remove code blocks to avoid picking up headings in code comments
+  const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, "");
+  
   const headingRegex = /^(#{1,6})\s+(.+)$/gm;
   const headings: Heading[] = [];
   let match;
-  while ((match = headingRegex.exec(content)) !== null) {
+  while ((match = headingRegex.exec(contentWithoutCodeBlocks)) !== null) {
     const level = match[1].length;
     const text = match[2];
     const id = text
