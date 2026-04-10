@@ -34,7 +34,7 @@ export async function getVertexAIClient() {
     return new GoogleGenAI({
       vertexai: true,
       project: projectId,
-      location: 'us-central1',
+      location: 'global',
       googleAuthOptions: {
         authClient,
       },
@@ -44,7 +44,7 @@ export async function getVertexAIClient() {
     return new GoogleGenAI({
       vertexai: true,
       project: projectId,
-      location: 'us-central1',
+      location: 'global',
       googleAuthOptions: {
         keyFilename: 'gcp-service-account.json',
       },
