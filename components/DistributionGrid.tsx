@@ -156,7 +156,7 @@ function ExpandableText({ text }: { text: string }) {
   );
 }
 
-// ─── Carousel slide type ────────��─────────────────────────────────────────────
+// ─── Carousel slide type ────────���─────────────────────────────────────────────
 interface CarouselSlide {
   title: string;
   body: string;
@@ -266,17 +266,13 @@ async function generateCarouselPdf(
       doc.setFontSize(28);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(255, 255, 255);
-      doc.setTextOpacity(0.9);
       const bodyLines = doc.splitTextToSize(slide.body, size - 180);
       doc.text(bodyLines, size / 2, titleY + 140, { align: "center" });
-      doc.setTextOpacity(1);
     }
 
     // Bottom accent bar with watermark
     doc.setFillColor(0, 0, 0);
-    doc.setFillOpacity(0.15);
     doc.rect(0, size - 100, size, 100, "F");
-    doc.setFillOpacity(1);
 
     doc.setFontSize(16);
     doc.setTextColor(255, 255, 255);
@@ -804,7 +800,7 @@ function SocialCard({
 
       {onPost && actionButtonConfig && (
         <button
-          onClick={() => onPost(text, day, imageUrl || undefined)}
+          onClick={() => onPost(text, day, imageUrl || undefined, includeCarousel ? carouselData || undefined : undefined)}
           disabled={postStatus === "loading" || postStatus === "success"}
           className={`w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 mt-auto ${postStatus === "success"
               ? "bg-green-100 text-green-700 border border-green-200"
@@ -1004,20 +1000,30 @@ export default function DistributionGrid({
     }
   };
 
-  const handlePostToLinkedIn = async (text: string, day: number, imageUrl?: string) => {
+  const handlePostToLinkedIn = async (
+    text: string,
+    day: number,
+    imageUrl?: string,
+    carouselData?: { documentBase64: string; documentTitle: string }
+  ) => {
     if (!session?.access_token) {
       toast.error("Sign in to post to LinkedIn.");
       return;
     }
     setLiStatuses((prev) => ({ ...prev, [day]: "loading" }));
     try {
-      const res = await fetch(getApiEndpoint(PLATFORMS.LINKEDIN), {
+      const payload: any = { text, userId: session.user.id, imageUrl };
+      if (carouselData) {
+        payload.documentBase64 = carouselData.documentBase64;
+        payload.documentTitle = carouselData.documentTitle;
+      }
+      const res = await fetch("/api/publish/linkedin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ text, userId: session.user.id, imageUrl, documentBase64: includeCarousel && carouselData ? carouselData.documentBase64 : undefined, documentTitle: includeCarousel && carouselData ? carouselData.documentTitle : undefined }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to post to LinkedIn");
