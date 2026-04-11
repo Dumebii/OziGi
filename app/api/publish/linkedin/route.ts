@@ -120,7 +120,12 @@ export async function POST(req: Request) {
       // Upload PDF document (carousel) if present
       if (documentBase64) {
         isDocument = true;
-        const pdfBase64 = documentBase64.replace(/^data:application\/pdf;base64,/, "");
+        console.log("[v0] Document received, length:", documentBase64.length);
+        // Handle both data URI and raw base64 formats
+        let pdfBase64 = documentBase64;
+        if (pdfBase64.includes("data:")) {
+          pdfBase64 = pdfBase64.split(",")[1] || pdfBase64;
+        }
         const pdfBuffer = Buffer.from(pdfBase64, "base64");
 
         const registerRes = await fetch(
@@ -262,6 +267,18 @@ export async function POST(req: Request) {
           "Content-Type": "application/json",
           "X-Restli-Protocol-Version": "2.0.0",
         },
+        body: JSON.stringify(postPayload),
+      });
+
+      if (!postRes.ok) {
+        const errText = await postRes.text();
+        throw new Error(`Failed to create post: ${postRes.status} ${errText}`);
+      }
+
+      const postData = await postRes.json();
+      console.log("[v0] Post created successfully", { isDocument, mediaCategory: shareMediaCategory });
+      return postData;
+    }
         body: JSON.stringify(postPayload),
       });
 
