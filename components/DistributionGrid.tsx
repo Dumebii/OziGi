@@ -156,6 +156,349 @@ function ExpandableText({ text }: { text: string }) {
   );
 }
 
+// ─── Carousel slide type ──────────────────────────────────────────────────────
+interface CarouselSlide {
+  title: string;
+  body: string;
+}
+
+// ─── Parse post text into slides heuristic ────────────────────────────────────
+function parsePostIntoSlides(postText: string): CarouselSlide[] {
+  // Split on double newlines or numbered list items
+  let chunks = postText
+    .split(/\n{2,}/)
+    .map((c) => c.trim())
+    .filter(Boolean);
+
+  // If only one chunk, split by sentence
+  if (chunks.length <= 1) {
+    chunks = postText
+      .split(/(?<=[.?!])\s+/)
+      .map((c) => c.trim())
+      .filter(Boolean);
+  }
+
+  // Cap at 8 slides
+  const capped = chunks.slice(0, 8);
+
+  return capped.map((chunk) => {
+    const lines = chunk.split("\n").map((l) => l.trim()).filter(Boolean);
+    return {
+      title: lines[0] ?? chunk.slice(0, 60),
+      body: lines.slice(1).join(" ") || "",
+    };
+  });
+}
+
+// ─── Generate PDF from slides (jspdf) ─────────────────────────────────────────
+async function generateCarouselPdf(
+  slides: CarouselSlide[],
+  title: string
+): Promise<string> {
+  const { jsPDF } = await import("jspdf");
+  const size = 1080;
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "px",
+    format: [size, size],
+    hotfixes: ["px_scaling"],
+  });
+
+  slides.forEach((slide, i) => {
+    if (i > 0) doc.addPage([size, size]);
+
+    // Background
+    doc.setFillColor(15, 23, 42); // #0F172A
+    doc.rect(0, 0, size, size, "F");
+
+    // Slide number
+    doc.setFontSize(22);
+    doc.setTextColor(100, 116, 139); // slate-500
+    doc.text(`${i + 1} / ${slides.length}`, size - 60, 60, { align: "right" });
+
+    // Title
+    doc.setFontSize(52);
+    doc.setTextColor(248, 250, 252); // slate-50
+    doc.setFont("helvetica", "bold");
+    const titleLines = doc.splitTextToSize(slide.title, size - 120);
+    const titleY = slide.body ? size * 0.35 : size * 0.5;
+    doc.text(titleLines, size / 2, titleY, { align: "center" });
+
+    // Body
+    if (slide.body) {
+      doc.setFontSize(32);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(148, 163, 184); // slate-400
+      const bodyLines = doc.splitTextToSize(slide.body, size - 160);
+      doc.text(bodyLines, size / 2, titleY + 120, { align: "center" });
+    }
+
+    // Watermark on last slide
+    if (i === slides.length - 1) {
+      doc.setFontSize(20);
+      doc.setTextColor(71, 85, 105); // slate-600
+      doc.text("Created with Ozigi", size / 2, size - 50, { align: "center" });
+    }
+  });
+
+  return doc.output("datauristring");
+}
+
+// ─── LinkedIn Carousel Builder ─────────────────────────────────────────────────
+function LinkedInCarouselBuilder({
+  postText,
+  session,
+  day,
+}: {
+  postText: string;
+  session: any;
+  day: number;
+}) {
+  const [slides, setSlides] = useState<CarouselSlide[]>([]);
+  const [documentTitle, setDocumentTitle] = useState("Carousel");
+  const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "generating" | "ready" | "publishing" | "published">("idle");
+  const [uploadedPdfBase64, setUploadedPdfBase64] = useState<string | null>(null);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  const handleParseFromPost = () => {
+    const parsed = parsePostIntoSlides(postText);
+    setSlides(parsed);
+    setPdfDataUri(null);
+    setUploadedPdfBase64(null);
+    setUploadedFileName(null);
+    setStatus("idle");
+  };
+
+  const handleAddSlide = () => {
+    setSlides((prev) => [...prev, { title: "", body: "" }]);
+  };
+
+  const handleRemoveSlide = (index: number) => {
+    setSlides((prev) => prev.filter((_, i) => i !== index));
+    setPdfDataUri(null);
+  };
+
+  const handleSlideChange = (index: number, field: "title" | "body", value: string) => {
+    setSlides((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
+    setPdfDataUri(null);
+  };
+
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("PDF must be under 5 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setUploadedPdfBase64(ev.target?.result as string);
+      setUploadedFileName(file.name);
+      setSlides([]);
+      setPdfDataUri(null);
+      setStatus("ready");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleGeneratePdf = async () => {
+    if (slides.length === 0) return;
+    setStatus("generating");
+    try {
+      const dataUri = await generateCarouselPdf(slides, documentTitle);
+      setPdfDataUri(dataUri);
+      setStatus("ready");
+    } catch (err: any) {
+      toast.error("Failed to generate PDF: " + err.message);
+      setStatus("idle");
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!session?.access_token) {
+      toast.error("Sign in to publish to LinkedIn.");
+      return;
+    }
+    const documentBase64 = uploadedPdfBase64 ?? pdfDataUri;
+    if (!documentBase64) return;
+
+    setStatus("publishing");
+    try {
+      const res = await fetch("/api/publish/linkedin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          text: postText,
+          userId: session.user.id,
+          documentBase64,
+          documentTitle,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to publish carousel");
+      setStatus("published");
+      toast.success("Carousel published to LinkedIn!");
+    } catch (err: any) {
+      toast.error("Failed to publish carousel: " + err.message);
+      setStatus("ready");
+    }
+  };
+
+  return (
+    <div className="mt-4 border border-[#0A66C2]/20 rounded-2xl bg-slate-50 overflow-hidden">
+      {/* Header */}
+      <div className="bg-[#0A66C2]/5 border-b border-[#0A66C2]/10 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A66C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          <span className="text-xs font-black uppercase tracking-widest text-[#0A66C2]">Carousel Builder</span>
+        </div>
+        <span className="text-[10px] text-slate-500 font-medium">PDF carousel — highest engagement format on LinkedIn</span>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {/* Document title */}
+        <div>
+          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5">Carousel Title</label>
+          <input
+            type="text"
+            value={documentTitle}
+            onChange={(e) => setDocumentTitle(e.target.value)}
+            placeholder="e.g. 5 things I learned shipping fast"
+            className="w-full text-sm text-slate-800 bg-white border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-[#0A66C2]"
+          />
+        </div>
+
+        {/* Slide list */}
+        {slides.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{slides.length} Slides</p>
+            {slides.map((slide, i) => (
+              <div key={i} className="flex gap-2 items-start bg-white border border-slate-200 rounded-xl p-3">
+                <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-[10px] font-black text-slate-500">{i + 1}</span>
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <input
+                    type="text"
+                    value={slide.title}
+                    onChange={(e) => handleSlideChange(i, "title", e.target.value)}
+                    placeholder="Slide headline"
+                    className="w-full text-sm font-semibold text-slate-800 bg-transparent border-b border-slate-100 pb-1 focus:outline-none focus:border-[#0A66C2]"
+                  />
+                  <textarea
+                    value={slide.body}
+                    onChange={(e) => handleSlideChange(i, "body", e.target.value)}
+                    placeholder="Supporting text (optional)"
+                    rows={2}
+                    className="w-full text-xs text-slate-600 bg-transparent resize-none focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={() => handleRemoveSlide(i)}
+                  className="text-slate-300 hover:text-red-400 transition-colors flex-shrink-0"
+                  aria-label="Remove slide"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* PDF upload mode */}
+        {uploadedFileName && (
+          <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-3 py-2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A66C2" strokeWidth="2" strokeLinecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+            </svg>
+            <span className="text-xs text-slate-700 flex-1 truncate">{uploadedFileName}</span>
+            <button
+              onClick={() => { setUploadedPdfBase64(null); setUploadedFileName(null); setStatus("idle"); }}
+              className="text-slate-400 hover:text-red-400 transition-colors"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Action buttons row */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleParseFromPost}
+            className="text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-[#0A66C2] hover:text-[#0A66C2] transition-colors"
+          >
+            Parse from post
+          </button>
+          <button
+            onClick={handleAddSlide}
+            className="text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-[#0A66C2] hover:text-[#0A66C2] transition-colors"
+          >
+            + Add slide
+          </button>
+          <button
+            onClick={() => pdfInputRef.current?.click()}
+            className="text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-[#0A66C2] hover:text-[#0A66C2] transition-colors"
+          >
+            Upload PDF
+          </button>
+          <input ref={pdfInputRef} type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} />
+        </div>
+
+        {/* Generate PDF */}
+        {slides.length > 0 && !uploadedPdfBase64 && (
+          <button
+            onClick={handleGeneratePdf}
+            disabled={status === "generating"}
+            className="w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors disabled:opacity-60"
+          >
+            {status === "generating" ? "Generating PDF..." : "Generate PDF Preview"}
+          </button>
+        )}
+
+        {/* PDF ready indicator */}
+        {status === "ready" && (
+          <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-100 rounded-xl px-3 py-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            PDF ready — {uploadedFileName ? "uploaded file" : `${slides.length} slides generated`}
+          </div>
+        )}
+
+        {/* Publish carousel button */}
+        {(status === "ready" || status === "published") && (
+          <button
+            onClick={handlePublish}
+            disabled={status === "publishing" || status === "published"}
+            className={`w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${
+              status === "published"
+                ? "bg-green-100 text-green-700 border border-green-200"
+                : "bg-[#0A66C2] text-white hover:bg-[#004182] active:scale-95"
+            }`}
+          >
+            {status === "publishing" && "Publishing Carousel..."}
+            {status === "published" && "Carousel Published!"}
+            {status === "ready" && "Publish Carousel to LinkedIn"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Social Card Component
 function SocialCard({
   day,
@@ -192,6 +535,7 @@ function SocialCard({
   showNudge?: boolean;
   onDismissNudge?: () => void;
   onOpenTips?: () => void;
+  showCarouselOption?: boolean;
 }) {
   const [text, setText] = useState(initialText);
   const [isEditing, setIsEditing] = useState(false);
@@ -201,6 +545,7 @@ function SocialCard({
   const [imageTitle, setImageTitle] = useState("");
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isUploadingImg, setIsUploadingImg] = useState(false);
+  const [showCarouselBuilder, setShowCarouselBuilder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopy = () => {
@@ -482,24 +827,49 @@ function SocialCard({
         </button>
       )}
 
-      {onOpenTips && (
-        <div className="mt-2 flex justify-end">
-          <button
-            onClick={onOpenTips}
-            className="text-xs text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            LinkedIn tips
-          </button>
+      {(onOpenTips || showCarouselOption) && (
+        <div className="mt-2 flex justify-between items-center">
+          {showCarouselOption && (
+            <button
+              onClick={() => setShowCarouselBuilder((v) => !v)}
+              className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${
+                showCarouselBuilder ? "text-[#0A66C2]" : "text-slate-400 hover:text-[#0A66C2]"
+              }`}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+              {showCarouselBuilder ? "Hide Carousel" : "Create Carousel"}
+            </button>
+          )}
+          {onOpenTips && (
+            <button
+              onClick={onOpenTips}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1 ml-auto"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              LinkedIn tips
+            </button>
+          )}
         </div>
       )}
 
       {showNudge && onDismissNudge && (
         <LinkedInEngagementNudge onDismiss={onDismissNudge} />
+      )}
+
+      {showCarouselOption && showCarouselBuilder && (
+        <LinkedInCarouselBuilder
+          postText={text}
+          session={session}
+          day={day}
+        />
       )}
 
       {isScheduleModalOpen && (
@@ -784,6 +1154,7 @@ export default function DistributionGrid({
                   showNudge={liNudgeVisible[dayData.day] ?? false}
                   onDismissNudge={() => setLiNudgeVisible((prev) => ({ ...prev, [dayData.day]: false }))}
                   onOpenTips={() => setShowLinkedInTips(true)}
+                  showCarouselOption={true}
                 />
               )
             )}

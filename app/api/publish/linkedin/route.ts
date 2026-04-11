@@ -31,7 +31,7 @@ async function refreshLinkedInToken(refreshToken: string) {
 
 export async function POST(req: Request) {
   try {
-    const { text, userId, imageUrl, accessToken: providedToken } = await req.json();
+    const { text, userId, imageUrl, documentBase64, documentTitle, accessToken: providedToken } = await req.json();
     const authHeader = req.headers.get("Authorization");
 
     let linkedInToken: string | null = null;
@@ -115,6 +115,63 @@ export async function POST(req: Request) {
       const authorUrn = `urn:li:person:${profileData.sub}`;
 
       let assetUrn: string | undefined = undefined;
+      let isDocument = false;
+
+      // Upload PDF document (carousel) if present
+      if (documentBase64) {
+        isDocument = true;
+        const pdfBase64 = documentBase64.replace(/^data:application\/pdf;base64,/, "");
+        const pdfBuffer = Buffer.from(pdfBase64, "base64");
+
+        const registerRes = await fetch(
+          "https://api.linkedin.com/v2/assets?action=registerUpload",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              registerUploadRequest: {
+                recipes: ["urn:li:digitalmediaRecipe:feedshare-document"],
+                owner: authorUrn,
+                serviceRelationships: [
+                  {
+                    relationshipType: "OWNER",
+                    identifier: "urn:li:userGeneratedContent",
+                  },
+                ],
+              },
+            }),
+          }
+        );
+
+        if (!registerRes.ok) {
+          const errText = await registerRes.text();
+          throw new Error(`Failed to register document upload: ${registerRes.status} ${errText}`);
+        }
+
+        const registerData = await registerRes.json();
+        const uploadUrl =
+          registerData.value.uploadMechanism[
+            "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
+          ].uploadUrl;
+        assetUrn = registerData.value.asset;
+
+        const uploadRes = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": "application/octet-stream" },
+          body: pdfBuffer,
+        });
+
+        if (!uploadRes.ok) {
+          const errorText = await uploadRes.text();
+          throw new Error(`Failed to upload document to LinkedIn: ${errorText}`);
+        }
+
+        // LinkedIn needs a moment to process the document asset
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
 
       // Upload image if present
       if (finalImageBase64) {
@@ -167,14 +224,32 @@ export async function POST(req: Request) {
       }
 
       // Create the post
+      let shareMediaCategory: string;
+      let media: any[];
+
+      if (isDocument && assetUrn) {
+        shareMediaCategory = "DOCUMENT";
+        media = [{
+          status: "READY",
+          media: assetUrn,
+          title: { text: documentTitle || "Carousel" },
+        }];
+      } else if (assetUrn) {
+        shareMediaCategory = "IMAGE";
+        media = [{ status: "READY", media: assetUrn }];
+      } else {
+        shareMediaCategory = "NONE";
+        media = [];
+      }
+
       const postPayload = {
         author: authorUrn,
         lifecycleState: "PUBLISHED",
         specificContent: {
           "com.linkedin.ugc.ShareContent": {
             shareCommentary: { text },
-            shareMediaCategory: assetUrn ? "IMAGE" : "NONE",
-            media: assetUrn ? [{ status: "READY", media: assetUrn }] : [],
+            shareMediaCategory,
+            media,
           },
         },
         visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
