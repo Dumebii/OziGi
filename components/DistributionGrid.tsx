@@ -156,7 +156,7 @@ function ExpandableText({ text }: { text: string }) {
   );
 }
 
-// ─── Carousel slide type ────────���─────────────────────────────────────────────
+// ─── Carousel slide type ────────����─────────────────────────────────────────────
 interface CarouselSlide {
   title: string;
   body: string;
@@ -504,7 +504,7 @@ function SocialCard({
   platformName: string;
   initialText: string;
   session: any;
-  onPost?: (text: string, day: number, imageUrl?: string) => void;
+  onPost?: (text: string, day: number, imageUrl?: string, carouselData?: { documentBase64: string; documentTitle: string }) => void;
   postStatus?: "idle" | "loading" | "success" | "error";
   actionButtonConfig?: {
     idle: string;
