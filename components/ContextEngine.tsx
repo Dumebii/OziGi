@@ -309,6 +309,7 @@ export default function Distillery({
 
           {/* Generate button */}
           <button
+            id="demo-generate-btn"
             data-tour="generate-button"
             onClick={onGenerate}
             disabled={(!inputs.text && inputs.files.length === 0) || isUploading}

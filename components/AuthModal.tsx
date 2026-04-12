@@ -264,7 +264,7 @@ export default function AuthModal({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 text-sm transition-all"
+                  className="w-full bg-slate-50 text-brand-slate rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 text-sm transition-all"
                   placeholder="Email address"
                   required
                 />
@@ -273,7 +273,7 @@ export default function AuthModal({
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 rounded-xl px-4 py-3 pr-10 border border-slate-200 outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 text-sm transition-all"
+                    className="w-full bg-slate-50 rounded-xl text-brand-slate px-4 py-3 pr-10 border border-slate-200 outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 text-sm transition-all"
                     placeholder="Password"
                     required
                   />

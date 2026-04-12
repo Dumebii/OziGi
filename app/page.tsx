@@ -9,6 +9,7 @@ import Hero from "../components/Hero";
 import AuthModal from "../components/AuthModal";
 import PricingCards from "../components/PricingCards";
 import BeforeAfterSlider from "../components/BeforeAfterSlider";
+import { LandingDemoWidget } from "../components/LandingDemoWidget";
 import { supabase } from "@/lib/supabase/client";
 
 const fadeUp: Variants = {
@@ -47,6 +48,17 @@ export default function Home() {
       <Header session={session} onSignIn={() => setIsAuthModalOpen(true)} />
       <main className="flex-1">
         <Hero />
+
+        {/* ── Inline demo widget ──────────────────────────────────── */}
+        <section className="py-12 px-6">
+          <div className="max-w-2xl mx-auto">
+            <p className="text-center text-xs font-black uppercase tracking-widest
+                          text-slate-400 mb-6">
+              See it in your voice — right now
+            </p>
+            <LandingDemoWidget />
+          </div>
+        </section>
 
         {/* How It Works */}
         <section className="py-20 md:py-28 bg-gradient-to-b from-white to-brand-offwhite border-b border-slate-200/20 relative overflow-hidden">
@@ -342,102 +354,6 @@ export default function Home() {
                   <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-red group-hover:w-full transition-all duration-500" />
                 </motion.div>
               ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Testimonials */}
-        <section className="py-20 md:py-28 bg-gradient-to-b from-brand-offwhite to-white relative overflow-hidden">
-          <div className="absolute top-1/3 right-0 w-96 h-96 bg-brand-red/8 rounded-full blur-3xl opacity-30" />
-          <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-brand-navy/5 rounded-full blur-3xl opacity-20" />
-          <div className="max-w-6xl mx-auto px-6 relative z-10">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.1 }}
-              variants={fadeUp}
-              className="text-center mb-16"
-            >
-              <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-brand-navy mb-4">
-                Shipping faster, sounding smarter
-              </h2>
-              <p className="text-slate-500 font-medium text-lg max-w-2xl mx-auto">
-                Real people. Real results. Real voice.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="relative w-full overflow-hidden"
-            >
-              {/* Testimonials Scroll Container - Anonymous, Quote-Focused */}
-              <div className="relative w-full overflow-hidden rounded-2xl">
-                <div className="flex animate-scroll gap-6">
-                  {[
-                    {
-                      role: "Developer Advocate",
-                      quote: "I paste my rough notes into Ozigi and get back a polished X thread that sounds like me, not a chatbot. It's the difference between shipping and not shipping.",
-                    },
-                    {
-                      role: "Technical Founder",
-                      quote: "Before Ozigi, I'd spend two hours tweaking prompts and still sound like ChatGPT. Now I feed in rough thoughts and ship authentic posts in minutes.",
-                    },
-                    {
-                      role: "DevRel Lead",
-                      quote: "Set my voice once. Now every post is on-brand, on-voice, and ready to go. My LinkedIn engagement tripled because I actually sound like me again.",
-                    },
-                    {
-                      role: "Content Strategist",
-                      quote: "Ozigi turned my scattered thoughts into cohesive narratives. No more generic AI vibes. Every piece feels authentically me.",
-                    },
-                    {
-                      role: "Engineering Manager",
-                      quote: "Our entire team uses Ozigi. We've cut content creation time in half and our voice is now consistent across all platforms.",
-                    },
-                    {
-                      role: "Product Lead",
-                      quote: "Finally, AI that gets out of the way. Ozigi enhances my voice rather than replacing it. That's the difference.",
-                    },
-                  ]
-                    .concat([
-                      {
-                        role: "Developer Advocate",
-                        quote: "I paste my rough notes into Ozigi and get back a polished X thread that sounds like me, not a chatbot. It's the difference between shipping and not shipping.",
-                      },
-                      {
-                        role: "Technical Founder",
-                        quote: "Before Ozigi, I'd spend two hours tweaking prompts and still sound like ChatGPT. Now I feed in rough thoughts and ship authentic posts in minutes.",
-                      },
-                    ])
-                    .map((testimonial, idx) => (
-                      <div
-                        key={idx}
-                        className="min-w-[320px] md:min-w-[400px] bg-white rounded-2xl border border-slate-200/60 p-6 shadow-lg hover:shadow-2xl transition-all group relative overflow-hidden flex-shrink-0"
-                      >
-                        <div className="absolute top-0 right-0 w-28 h-28 bg-brand-red/8 rounded-full blur-2xl group-hover:bg-brand-red/12 transition-colors" />
-                        {/* Quote icon instead of avatar */}
-                        <div className="flex items-center gap-3 mb-4 relative z-10">
-                          <div className="w-10 h-10 rounded-full bg-brand-red/10 flex items-center justify-center">
-                            <svg className="w-5 h-5 text-brand-red" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                            </svg>
-                          </div>
-                          <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{testimonial.role}</span>
-                        </div>
-                        <p className="text-slate-700 leading-relaxed relative z-10 text-sm">
-                          {testimonial.quote}
-                        </p>
-                      </div>
-                    ))}
-                </div>
-
-                {/* Fade edges for smooth visual blending */}
-                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-brand-offwhite to-transparent pointer-events-none z-20" />
-                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-brand-offwhite to-transparent pointer-events-none z-20" />
-              </div>
             </motion.div>
           </div>
         </section>

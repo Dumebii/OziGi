@@ -165,6 +165,8 @@ export default function LongFormPage() {
       setArticle(data.article);
       setActiveTab("output");
       toast.success("Article generated successfully!");
+      // Refresh history in the background so the tab is ready when the user switches to it
+      fetchHistory();
     } catch (error: any) {
       console.error("[LongForm] Error:", error);
       toast.error(error.message || "Failed to generate article");

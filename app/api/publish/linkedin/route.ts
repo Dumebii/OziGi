@@ -31,7 +31,7 @@ async function refreshLinkedInToken(refreshToken: string) {
 
 export async function POST(req: Request) {
   try {
-    const { text, userId, imageUrl, accessToken: providedToken } = await req.json();
+    const { text, userId, imageUrl, documentBase64, documentTitle, accessToken: providedToken } = await req.json();
     const authHeader = req.headers.get("Authorization");
 
     let linkedInToken: string | null = null;
@@ -115,6 +115,74 @@ export async function POST(req: Request) {
       const authorUrn = `urn:li:person:${profileData.sub}`;
 
       let assetUrn: string | undefined = undefined;
+      let isDocument = false;
+
+      // Upload PDF document (carousel) if present
+      if (documentBase64) {
+        isDocument = true;
+
+        let pdfBase64 = documentBase64;
+        if (pdfBase64.includes("data:")) {
+          pdfBase64 = pdfBase64.split(",")[1] || pdfBase64;
+        }
+        const pdfBuffer = Buffer.from(pdfBase64, "base64");
+
+        // Step 1: Initialize upload using the correct document endpoint
+        const initRes = await fetch(
+          "https://api.linkedin.com/rest/documents?action=initializeUpload",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "LinkedIn-Version": "202504",
+              "X-Restli-Protocol-Version": "2.0.0",
+            },
+            body: JSON.stringify({
+              initializeUploadRequest: {
+                owner: authorUrn,
+              },
+            }),
+          }
+        );
+
+        if (!initRes.ok) {
+          const errText = await initRes.text();
+          throw new Error(
+            `Failed to initialize document upload: ${initRes.status} ${errText}`
+          );
+        }
+
+        const initData = await initRes.json();
+        const uploadUrl = initData.value?.uploadUrl;
+        const documentUrn = initData.value?.document;
+
+        if (!uploadUrl || !documentUrn) {
+          throw new Error("LinkedIn did not return an upload URL for the document.");
+        }
+
+        // Step 2: Upload the PDF bytes
+        const uploadRes = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/octet-stream",
+          },
+          body: pdfBuffer,
+        });
+
+        if (!uploadRes.ok) {
+          const errorText = await uploadRes.text();
+          throw new Error(
+            `Failed to upload document to LinkedIn: ${uploadRes.status} ${errorText}`
+          );
+        }
+
+        // Step 3: Set assetUrn to the document URN for the post payload
+        assetUrn = documentUrn;
+
+        // LinkedIn needs time to process the document
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
 
       // Upload image if present
       if (finalImageBase64) {
@@ -167,42 +235,92 @@ export async function POST(req: Request) {
       }
 
       // Create the post
-      const postPayload = {
-        author: authorUrn,
-        lifecycleState: "PUBLISHED",
-        specificContent: {
-          "com.linkedin.ugc.ShareContent": {
-            shareCommentary: { text },
-            shareMediaCategory: assetUrn ? "IMAGE" : "NONE",
-            media: assetUrn ? [{ status: "READY", media: assetUrn }] : [],
+      // Document posts must use the newer /rest/posts API; image/text posts use /v2/ugcPosts
+      let postRes: Response;
+
+      if (isDocument && assetUrn) {
+        // Use /rest/posts for document (carousel) posts
+        const restPostPayload = {
+          author: authorUrn,
+          commentary: text,
+          visibility: "PUBLIC",
+          distribution: {
+            feedDistribution: "MAIN_FEED",
+            targetEntities: [],
+            thirdPartyDistributionChannels: [],
           },
-        },
-        visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
-      };
+          content: {
+            media: {
+              title: documentTitle || "Carousel",
+              id: assetUrn,
+            },
+          },
+          lifecycleState: "PUBLISHED",
+          isReshareDisabledByAuthor: false,
+        };
 
-      const postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          "X-Restli-Protocol-Version": "2.0.0",
-        },
-        body: JSON.stringify(postPayload),
-      });
+        postRes = await fetch("https://api.linkedin.com/rest/posts", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "X-Restli-Protocol-Version": "2.0.0",
+            "LinkedIn-Version": "202504",
+          },
+          body: JSON.stringify(restPostPayload),
+        });
+      } else {
+        // Use /v2/ugcPosts for image or text-only posts
+        let shareMediaCategory: string;
+        let media: any[];
 
-      if (!postRes.ok) {
-        const errorText = await postRes.text();
-        let errorMessage = `LinkedIn API error ${postRes.status}: ${errorText}`;
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorMessage = errorJson.message || errorMessage;
-        } catch {}
-        throw new Error(errorMessage);
+        if (assetUrn) {
+          shareMediaCategory = "IMAGE";
+          media = [{ status: "READY", media: assetUrn }];
+        } else {
+          shareMediaCategory = "NONE";
+          media = [];
+        }
+
+        const ugcPostPayload = {
+          author: authorUrn,
+          lifecycleState: "PUBLISHED",
+          specificContent: {
+            "com.linkedin.ugc.ShareContent": {
+              shareCommentary: { text },
+              shareMediaCategory,
+              media,
+            },
+          },
+          visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
+        };
+
+        postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "X-Restli-Protocol-Version": "2.0.0",
+            "LinkedIn-Version": "202504",
+          },
+          body: JSON.stringify(ugcPostPayload),
+        });
       }
 
-      return await postRes.json();
-    }
+      if (!postRes.ok) {
+        const errText = await postRes.text();
+        throw new Error(`Failed to create post: ${postRes.status} ${errText}`);
+      }
 
+      // /rest/posts returns 201 with no body; /v2/ugcPosts returns JSON
+      let postData: any = {};
+      const contentType = postRes.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        postData = await postRes.json();
+      }
+      console.log("[v0] Post created successfully", { isDocument });
+      return postData;
+    }
     // Attempt to post
     let postResult;
     try {

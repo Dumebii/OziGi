@@ -32,12 +32,13 @@ export async function GET(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Fetch all long-form generations for this user
+    // Fetch all long-form generations for this user.
+    // Filter by is_longform=true (platform='long-form' is not in the check constraint).
     const { data: articles, error: fetchError } = await supabaseAdmin
       .from("scheduled_posts")
-      .select("id, caption, content, metadata, longform_sections, created_at")
+      .select("id, subject, content, longform_sections, created_at")
       .eq("user_id", user.id)
-      .eq("platform", "long-form")
+      .eq("is_longform", true)
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -55,11 +56,18 @@ export async function GET(req: NextRequest) {
 
     // Parse and format the articles
     const formattedArticles = (articles || []).map((article: any) => {
-      let sections = [];
+      let sections: any[] = [];
+      let meta: any = {};
       try {
-        // Get sections from the dedicated longform_sections column
         if (article.longform_sections && Array.isArray(article.longform_sections)) {
-          sections = article.longform_sections;
+          // First element may be the embedded __meta object (written by generate route)
+          const [first, ...rest] = article.longform_sections;
+          if (first?.__meta) {
+            meta = first;
+            sections = rest;
+          } else {
+            sections = article.longform_sections;
+          }
         }
       } catch (e) {
         console.error("[LongForm History] Parse error:", e);
@@ -67,12 +75,11 @@ export async function GET(req: NextRequest) {
 
       return {
         id: article.id,
-        title: article.caption,
+        title: article.subject,
         content: article.content,
-        metadata: article.metadata,
-        totalWordCount: article.metadata?.totalWordCount || 0,
-        tone: article.metadata?.tone || "unknown",
-        structure: article.metadata?.structure || "unknown",
+        totalWordCount: meta.totalWordCount || 0,
+        tone: meta.tone || "unknown",
+        structure: meta.structure || "unknown",
         sections,
         createdAt: article.created_at,
       };

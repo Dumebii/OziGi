@@ -301,6 +301,22 @@ export default function DemoSandbox() {
     }
   }, []);
 
+  // Pre-populate from landing page demo widget
+  useEffect(() => {
+    const landingInput = sessionStorage.getItem("ozigi_landing_demo_input");
+    if (landingInput) {
+      setInputs((prev) => ({ ...prev, text: landingInput }));
+      sessionStorage.removeItem("ozigi_landing_demo_input");
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("from") === "landing") {
+        setTimeout(() => {
+          document.getElementById("demo-generate-btn")?.click();
+        }, 400);
+      }
+    }
+  }, []);
+
   const handleSampleClick = (sample: string) => {
     setInputs({ ...inputs, text: sample });
   };
