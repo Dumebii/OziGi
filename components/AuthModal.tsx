@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase/client";
 import { OAUTH_PROVIDERS, OAUTH_SCOPES } from "@/lib/platforms";
 import { X, Mail, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
-type AuthView = "signin" | "signup";
+type AuthView = "signin" | "signup" | "reset";
 
 export default function AuthModal({ 
   onClose,
@@ -131,6 +131,27 @@ export default function AuthModal({
     setView(newView);
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      setSuccess("Check your email — we sent a password reset link.");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Compact OAuth buttons
   const OAuthButtons = () => (
     <div className="grid grid-cols-2 gap-2">
@@ -203,29 +224,31 @@ export default function AuthModal({
             <span className="text-2xl font-black text-brand-navy tracking-tight">Ozigi</span>
           </div>
           
-          {/* View toggle tabs */}
-          <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
-            <button
-              onClick={() => switchView("signin")}
-              className={`flex-1 py-2.5 px-4 text-sm font-bold rounded-lg transition-all ${
-                view === "signin" 
-                  ? "bg-white text-slate-900 shadow-sm" 
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => switchView("signup")}
-              className={`flex-1 py-2.5 px-4 text-sm font-bold rounded-lg transition-all ${
-                view === "signup" 
-                  ? "bg-white text-slate-900 shadow-sm" 
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              Create Account
-            </button>
-          </div>
+          {/* View toggle tabs — hidden on reset view */}
+          {view !== "reset" && (
+            <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
+              <button
+                onClick={() => switchView("signin")}
+                className={`flex-1 py-2.5 px-4 text-sm font-bold rounded-lg transition-all ${
+                  view === "signin"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => switchView("signup")}
+                className={`flex-1 py-2.5 px-4 text-sm font-bold rounded-lg transition-all ${
+                  view === "signup"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -286,6 +309,15 @@ export default function AuthModal({
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => switchView("reset")}
+                    className="text-xs text-slate-400 hover:text-brand-red transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
                 <button
                   type="submit"
                   disabled={isLoading}
@@ -295,6 +327,42 @@ export default function AuthModal({
                   {!isLoading && <ArrowRight size={16} />}
                 </button>
               </form>
+            </>
+          )}
+
+          {/* Password Reset View */}
+          {view === "reset" && (
+            <>
+              <div className="mb-6">
+                <h3 className="text-lg font-black text-slate-900 mb-1">Reset your password</h3>
+                <p className="text-sm text-slate-500">
+                  Enter your email and we'll send you a link to get back in.
+                </p>
+              </div>
+              <form onSubmit={handlePasswordReset} className="space-y-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-slate-50 text-brand-slate rounded-xl px-4 py-3 border border-slate-200 outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 text-sm transition-all"
+                  placeholder="Email address"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-brand-red text-white py-3 rounded-xl font-bold text-sm hover:bg-red-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? "Sending..." : "Send Reset Link"}
+                  {!isLoading && <ArrowRight size={16} />}
+                </button>
+              </form>
+              <button
+                onClick={() => switchView("signin")}
+                className="mt-4 w-full text-center text-xs text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                ← Back to sign in
+              </button>
             </>
           )}
 

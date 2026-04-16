@@ -173,7 +173,7 @@ export default function Hero() {
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter leading-[1.1] text-brand-navy">
-              Content that doesn't <br />
+              Create Content that doesn't <br />
               <span className="text-brand-red relative inline-block">
                 sound like AI wrote it
                 <motion.span
@@ -185,7 +185,7 @@ export default function Hero() {
               </span>
             </h1> 
             <p className="text-lg text-slate-600 max-w-lg mx-auto lg:mx-0">
-              Stop writing. Start shipping. Drop raw thoughts, PDFs, or links. Ozigi transforms them into platform-ready posts that sound authentically like you—not a template.
+              Stop wasting time reviewing AI slop in your content. Use Ozigi's pre-built AI filter to produce natural sounding content. Drop raw thoughts, PDFs, or links. Ozigi transforms them into platform-ready posts that sound authentically like you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-2 justify-center lg:justify-start">
               <Link

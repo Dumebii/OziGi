@@ -4,7 +4,10 @@
       "Bash(npx next:*)",
       "Bash(npx tsc:*)",
       "Bash(node -e \"const ts = require\\('typescript'\\); const config = ts.readConfigFile\\('tsconfig.json', ts.sys.readFile\\); const parsed = ts.parseJsonConfigFileContent\\(config.config, ts.sys, '.'\\); const program = ts.createProgram\\(parsed.fileNames, parsed.options\\); const diags = ts.getPreEmitDiagnostics\\(program\\); diags.forEach\\(d => { if\\(d.file\\) { const {line} = d.file.getLineAndCharacterOfPosition\\(d.start\\); console.log\\(d.file.fileName + ':' + \\(line+1\\) + ' ' + ts.flattenDiagnosticMessageText\\(d.messageText, '\\\\n'\\)\\); } else { console.log\\(ts.flattenDiagnosticMessageText\\(d.messageText, '\\\\n'\\)\\); }}\\); console.log\\('Total errors:', diags.length\\);\")",
-      "Bash(node -e \"try { require\\('./components/LandingDemoWidget.tsx'\\) } catch\\(e\\) { console.log\\('Syntax check via import not possible for TSX, checking with swc...'\\) }\")"
+      "Bash(node -e \"try { require\\('./components/LandingDemoWidget.tsx'\\) } catch\\(e\\) { console.log\\('Syntax check via import not possible for TSX, checking with swc...'\\) }\")",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:dev.to)",
+      "Bash(grep -l \"bg-black\\\\|bg-slate-9\\\\|bg-zinc-9\\\\|bg-gray-9\" C:/Users/PC/fork/OziGi/components/*.tsx C:/Users/PC/fork/OziGi/app/*.tsx)"
     ]
   }
 }

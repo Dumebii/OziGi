@@ -11,6 +11,16 @@ import { usePlanStatus } from "@/components/hooks/usePlanStatus";
 import { PLATFORMS, getApiEndpoint } from "@/lib/platforms";
 import { uploadLargeAsset } from "@/lib/utils";
 import { ImagePlus, X } from "lucide-react";
+import {
+  BUILT_IN_THEMES,
+  loadCustomThemes,
+  saveCustomThemes,
+  hexToRgb,
+  rgbToHex,
+  rgbToCss,
+  type CarouselTheme,
+  type RGB,
+} from "@/lib/carousel-themes";
 
 // ─── LinkedIn Engagement Nudge ────────────────────────────────────────────────
 function LinkedInEngagementNudge({ onDismiss }: { onDismiss: () => void }) {
@@ -190,10 +200,11 @@ function parsePostIntoSlides(postText: string): CarouselSlide[] {
   });
 }
 
-// ─── Generate PDF from slides (jspdf) with Ozigi brand styling ────────────────
+// ─── Generate PDF from slides (jspdf) using the selected theme ────────────────
 async function generateCarouselPdf(
   slides: CarouselSlide[],
-  title: string
+  title: string,
+  theme: CarouselTheme
 ): Promise<string> {
   const { jsPDF } = await import("jspdf");
   const size = 1080;
@@ -204,54 +215,64 @@ async function generateCarouselPdf(
     hotfixes: ["px_scaling"],
   });
 
-  // Ozigi brand palette — one scheme, clean and consistent
-  const NAVY = [10, 22, 40] as const;       // #0A1628
-  const RED = [232, 50, 10] as const;        // #E8320A
-  const OFF_WHITE = [250, 250, 250] as const; // #FAFAFA
-  const SLATE = [30, 41, 59] as const;       // #1E293B
-  const MID = [71, 85, 105] as const;        // #475569
+  const {
+    background,
+    bar,
+    accent,
+    titleText,
+    bodyText,
+    mutedText,
+    fontFamily,
+  } = theme;
+
+  // Determine if the background is dark to pick the right ghost number tint
+  const bgLuma = (background[0] * 299 + background[1] * 587 + background[2] * 114) / 1000;
+  const ghostColor: RGB = bgLuma < 128 ? [255, 255, 255] : [0, 0, 0];
 
   slides.forEach((slide, i) => {
     if (i > 0) doc.addPage([size, size]);
 
-    // ── Background: navy ──────────────────────────────────────
-    doc.setFillColor(...NAVY);
+    // ── Background ────────────────────────────────────────────
+    doc.setFillColor(...background);
     doc.rect(0, 0, size, size, "F");
 
-    // ── Red accent stripe (left edge, full height) ─────────────
-    doc.setFillColor(...RED);
+    // ── Accent stripe (left edge, full height) ────────────────
+    doc.setFillColor(...accent);
     doc.rect(0, 0, 18, size, "F");
 
     // ── Top bar with slide counter ─────────────────────────────
-    doc.setFillColor(20, 36, 58); // slightly lighter navy
+    doc.setFillColor(...bar);
     doc.rect(0, 0, size, 90, "F");
 
     // Slide counter — top right
     doc.setFontSize(18);
-    doc.setTextColor(...MID);
-    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...mutedText);
+    doc.setFont(fontFamily, "bold");
     doc.text(`${i + 1} / ${slides.length}`, size - 60, 54, { align: "right" });
 
-    // Brand wordmark — top left (after the red stripe)
-    doc.setFontSize(18);
-    doc.setTextColor(...RED);
-    doc.setFont("helvetica", "bold");
-    doc.text("OZIGI", 54, 54);
+    // Brand watermark — very faint, top left
+    doc.setGState(doc.GState({ opacity: 0.12 }));
+    doc.setFontSize(11);
+    doc.setTextColor(...mutedText);
+    doc.setFont(fontFamily, "normal");
+    doc.text("ozigi", 54, 54);
+    doc.setGState(doc.GState({ opacity: 1 }));
 
-    // ── Decorative element: large faint circle ────────────────
-    doc.setDrawColor(255, 255, 255);
-    doc.setLineWidth(0.5);
-    doc.setGState(doc.GState({ opacity: 0.04 }));
-    doc.circle(size * 0.82, size * 0.25, 260, "S");
-    doc.circle(size * 0.15, size * 0.78, 180, "S");
+    // ── Decorative element: large ghost slide number ──────────
+    // Faint oversized number anchored to bottom-right — intentional, not noisy
+    doc.setGState(doc.GState({ opacity: 0.045 }));
+    doc.setFontSize(520);
+    doc.setTextColor(...ghostColor);
+    doc.setFont(fontFamily, "bold");
+    doc.text(String(i + 1).padStart(2, "0"), size + 30, size - 20, { align: "right" });
     doc.setGState(doc.GState({ opacity: 1 }));
 
     // ── Title ─────────────────────────────────────────────────
     const isLastSlide = i === slides.length - 1;
 
     doc.setFontSize(slide.title.length > 60 ? 52 : 62);
-    doc.setTextColor(...OFF_WHITE);
-    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...titleText);
+    doc.setFont(fontFamily, "bold");
 
     const titleLines = doc.splitTextToSize(slide.title, size - 160);
     const titleBlockHeight = titleLines.length * (slide.title.length > 60 ? 64 : 76);
@@ -262,14 +283,14 @@ async function generateCarouselPdf(
 
     // ── Body text ──────────────────────────────────────────────
     if (slide.body) {
-      // Red rule between title and body
-      doc.setDrawColor(...RED);
+      // Accent rule between title and body
+      doc.setDrawColor(...accent);
       doc.setLineWidth(3);
       doc.line(80, startY + titleBlockHeight + 30, 220, startY + titleBlockHeight + 30);
 
       doc.setFontSize(26);
-      doc.setTextColor(180, 195, 210); // muted blue-grey for readability
-      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...bodyText);
+      doc.setFont(fontFamily, "normal");
       const bodyLines = doc.splitTextToSize(slide.body, size - 160).slice(0, 6);
       doc.text(bodyLines, 80, startY + titleBlockHeight + 65, {
         align: "left",
@@ -281,28 +302,283 @@ async function generateCarouselPdf(
     if (i === 0 && title && title !== "Carousel") {
       // Overprint a small label above the title
       doc.setFontSize(14);
-      doc.setTextColor(...RED);
-      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...accent);
+      doc.setFont(fontFamily, "bold");
       doc.text(title.toUpperCase(), 80, startY - 36);
     }
 
     // ── Bottom bar ─────────────────────────────────────────────
-    doc.setFillColor(20, 36, 58);
+    doc.setFillColor(...bar);
     doc.rect(0, size - 70, size, 70, "F");
 
-    // "Follow for more" on last slide, domain otherwise
-    doc.setFontSize(15);
-    doc.setTextColor(...MID);
-    doc.setFont("helvetica", "normal");
-    const bottomText = isLastSlide ? "Follow for more → ozigi.app" : "ozigi.app";
-    doc.text(bottomText, size / 2, size - 24, { align: "center" });
-
-    // Red dot accent in bottom bar
-    doc.setFillColor(...RED);
-    doc.circle(60, size - 35, 6, "F");
+    // Subtle watermark — bottom right, barely there
+    doc.setGState(doc.GState({ opacity: 0.12 }));
+    doc.setFontSize(10);
+    doc.setTextColor(...mutedText);
+    doc.setFont(fontFamily, "normal");
+    doc.text("made with ozigi.app", size - 36, size - 22, { align: "right" });
+    doc.setGState(doc.GState({ opacity: 1 }));
   });
 
   return doc.output("datauristring");
+}
+
+// ─── Theme Swatch (compact preview used in the picker) ────────────────────────
+function ThemeSwatch({ theme, size = 44 }: { theme: CarouselTheme; size?: number }) {
+  return (
+    <div
+      className="rounded-md overflow-hidden border border-slate-200 flex-shrink-0 relative"
+      style={{ width: size, height: size, background: rgbToCss(theme.background) }}
+      aria-hidden
+    >
+      <div
+        className="absolute left-0 top-0 bottom-0"
+        style={{ width: Math.max(3, size * 0.1), background: rgbToCss(theme.accent) }}
+      />
+      <div
+        className="absolute left-0 right-0 top-0"
+        style={{ height: Math.max(5, size * 0.18), background: rgbToCss(theme.bar) }}
+      />
+      <div
+        className="absolute left-0 right-0 bottom-0"
+        style={{ height: Math.max(5, size * 0.18), background: rgbToCss(theme.bar) }}
+      />
+      <div
+        className="absolute"
+        style={{
+          left: size * 0.28,
+          right: size * 0.18,
+          top: size * 0.4,
+          height: Math.max(2, size * 0.08),
+          background: rgbToCss(theme.titleText),
+          borderRadius: 1,
+        }}
+      />
+      <div
+        className="absolute"
+        style={{
+          left: size * 0.28,
+          right: size * 0.34,
+          top: size * 0.55,
+          height: Math.max(1, size * 0.05),
+          background: rgbToCss(theme.bodyText),
+          borderRadius: 1,
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── Custom Theme Editor Modal ────────────────────────────────────────────────
+type CustomThemeDraft = {
+  name: string;
+  background: string;
+  bar: string;
+  accent: string;
+  titleText: string;
+  bodyText: string;
+  mutedText: string;
+  fontFamily: "helvetica" | "times" | "courier";
+};
+
+const COLOR_FIELDS: {
+  key: keyof Omit<CustomThemeDraft, "name" | "fontFamily">;
+  label: string;
+  hint: string;
+}[] = [
+  { key: "background", label: "Background", hint: "Main slide color" },
+  { key: "bar", label: "Bar", hint: "Top/bottom strip" },
+  { key: "accent", label: "Accent", hint: "Stripe, rule, dot" },
+  { key: "titleText", label: "Title", hint: "Headline" },
+  { key: "bodyText", label: "Body", hint: "Paragraph text" },
+  { key: "mutedText", label: "Muted", hint: "Counter / footer" },
+];
+
+function CustomThemeModal({
+  initial,
+  onSave,
+  onClose,
+}: {
+  initial?: CarouselTheme;
+  onSave: (theme: CarouselTheme) => void;
+  onClose: () => void;
+}) {
+  const [draft, setDraft] = useState<CustomThemeDraft>(() =>
+    initial
+      ? {
+          name: initial.name,
+          background: rgbToHex(initial.background),
+          bar: rgbToHex(initial.bar),
+          accent: rgbToHex(initial.accent),
+          titleText: rgbToHex(initial.titleText),
+          bodyText: rgbToHex(initial.bodyText),
+          mutedText: rgbToHex(initial.mutedText),
+          fontFamily: initial.fontFamily,
+        }
+      : {
+          name: "My Theme",
+          background: "#0A1628",
+          bar: "#14243A",
+          accent: "#E8320A",
+          titleText: "#FAFAFA",
+          bodyText: "#B4C3D2",
+          mutedText: "#475569",
+          fontFamily: "helvetica",
+        }
+  );
+
+  const preview: CarouselTheme | null = (() => {
+    const background = hexToRgb(draft.background);
+    const bar = hexToRgb(draft.bar);
+    const accent = hexToRgb(draft.accent);
+    const titleText = hexToRgb(draft.titleText);
+    const bodyText = hexToRgb(draft.bodyText);
+    const mutedText = hexToRgb(draft.mutedText);
+    if (!background || !bar || !accent || !titleText || !bodyText || !mutedText) return null;
+    return {
+      id: initial?.id ?? `custom-${Date.now()}`,
+      name: draft.name || "Untitled",
+      description: "Custom theme",
+      background,
+      bar,
+      accent,
+      titleText,
+      bodyText,
+      mutedText,
+      fontFamily: draft.fontFamily,
+      custom: true,
+    };
+  })();
+
+  const handleSave = () => {
+    if (!preview) {
+      toast.error("One of the colors is invalid — use 6-digit hex codes.");
+      return;
+    }
+    if (!draft.name.trim()) {
+      toast.error("Give your theme a name.");
+      return;
+    }
+    onSave(preview);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h2 className="text-base font-black uppercase tracking-tighter text-slate-900">
+              {initial ? "Edit theme" : "Build your theme"}
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Pick colors and a font — saved locally so it&apos;s here every time you open the carousel builder.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-700 transition-colors"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Preview */}
+        {preview && (
+          <div className="mb-4 flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <ThemeSwatch theme={preview} size={64} />
+            <div className="text-xs text-slate-600">
+              <p className="font-bold text-slate-800">{preview.name}</p>
+              <p>Font: {preview.fontFamily}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Name */}
+        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
+          Name
+        </label>
+        <input
+          type="text"
+          value={draft.name}
+          onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+          className="w-full text-sm text-slate-800 bg-white border border-slate-200 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:border-[#0A66C2]"
+          placeholder="My Theme"
+        />
+
+        {/* Colors */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {COLOR_FIELDS.map((f) => (
+            <div key={f.key}>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
+                {f.label}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={draft[f.key]}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, [f.key]: e.target.value }))
+                  }
+                  className="h-8 w-10 rounded border border-slate-200 cursor-pointer bg-white"
+                />
+                <input
+                  type="text"
+                  value={draft[f.key]}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, [f.key]: e.target.value }))
+                  }
+                  className="flex-1 text-xs font-mono text-slate-800 bg-white border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#0A66C2]"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-0.5">{f.hint}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Font */}
+        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">
+          Font family
+        </label>
+        <div className="flex gap-1.5 mb-5">
+          {(["helvetica", "times", "courier"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setDraft((d) => ({ ...d, fontFamily: f }))}
+              className={`flex-1 text-[10px] font-black uppercase tracking-widest px-2 py-2 rounded-lg border transition-colors ${
+                draft.fontFamily === f
+                  ? "bg-[#0A66C2]/10 text-[#0A66C2] border-[#0A66C2]/30"
+                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg font-black uppercase tracking-widest text-[10px] bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="flex-1 py-2 rounded-lg font-black uppercase tracking-widest text-[10px] bg-[#0A66C2] text-white hover:bg-[#0A66C2]/90 transition-colors"
+          >
+            Save theme
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─── LinkedIn Carousel Builder ─────────────────────────────────────────────────
@@ -325,6 +601,64 @@ function LinkedInCarouselBuilder({
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "generating" | "ready">("idle");
   const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Theme state ────────────────────────────────────────────────────────────
+  const [customThemes, setCustomThemes] = useState<CarouselTheme[]>([]);
+  const [selectedThemeId, setSelectedThemeId] = useState<string>(BUILT_IN_THEMES[0].id);
+  const [showThemeModal, setShowThemeModal] = useState(false);
+  const [editingTheme, setEditingTheme] = useState<CarouselTheme | undefined>(undefined);
+
+  // Load custom themes (and remembered selection) from localStorage on mount
+  useEffect(() => {
+    const loaded = loadCustomThemes();
+    setCustomThemes(loaded);
+    try {
+      const savedId = window.localStorage.getItem("ozigi.carousel.selectedTheme");
+      if (savedId) {
+        const all = [...BUILT_IN_THEMES, ...loaded];
+        if (all.some((t) => t.id === savedId)) setSelectedThemeId(savedId);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const allThemes: CarouselTheme[] = [...BUILT_IN_THEMES, ...customThemes];
+  const activeTheme: CarouselTheme =
+    allThemes.find((t) => t.id === selectedThemeId) ?? BUILT_IN_THEMES[0];
+
+  const handleSelectTheme = (id: string) => {
+    setSelectedThemeId(id);
+    try {
+      window.localStorage.setItem("ozigi.carousel.selectedTheme", id);
+    } catch {
+      // ignore
+    }
+    // Invalidate any previously generated PDF so the next generate uses the new theme
+    setPdfDataUri(null);
+  };
+
+  const handleSaveCustomTheme = (theme: CarouselTheme) => {
+    setCustomThemes((prev) => {
+      const exists = prev.some((t) => t.id === theme.id);
+      const next = exists ? prev.map((t) => (t.id === theme.id ? theme : t)) : [...prev, theme];
+      saveCustomThemes(next);
+      return next;
+    });
+    handleSelectTheme(theme.id);
+    setShowThemeModal(false);
+    setEditingTheme(undefined);
+    toast.success(`Theme "${theme.name}" saved`);
+  };
+
+  const handleDeleteCustomTheme = (id: string) => {
+    setCustomThemes((prev) => {
+      const next = prev.filter((t) => t.id !== id);
+      saveCustomThemes(next);
+      return next;
+    });
+    if (selectedThemeId === id) handleSelectTheme(BUILT_IN_THEMES[0].id);
+  };
 
   const handleParseFromPost = () => {
     const parsed = parsePostIntoSlides(postText);
@@ -374,7 +708,7 @@ function LinkedInCarouselBuilder({
     if (slides.length === 0) return;
     setStatus("generating");
     try {
-      const dataUri = await generateCarouselPdf(slides, documentTitle);
+      const dataUri = await generateCarouselPdf(slides, documentTitle, activeTheme);
       setPdfDataUri(dataUri);
       setStatus("ready");
       if (onCarouselReady) {
@@ -438,6 +772,110 @@ function LinkedInCarouselBuilder({
             />
           </div>
 
+          {/* Theme picker */}
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1.5">
+              Theme
+            </label>
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {allThemes.map((t) => {
+                const isActive = t.id === activeTheme.id;
+                return (
+                  <div key={t.id} className="relative flex-shrink-0 group">
+                    <button
+                      onClick={() => handleSelectTheme(t.id)}
+                      title={`${t.name} — ${t.description}`}
+                      className={`flex flex-col items-center gap-1 p-1.5 rounded-lg border transition-all ${
+                        isActive
+                          ? "border-[#0A66C2] ring-2 ring-[#0A66C2]/30 bg-[#0A66C2]/5"
+                          : "border-slate-200 hover:border-slate-400 bg-white"
+                      }`}
+                    >
+                      <ThemeSwatch theme={t} size={40} />
+                      <span
+                        className={`text-[9px] font-bold uppercase tracking-wide ${
+                          isActive ? "text-[#0A66C2]" : "text-slate-500"
+                        }`}
+                      >
+                        {t.name}
+                      </span>
+                    </button>
+                    {t.custom && (
+                      <div className="absolute -top-1 -right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTheme(t);
+                            setShowThemeModal(true);
+                          }}
+                          className="w-4 h-4 rounded-full bg-white border border-slate-300 text-slate-600 hover:text-[#0A66C2] flex items-center justify-center text-[10px]"
+                          title="Edit"
+                          aria-label={`Edit ${t.name}`}
+                        >
+                          ✎
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Delete "${t.name}"?`)) handleDeleteCustomTheme(t.id);
+                          }}
+                          className="w-4 h-4 rounded-full bg-white border border-slate-300 text-slate-600 hover:text-red-600 flex items-center justify-center"
+                          title="Delete"
+                          aria-label={`Delete ${t.name}`}
+                        >
+                          <X size={8} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Add custom theme card */}
+              <div className="flex-shrink-0">
+                <button
+                  onClick={() => {
+                    setEditingTheme(undefined);
+                    setShowThemeModal(true);
+                  }}
+                  title="Create your own theme"
+                  className="flex flex-col items-center gap-1 p-1.5 rounded-lg border border-dashed border-slate-300 hover:border-[#0A66C2] hover:bg-[#0A66C2]/5 bg-white transition-all group/add"
+                >
+                  <div
+                    className="rounded-md border border-dashed border-slate-300 group-hover/add:border-[#0A66C2]/40 flex items-center justify-center flex-shrink-0 transition-colors"
+                    style={{ width: 40, height: 40 }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-slate-400 group-hover/add:text-[#0A66C2] transition-colors">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                  </div>
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400 group-hover/add:text-[#0A66C2] transition-colors">
+                    Custom
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Active theme description */}
+            <p className="mt-1.5 text-[10px] text-slate-400 leading-snug">
+              <span className="font-semibold text-slate-600">{activeTheme.name}</span>
+              {" — "}
+              {activeTheme.description}
+              {activeTheme.custom && (
+                <button
+                  onClick={() => {
+                    setEditingTheme(activeTheme);
+                    setShowThemeModal(true);
+                  }}
+                  className="ml-2 underline hover:text-[#0A66C2] transition-colors"
+                >
+                  Edit
+                </button>
+              )}
+            </p>
+          </div>
+
           {/* Slide thumbnails / preview */}
           {slides.length > 0 && (
             <div>
@@ -499,6 +937,17 @@ function LinkedInCarouselBuilder({
             </button>
           )}
         </div>
+      )}
+
+      {showThemeModal && (
+        <CustomThemeModal
+          initial={editingTheme}
+          onSave={handleSaveCustomTheme}
+          onClose={() => {
+            setShowThemeModal(false);
+            setEditingTheme(undefined);
+          }}
+        />
       )}
     </div>
   );
@@ -753,8 +1202,8 @@ function SocialCard({
             type="text"
             value={imageTitle}
             onChange={(e) => setImageTitle(e.target.value)}
-            placeholder="Headline, e.g: 'New Feature Launch' (Optional)"
-            className="w-full px-3 py-2 text-sm bg-slate-400 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-red/50 text-brand-slate placeholder:text-slate-600"
+            placeholder="Image Copy (Optional)"
+            className="w-full px-3 py-2 text-sm bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-red/50 text-brand-slate placeholder:text-slate-600"
           />
         </div>
       )}
@@ -838,14 +1287,13 @@ function SocialCard({
         <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
           {showCarouselOption && (
             <button
-              onClick={() => {
-                setShowCarouselBuilder((v) => !v);
-              }}
-              className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest
-                          px-3 py-1.5 rounded-lg border transition-all ${
-                showCarouselBuilder || carouselData
-                  ? "bg-[#0A66C2] text-white border-[#0A66C2]"
-                  : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#0A66C2] hover:text-[#0A66C2]"
+              onClick={() => setShowCarouselBuilder((v) => !v)}
+              className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                carouselData
+                  ? "text-[#0A66C2]"
+                  : showCarouselBuilder
+                  ? "text-[#0A66C2]"
+                  : "text-slate-400 hover:text-[#0A66C2]"
               }`}
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
@@ -854,7 +1302,7 @@ function SocialCard({
                 <line x1="8" y1="21" x2="16" y2="21" />
                 <line x1="12" y1="17" x2="12" y2="21" />
               </svg>
-              {showCarouselBuilder ? "Hide carousel" : carouselData ? "Carousel ready ✓" : "Add carousel"}
+              {carouselData ? "Carousel ready ✓" : showCarouselBuilder ? "Hide carousel" : "Add carousel"}
             </button>
           )}
 
