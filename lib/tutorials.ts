@@ -19,7 +19,7 @@ export const TUTORIALS: Tutorial[] = [
     description:
       "A complete walkthrough of the Ozigi dashboard — from signing up to generating your first piece of content in under 5 minutes.",
     videoId: "wX18Kd7n_RM",
-    duration: "0:00",
+    duration: "2:22", // ← update this to the actual video length
     category: "Getting Started",
     publishedAt: "2026-04-17",
   },

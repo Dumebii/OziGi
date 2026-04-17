@@ -106,11 +106,15 @@ export default function TutorialsPage() {
                 <Play className="w-3.5 h-3.5 text-brand-red" />
                 {TUTORIALS.length} {TUTORIALS.length === 1 ? "tutorial" : "tutorials"}
               </span>
-              <span className="w-px h-4 bg-slate-200" />
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-brand-red" />
-                {totalMinutes} min of content
-              </span>
+              {totalMinutes > 0 && (
+                <>
+                  <span className="w-px h-4 bg-slate-200" />
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-brand-red" />
+                    {totalMinutes} min of content
+                  </span>
+                </>
+              )}
             </motion.div>
           </motion.div>
         </div>

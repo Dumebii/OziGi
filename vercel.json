@@ -1,12 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/publish",
-      "schedule": "* * * * *"
-    },
-    {
-      "path": "/api/cron/promotional",
-      "schedule": "0 10 * * 1"
-    }
-  ]
-}
+{}
