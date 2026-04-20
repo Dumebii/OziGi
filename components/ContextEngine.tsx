@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Paperclip, ChevronDown, ArrowLeftRight, X } from "lucide-react";
@@ -38,6 +39,7 @@ export default function Distillery({
   onGenerate,
   loading,
 }: DistilleryProps) {
+  const router = useRouter();
   const [fileUploadOpen, setFileUploadOpen] = useState(false);
   const [personaPopoverOpen, setPersonaPopoverOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -97,7 +99,7 @@ export default function Distillery({
 
   const handlePersonaSelect = (personaId: string) => {
     if (personaId === "create_new") {
-      if (onOpenSettings) onOpenSettings();
+      router.push("/dashboard/personas");
     } else {
       setInputs({ ...inputs, personaId });
     }

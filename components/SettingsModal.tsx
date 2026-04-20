@@ -210,6 +210,7 @@ const handleConnectGitHub = async () => {
   };
 
   return (
+    <>
     <div
       className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 sm:p-6 animate-in fade-in"
       onClick={onClose}
@@ -459,28 +460,30 @@ const handleConnectGitHub = async () => {
           </div>
         </div>
       </div>
-
-      {/* Cancellation Modal */}
-      {showCancellationModal && (
-        <CancellationModal
-          currentPlan={userPlan}
-          onClose={() => setShowCancellationModal(false)}
-          onSuccess={() => {
-            setUserPlan('free');
-            window.dispatchEvent(new Event('refreshPlanStatus'));
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        title="Delete Account"
-        message="This will permanently delete your account, all personas, settings, and generated content. This action CANNOT be undone."
-        confirmLabel="Delete Forever"
-        variant="danger"
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setShowDeleteConfirm(false)}
-      />
     </div>
+
+    {/* Sub-modals rendered outside the backdrop div to avoid backdrop-filter
+        stacking context issues that cause visual artifacts on close */}
+    {showCancellationModal && (
+      <CancellationModal
+        currentPlan={userPlan}
+        onClose={() => setShowCancellationModal(false)}
+        onSuccess={() => {
+          setUserPlan('free');
+          window.dispatchEvent(new Event('refreshPlanStatus'));
+        }}
+      />
+    )}
+
+    <ConfirmDialog
+      isOpen={showDeleteConfirm}
+      title="Delete Account"
+      message="This will permanently delete your account, all personas, settings, and generated content. This action CANNOT be undone."
+      confirmLabel="Delete Forever"
+      variant="danger"
+      onConfirm={handleDeleteConfirm}
+      onCancel={() => setShowDeleteConfirm(false)}
+    />
+    </>
   );
 }
