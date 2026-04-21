@@ -268,15 +268,22 @@ export default function Hero() {
             transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             className="flex-1 space-y-5 text-center lg:text-left"
           >
-            <h1 className="text-[72px] md:text-[88px] lg:text-[100px] font-black text-brand-navy leading-none tracking-tighter">
+            {/* Verb overline — small, tells you what to do */}
+            <p className="text-xs font-black uppercase tracking-[0.28em] text-slate-400">
               Create
-            </h1>
-
-            <p className="text-2xl md:text-[2rem] lg:text-[2.25rem] font-black text-brand-red leading-snug tracking-tight">
-              content that sounds like you,<br className="hidden sm:block" /> not like AI.
             </p>
 
-            <p className="text-sm text-slate-500 font-semibold tracking-wide">
+            {/* Main value prop — this is what dominates */}
+            <h1 className="text-[52px] md:text-[64px] lg:text-[72px] font-black text-brand-navy leading-[1.05] tracking-tighter">
+              content that<br />sounds like you.
+            </h1>
+
+            {/* Punch line — the differentiator, high contrast */}
+            <p className="text-[28px] md:text-[34px] lg:text-[38px] font-black text-brand-red leading-none tracking-tight">
+              Not like AI.
+            </p>
+
+            <p className="text-sm text-slate-500 font-semibold tracking-wide pt-1">
               AI-powered content engine
             </p>
 

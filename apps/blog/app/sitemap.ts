@@ -30,11 +30,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogPages: MetadataRoute.Sitemap = posts
     .filter((post) => post.date) // Filter out posts without dates
     .map((post) => {
-      // Ensure date string is properly formatted
+      // Prefer modifiedTime over date so updated articles surface correctly in Google
       let lastModified: Date;
       try {
         // Check if date already has time component
-        const dateString = post.date.includes('T') ? post.date : `${post.date}T00:00:00Z`;
+        const rawDate = post.modifiedTime || post.date;
+        const dateString = rawDate.includes('T') ? rawDate : `${rawDate}T00:00:00Z`;
         const dateObj = new Date(dateString);
         
         // Validate the date is valid

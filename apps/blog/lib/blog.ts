@@ -14,6 +14,10 @@ export interface BlogPost {
   slug: string;
   title: string;
   date: string;
+  /** ISO date string for the last time this article was meaningfully updated.
+   *  Used in schema.org dateModified and sitemap lastModified.
+   *  Falls back to `date` when absent. */
+  modifiedTime?: string;
   excerpt?: string;
   description?: string;
   coverImage?: string;
@@ -108,6 +112,7 @@ export async function getAllPosts(): Promise<BlogPost[]> {
           slug,
           title: data.title || 'Untitled',
           date: data.date || new Date().toISOString().split('T')[0],
+          modifiedTime: data.modifiedTime || data.lastModified || undefined,
           excerpt: data.excerpt || data.description,
           description: data.description || data.excerpt,
           coverImage: data.coverImage,
@@ -156,6 +161,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
       slug,
       title: data.title,
       date: data.date,
+      modifiedTime: data.modifiedTime || data.lastModified || undefined,
       excerpt: data.excerpt || data.description,
       description: data.description || data.excerpt,
       coverImage: data.coverImage || null,
@@ -189,7 +195,7 @@ export async function getRelatedPosts(categories: string[], currentSlug: string)
 }
 
 export function getAllSections(): string[] {
-  return ["Engineering", "Marketing", "Content", "Tools Roundup", "Ozigi Focus"];
+  return ["Engineering", "Marketing", "Content", "Security", "Tools Roundup", "Ozigi Focus"];
 }
 
 export interface SectionMeta {
@@ -247,6 +253,19 @@ export const SECTION_META: Record<string, SectionMeta> = {
       "Developer tooling updates"
     ],
     wordCount: "1,500-2,500 words"
+  },
+  "Security": {
+    title: "Security",
+    description: "Vulnerability research, threat modeling, secure architecture patterns, and how we think about keeping Ozigi and user data safe. Practical, opinionated guides for developers and founders building production systems that need to stay secure under pressure.",
+    examples: [
+      "API authentication & authorization",
+      "Threat modeling for SaaS",
+      "Vulnerability disclosure",
+      "Secure deployment practices",
+      "Rate limiting & abuse prevention",
+      "Secrets management"
+    ],
+    wordCount: "1,500-3,000 words"
   },
   "Ozigi Focus": {
     title: "Ozigi Focus",
