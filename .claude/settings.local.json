@@ -12,7 +12,8 @@
       "Bash(grep -E \"\\\\.mdx$|\\\\.md$\")",
       "Bash(xargs ls *)",
       "WebFetch(domain:developer.linkedin.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(xargs head *)"
     ]
   }
 }

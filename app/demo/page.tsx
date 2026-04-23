@@ -273,7 +273,7 @@ export default function DemoSandbox() {
   const campaignRef = useRef<HTMLDivElement>(null);
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   const [inputs, setInputs] = useState({
     url: "",
@@ -459,11 +459,11 @@ export default function DemoSandbox() {
             >
               <span className="text-lg leading-none">←</span> Back to Home
             </Link>
-            <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter mb-4">
+            <h1 className="text-4xl md:text-5xl text-brand-navy font-black italic uppercase tracking-tighter mb-4">
               See What Human Sounds Like
             </h1>
             <p className="text-slate-500 font-medium max-w-xl mx-auto">
-              Paste a URL, drop your notes, or upload a file. Get content that sounds like you wrote it — in 20 seconds.
+              Paste a URL, drop your notes, or upload a file. Get content that sounds like you wrote it, in 20 seconds.
             </p>
           </div>
 
@@ -485,6 +485,7 @@ export default function DemoSandbox() {
                     <Distillery
                       session={null}
                       userPersonas={[]}
+                      demoMode
                       inputs={inputs}
                       setInputs={setInputs}
                       loading={loading}
@@ -522,10 +523,7 @@ export default function DemoSandbox() {
                   <div className="animate-in fade-in slide-in-from-bottom-8">
                     <div className="flex justify-between items-center mb-8">
                       <button
-                        onClick={() => {
-                          setCampaign([]);
-                          // Show gate on next attempt
-                        }}
+                        onClick={() => setIsAuthModalOpen(true)}
                         className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-brand-red transition-colors bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm hover:shadow-md active:scale-95"
                       >
                         ← Architect New Campaign
@@ -539,6 +537,7 @@ export default function DemoSandbox() {
                         selectedPlatforms={inputs.platforms}
                         emailContent={emailContent}
                         setEmailContent={setEmailContent}
+                        demoMode
                       />
                     </div>
 

@@ -126,6 +126,7 @@ interface DistributionGridProps {
   emailContent?: string | null;
   setEmailContent?: (content: string | null) => void;
   onStatsChange?: () => void;
+  demoMode?: boolean;
 }
 
 const fadeUp: Variants = {
@@ -970,6 +971,7 @@ function SocialCard({
   onDismissNudge,
   onOpenTips,
   showCarouselOption,
+  demoMode = false,
 }: {
   day: number;
   platformName: string;
@@ -991,6 +993,7 @@ function SocialCard({
   onDismissNudge?: () => void;
   onOpenTips?: () => void;
   showCarouselOption?: boolean;
+  demoMode?: boolean;
 }) {
   const [text, setText] = useState(initialText);
   const [isEditing, setIsEditing] = useState(false);
@@ -1191,12 +1194,26 @@ function SocialCard({
           >
             {copied ? "Copied!" : "Copy"}
           </button>
-          <button
-            onClick={() => setIsScheduleModalOpen(true)}
-            className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-brand-red bg-slate-50 hover:bg-red-50 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            Schedule
-          </button>
+          {demoMode ? (
+            <div className="relative group">
+              <button
+                disabled
+                className="text-[10px] font-bold uppercase tracking-widest text-slate-300 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-not-allowed"
+              >
+                Schedule
+              </button>
+              <div className="absolute bottom-full right-0 mb-2 px-2.5 py-1.5 bg-slate-900 text-white text-[10px] rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none shadow-lg">
+                Sign up to schedule posts
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-brand-red bg-slate-50 hover:bg-red-50 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Schedule
+            </button>
+          )}
         </div>
       </div>
 
@@ -1278,7 +1295,19 @@ function SocialCard({
         <ExpandableText text={text} />
       )}
 
-      {onPost && actionButtonConfig && (
+      {demoMode ? (
+        <div className="relative group mt-auto">
+          <button
+            disabled
+            className="w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            🔒 Sign up to post
+          </button>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-slate-900 text-white text-[10px] rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none shadow-lg">
+            Create a free account to publish directly
+          </div>
+        </div>
+      ) : onPost && actionButtonConfig && (
         <button
           onClick={() => onPost(text, day, imageUrls.length > 0 ? imageUrls : undefined, carouselData || undefined)}
           disabled={postStatus === "loading" || postStatus === "success"}
@@ -1373,6 +1402,7 @@ export default function DistributionGrid({
   emailContent,
   setEmailContent,
   onStatsChange,
+  demoMode = false,
 }: DistributionGridProps) {
   const { planStatus, loading: planLoading } = usePlanStatus();
   const [xStatuses, setXStatuses] = useState<{ [day: number]: "idle" | "loading" | "success" | "error" }>({});
@@ -1591,6 +1621,7 @@ export default function DistributionGrid({
                     classes: "bg-black text-white hover:bg-slate-800 active:scale-95",
                   }}
                   onStatsChange={onStatsChange}
+                  demoMode={demoMode}
                 />
               )
             )}
@@ -1642,6 +1673,7 @@ export default function DistributionGrid({
                   onDismissNudge={() => setLiNudgeVisible((prev) => ({ ...prev, [dayData.day]: false }))}
                   onOpenTips={() => setShowLinkedInTips(true)}
                   showCarouselOption={true}
+                  demoMode={demoMode}
                 />
               )
             )}
@@ -1689,6 +1721,7 @@ export default function DistributionGrid({
                     classes: "bg-[#5865F2] text-white hover:bg-[#4752C4] active:scale-95",
                   }}
                   onStatsChange={onStatsChange}
+                  demoMode={demoMode}
                 />
               )
             )}
@@ -1736,6 +1769,7 @@ export default function DistributionGrid({
                     classes: "bg-[#4A154B] text-white hover:bg-[#36123b] active:scale-95",
                   }}
                   onStatsChange={onStatsChange}
+                  demoMode={demoMode}
                 />
               )
             )}
@@ -1798,7 +1832,19 @@ export default function DistributionGrid({
                 />
               )}
 
-              {planStatus?.emailSendsLimit !== 0 ? (
+              {demoMode ? (
+                <div className="relative group">
+                  <button
+                    disabled
+                    className="w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    🔒 Sign up to schedule
+                  </button>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-slate-900 text-white text-[10px] rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none shadow-lg">
+                    Create a free account to send newsletters
+                  </div>
+                </div>
+              ) : planStatus?.emailSendsLimit !== 0 ? (
                 <button
                   onClick={() => setIsScheduleModalOpen(true)}
                   disabled={emailStatus === "loading"}

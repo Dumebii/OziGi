@@ -14,6 +14,7 @@ interface DistilleryProps {
   userPersonas?: { id: string; name: string; prompt?: string }[];
   onOpenSettings?: () => void;
   onOpenPersonas?: () => void;
+  demoMode?: boolean;
   inputs: {
     url: string;
     text: string;
@@ -35,6 +36,7 @@ export default function Distillery({
   userPersonas = [],
   onOpenSettings,
   onOpenPersonas,
+  demoMode = false,
   inputs,
   setInputs,
   onGenerate,
@@ -230,86 +232,88 @@ export default function Distillery({
             </ul>
           )}
 
-          {/* Config row: Persona + Platforms + X Format */}
-          <div className="flex items-center gap-4 flex-wrap py-2 border-t border-b border-slate-100">
-            {/* Persona selector */}
-            <div className="relative" ref={personaPopoverRef} data-tour="persona-selector">
-              <button
-                onClick={() => setPersonaPopoverOpen(!personaPopoverOpen)}
-                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
-              >
-                <span className="text-slate-400 uppercase tracking-widest text-[10px] font-bold">Persona</span>
-                <span className="font-medium text-slate-800">{selectedPersona}</span>
-                <ChevronDown size={12} />
-              </button>
-              {personaPopoverOpen && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 min-w-48 py-1">
-                  <button
-                    onClick={() => handlePersonaSelect("default")}
-                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                  >
-                    Default
-                  </button>
-                  {userPersonas.map((p) => (
+          {/* Config row: Persona + Platforms + X Format — hidden in demo mode */}
+          {!demoMode && (
+            <div className="flex items-center gap-4 flex-wrap py-2 border-t border-b border-slate-100">
+              {/* Persona selector */}
+              <div className="relative" ref={personaPopoverRef} data-tour="persona-selector">
+                <button
+                  onClick={() => setPersonaPopoverOpen(!personaPopoverOpen)}
+                  className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
+                >
+                  <span className="text-slate-400 uppercase tracking-widest text-[10px] font-bold">Persona</span>
+                  <span className="font-medium text-slate-800">{selectedPersona}</span>
+                  <ChevronDown size={12} />
+                </button>
+                {personaPopoverOpen && (
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 min-w-48 py-1">
                     <button
-                      key={p.id}
-                      onClick={() => handlePersonaSelect(p.id)}
+                      onClick={() => handlePersonaSelect("default")}
                       className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                     >
-                      {p.name}
+                      Default
                     </button>
-                  ))}
-                  <button
-                    onClick={() => handlePersonaSelect("create_new")}
-                    className="w-full text-left px-4 py-2 text-sm text-brand-red font-bold hover:bg-slate-50 transition-colors border-t border-slate-100 mt-1"
-                  >
-                    + Create New Persona
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <span className="text-slate-200 text-sm">|</span>
-
-            {/* Platforms inline multi-select */}
-            <div className="flex items-center gap-1.5 flex-wrap" data-tour="platform-selector">
-              <span className="text-slate-400 uppercase tracking-widest text-[10px] font-bold">Platforms</span>
-              {ALL_PLATFORMS.map((platform) => {
-                const isActive = inputs.platforms.includes(platform.id);
-                return (
-                  <div key={platform.id} className="relative group">
+                    {userPersonas.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => handlePersonaSelect(p.id)}
+                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        {p.name}
+                      </button>
+                    ))}
                     <button
-                      onClick={() => togglePlatform(platform.id)}
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${
-                        isActive
-                          ? "bg-brand-navy text-white border-brand-navy"
-                          : "bg-white text-slate-400 border-slate-200 line-through"
-                      }`}
+                      onClick={() => handlePersonaSelect("create_new")}
+                      className="w-full text-left px-4 py-2 text-sm text-brand-red font-bold hover:bg-slate-50 transition-colors border-t border-slate-100 mt-1"
                     >
-                      {platform.shortLabel}
+                      + Create New Persona
                     </button>
-                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[8px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-50 shadow-lg">
-                      {platform.tooltip}
-                    </span>
                   </div>
-                );
-              })}
-            </div>
+                )}
+              </div>
 
-            <span className="text-slate-200 text-sm">|</span>
+              <span className="text-slate-200 text-sm">|</span>
 
-            {/* X format inline toggle */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 uppercase tracking-widest text-[10px] font-bold">X</span>
-              <button
-                onClick={() => setInputs({ ...inputs, tweetFormat: inputs.tweetFormat === "single" ? "thread" : "single" })}
-                className="flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-slate-900 transition-colors"
-              >
-                {inputs.tweetFormat === "single" ? "Single tweet" : "Full thread"}
-                <ArrowLeftRight size={10} className="text-slate-400" />
-              </button>
+              {/* Platforms inline multi-select */}
+              <div className="flex items-center gap-1.5 flex-wrap" data-tour="platform-selector">
+                <span className="text-slate-400 uppercase tracking-widest text-[10px] font-bold">Platforms</span>
+                {ALL_PLATFORMS.map((platform) => {
+                  const isActive = inputs.platforms.includes(platform.id);
+                  return (
+                    <div key={platform.id} className="relative group">
+                      <button
+                        onClick={() => togglePlatform(platform.id)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${
+                          isActive
+                            ? "bg-brand-navy text-white border-brand-navy"
+                            : "bg-white text-slate-400 border-slate-200 line-through"
+                        }`}
+                      >
+                        {platform.shortLabel}
+                      </button>
+                      <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[8px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-50 shadow-lg">
+                        {platform.tooltip}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <span className="text-slate-200 text-sm">|</span>
+
+              {/* X format inline toggle */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 uppercase tracking-widest text-[10px] font-bold">X</span>
+                <button
+                  onClick={() => setInputs({ ...inputs, tweetFormat: inputs.tweetFormat === "single" ? "thread" : "single" })}
+                  className="flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-slate-900 transition-colors"
+                >
+                  {inputs.tweetFormat === "single" ? "Single tweet" : "Full thread"}
+                  <ArrowLeftRight size={10} className="text-slate-400" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Generate button */}
           <button
@@ -321,57 +325,66 @@ export default function Distillery({
               bg-brand-red text-white hover:bg-[#C5280A] active:scale-[0.99]
               disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-red"
           >
-            {isUploading ? "Uploading Assets to R2... ⏳" : "Generate Campaign ⚡"}
+            {isUploading ? "Uploading Assets to R2... ⏳" : "Generate Content"}
           </button>
 
-          {/* Advanced directives toggle (below button) */}
-          <div className="text-center">
-            <button
-              data-tour="advanced-toggle"
-              onClick={() => setAdvancedOpen(!advancedOpen)}
-              className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              ⚙ Advanced directives {advancedOpen ? "▲" : "▼"}
-            </button>
-            <AnimatePresence>
-              {advancedOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="mt-4"
-                >
-                  {/* Campaign Directives */}
-                  <div className="mt-2 p-5 bg-slate-50 rounded-[1.5rem] border border-slate-200">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 flex items-center gap-2">
-                      Campaign Directives
-                    </label>
-                    <input
-                      type="text"
-                      value={inputs.additionalInfo || ""}
-                      onChange={(e) => setInputs({ ...inputs, additionalInfo: e.target.value })}
-                      placeholder="e.g., Target junior devs. (No tone instructions here)"
-                      className="w-full text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl p-3 focus:outline-none focus:border-slate-400 transition-colors"
-                    />
-                  </div>
-                  {/* Campaign Name */}
-                  <div className="mt-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 flex items-center gap-2">
-                      Campaign Name (optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={inputs.campaignName || ""}
-                      onChange={(e) => setInputs({ ...inputs, campaignName: e.target.value })}
-                      placeholder="e.g., Product Launch Week"
-                      className="w-full text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl p-3 focus:outline-none focus:border-slate-400 transition-colors"
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Demo hint: 3-day campaign output */}
+          {demoMode && (
+            <p className="text-center text-[10px] text-slate-400 leading-relaxed">
+              You'll get a 3-day content campaign — posts for X, LinkedIn & Discord, ready to publish.
+            </p>
+          )}
+
+          {/* Advanced directives toggle — hidden in demo mode */}
+          {!demoMode && (
+            <div className="text-center">
+              <button
+                data-tour="advanced-toggle"
+                onClick={() => setAdvancedOpen(!advancedOpen)}
+                className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                ⚙ Advanced directives {advancedOpen ? "▲" : "▼"}
+              </button>
+              <AnimatePresence>
+                {advancedOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="mt-4"
+                  >
+                    {/* Campaign Directives */}
+                    <div className="mt-2 p-5 bg-slate-50 rounded-[1.5rem] border border-slate-200">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 flex items-center gap-2">
+                        Campaign Directives
+                      </label>
+                      <input
+                        type="text"
+                        value={inputs.additionalInfo || ""}
+                        onChange={(e) => setInputs({ ...inputs, additionalInfo: e.target.value })}
+                        placeholder="e.g., Target junior devs. (No tone instructions here)"
+                        className="w-full text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl p-3 focus:outline-none focus:border-slate-400 transition-colors"
+                      />
+                    </div>
+                    {/* Campaign Name */}
+                    <div className="mt-4">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-2 flex items-center gap-2">
+                        Campaign Name (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={inputs.campaignName || ""}
+                        onChange={(e) => setInputs({ ...inputs, campaignName: e.target.value })}
+                        placeholder="e.g., Product Launch Week"
+                        className="w-full text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl p-3 focus:outline-none focus:border-slate-400 transition-colors"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
         </div>
       </div>
     </section>
