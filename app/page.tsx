@@ -70,7 +70,7 @@ export default function Home() {
 
 {/* BetterLaunch badge — place above the logo ticker in the social proof section */}
 <div className="flex justify-center mb-6">
-  
+  <a
     href="https://www.betterlaunch.co"
     target="_blank"
     rel="noopener noreferrer"
