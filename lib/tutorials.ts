@@ -55,6 +55,16 @@ export const TUTORIALS: Tutorial[] = [
     category: "Getting Started",
     publishedAt: "2026-04-22",
   },
+          {
+    id: "5",
+    slug: "best-email-newsletter-generator",
+    title: "Learn How To Build, Publish and Schedule Your Own Email Newsletters",
+    description: "Watch how easy it is to take raw release notes or basic text and transform them into an engaging newsletter that maintains your authentic voice. Whether you are a creator, founder, or writer, this workflow is designed to give you your time back so you can focus on building, not fighting with a text editor.",
+    videoId: "EevF7swGKKQ",
+    duration: "2:42", // ← update this to the actual video length
+    category: "Features",
+    publishedAt: "2026-04-27",
+  },
   // Add more tutorials here as you upload videos to YouTube.
   // Copy the block above, increment the id, update the slug, title,
   // description, videoId (the part after ?v= in the YouTube URL),

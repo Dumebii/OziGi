@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, Clock, BookOpen, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
@@ -22,9 +23,42 @@ const stagger = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
-export default function TutorialsPage() {
+export default function TutorialsPageWrapper() {
+  return (
+    <Suspense>
+      <TutorialsPage />
+    </Suspense>
+  );
+}
+
+function TutorialsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeCategory, setActiveCategory] = useState<TutorialCategory>("All");
   const [activeTutorial, setActiveTutorial] = useState<Tutorial | null>(null);
+
+  // Sync modal state from URL param ?v=slug
+  useEffect(() => {
+    const slug = searchParams.get("v");
+    if (slug) {
+      const found = TUTORIALS.find((t) => t.slug === slug) ?? null;
+      setActiveTutorial(found);
+    } else {
+      setActiveTutorial(null);
+    }
+  }, [searchParams]);
+
+  const openTutorial = useCallback((tutorial: Tutorial) => {
+    router.push(`/tutorials?v=${tutorial.slug}`, { scroll: false });
+  }, [router]);
+
+  const closeTutorial = useCallback(() => {
+    router.push("/tutorials", { scroll: false });
+  }, [router]);
+
+  const goToTutorial = useCallback((tutorial: Tutorial) => {
+    router.push(`/tutorials?v=${tutorial.slug}`, { scroll: false });
+  }, [router]);
 
   const filtered =
     activeCategory === "All"
@@ -34,9 +68,9 @@ export default function TutorialsPage() {
   // Close modal on Escape
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape" && activeTutorial) setActiveTutorial(null);
+      if (e.key === "Escape" && activeTutorial) closeTutorial();
     },
-    [activeTutorial]
+    [activeTutorial, closeTutorial]
   );
 
   useEffect(() => {
@@ -158,7 +192,7 @@ export default function TutorialsPage() {
               <TutorialCard
                 key={tutorial.id}
                 tutorial={tutorial}
-                onPlay={() => setActiveTutorial(tutorial)}
+                onPlay={() => openTutorial(tutorial)}
               />
             ))}
           </motion.div>
@@ -172,11 +206,11 @@ export default function TutorialsPage() {
         {activeTutorial && (
           <VideoModal
             tutorial={activeTutorial}
-            onClose={() => setActiveTutorial(null)}
+            onClose={closeTutorial}
             onNext={() => {
               const idx = TUTORIALS.findIndex((t) => t.id === activeTutorial.id);
               const next = TUTORIALS[idx + 1];
-              if (next) setActiveTutorial(next);
+              if (next) goToTutorial(next);
             }}
             hasPrev={TUTORIALS.findIndex((t) => t.id === activeTutorial.id) > 0}
             hasNext={
@@ -186,7 +220,7 @@ export default function TutorialsPage() {
             onPrev={() => {
               const idx = TUTORIALS.findIndex((t) => t.id === activeTutorial.id);
               const prev = TUTORIALS[idx - 1];
-              if (prev) setActiveTutorial(prev);
+              if (prev) goToTutorial(prev);
             }}
           />
         )}

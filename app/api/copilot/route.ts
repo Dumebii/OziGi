@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { getVertexAIClient } from '@/lib/genai-client';
 import { searchWebWithExa } from '@/lib/exa';
 import { getMemories, storeMemory } from '@/lib/mem0';
-import { getComposioConnection } from '@/lib/composio';
+import { getGitHubEnrichedContext } from '@/lib/composio';
 
 export async function POST(req: Request) {
   try {
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     const userMemories = await getMemories(user.id);
     const memoryContext = userMemories.map(m => `${m.key}: ${m.value}`).join('\n');
 
-    // 2b. Fetch GitHub repositories if connected
+    // 2b. Fetch GitHub context (repos + commits + README + releases) if connected
     let githubContext = '';
     const { data: githubConn, error: githubError } = await supabase
       .from('user_composio_connections')
@@ -52,20 +52,9 @@ export async function POST(req: Request) {
 
     if (githubConn && !githubError) {
       try {
-        const connection = await getComposioConnection(githubConn.connection_id);
-        const reposResp = await fetch(`https://backend.composio.dev/api/v1/connectedAccounts/${connection.id}/actions/getUserRepos`, {
-          headers: { 'x-api-key': process.env.COMPOSIO_API_KEY! },
-        });
-        if (reposResp.ok) {
-          const repos = await reposResp.json();
-          if (repos && repos.length) {
-            githubContext = '\n\nUser\'s GitHub repositories:\n' + repos.map((repo: any) => 
-              `- ${repo.name}: ${repo.description || 'No description'}`
-            ).join('\n');
-          }
-        }
+        githubContext = await getGitHubEnrichedContext(githubConn.connection_id);
       } catch (err) {
-        console.error('Failed to fetch GitHub repos:', err);
+        console.error('Failed to fetch GitHub context:', err);
       }
     }
 

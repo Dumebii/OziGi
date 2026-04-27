@@ -55,6 +55,7 @@ export default function DocsPage() {
                 <li><a href="#pricing" className="hover:text-slate-900 transition-colors block">13. Pricing & Gating</a></li>
                 <li><a href="#troubleshooting" className="hover:text-slate-900 transition-colors block">14. Troubleshooting</a></li>
                 <li><a href="#integrations" className="hover:text-slate-900 transition-colors block">15. Integration Setup</a></li>
+                <li><a href="#github-context" className="hover:text-slate-900 transition-colors block">16. GitHub Context</a></li>
               </ul>
             </nav>
           </div>
@@ -783,6 +784,85 @@ export default function DocsPage() {
                   </ol>
                   <p className="text-xs text-slate-500 mt-3 italic"><strong>Note:</strong> LinkedIn OAuth tokens expire after 60 days. You'll receive an email when reconnection is needed.</p>
                 </div>
+
+                <div className="bg-white border border-slate-200 p-6 rounded-2xl">
+                  <h3 className="font-bold text-slate-900 mb-3">GitHub Context — Connect Your Repositories</h3>
+                  <p className="text-sm text-slate-600 mb-4">When you connect GitHub, Ozigi reads the names and descriptions of your public repositories and silently includes them in every generation prompt. This means your campaigns will automatically reference what you actually build — without you having to paste project details manually.</p>
+                  <ol className="space-y-2 text-sm text-slate-600 list-decimal pl-5">
+                    <li>Go to <strong>Settings → Integrations</strong> in your Ozigi dashboard.</li>
+                    <li>Click <strong>Connect GitHub</strong> under "GitHub Context".</li>
+                    <li>You'll be redirected to GitHub's OAuth authorization page via Composio.</li>
+                    <li>Authorize access and you'll be redirected back to your dashboard.</li>
+                    <li>GitHub context is now active — your next generation will include your repository list.</li>
+                  </ol>
+                  <p className="text-xs text-slate-500 mt-3 italic"><strong>Note:</strong> Ozigi only reads repository names and descriptions — not code, commits, or private content.</p>
+                </div>
+              </div>
+            </section>
+
+            {/* 16. GitHub Context */}
+            <section id="github-context" className="scroll-mt-28">
+              <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 border-b-2 border-slate-100 pb-2 mb-6">
+                16. GitHub Context Integration
+              </h2>
+              <p className="text-slate-600 font-medium leading-relaxed mb-4">
+                Ozigi can read your GitHub repositories and use them as invisible context when generating your campaigns. If you're a developer or founder who builds things, this means your posts will naturally reference your actual work — your repo names, project descriptions, what you've shipped — without you having to explain it every time.
+              </p>
+
+              <div className="bg-slate-900 text-white p-6 rounded-2xl mb-6">
+                <h3 className="font-black uppercase tracking-widest text-sm mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                  What Ozigi reads from GitHub
+                </h3>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li>✅ Repository names and descriptions</li>
+                  <li>✅ README (intro, what the project does)</li>
+                  <li>✅ Last 5 commit messages per repo</li>
+                  <li>✅ Latest release name and notes (if published)</li>
+                  <li>❌ Source code — never read</li>
+                  <li>❌ Private repository content — never accessed</li>
+                </ul>
+                <p className="text-xs text-slate-400 mt-4">Ozigi reads your 3 most recently active repos. Fetched fresh on every generation.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-white border border-slate-200 p-5 rounded-xl">
+                  <h3 className="font-black text-sm uppercase tracking-widest text-brand-red mb-2">Without GitHub connected</h3>
+                  <p className="text-sm text-slate-600 italic">"Today I shipped a performance update to our backend infrastructure..."</p>
+                  <p className="text-xs text-slate-400 mt-2">Generic — the AI has no idea what you've actually built.</p>
+                </div>
+                <div className="bg-white border border-slate-200 p-5 rounded-xl">
+                  <h3 className="font-black text-sm uppercase tracking-widest text-brand-red mb-2">With GitHub connected</h3>
+                  <p className="text-sm text-slate-600 italic">"Just pushed a fix to OziGi — rate limiting now handles bursts without dropping legitimate traffic..."</p>
+                  <p className="text-xs text-slate-400 mt-2">Specific — your actual project names ground the copy in reality.</p>
+                </div>
+              </div>
+
+              <div className="bg-white border-2 border-slate-200 p-6 rounded-2xl mb-4">
+                <h3 className="font-bold text-slate-900 mb-3">How It Works</h3>
+                <div className="space-y-3 text-sm text-slate-600">
+                  <div className="flex gap-3 items-start">
+                    <span className="w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-xs shrink-0 mt-0.5">1</span>
+                    <p>You connect GitHub via OAuth through Composio (a secure integrations platform). Ozigi never sees your credentials — Composio handles the token exchange.</p>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-xs shrink-0 mt-0.5">2</span>
+                    <p>Your Composio connection ID is stored in Ozigi's database (not the token itself).</p>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-xs shrink-0 mt-0.5">3</span>
+                    <p>On every campaign generation, Ozigi calls Composio's API to fetch your current repository list — names and descriptions only.</p>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-xs shrink-0 mt-0.5">4</span>
+                    <p>The repo list is appended to your generation context, behind the scenes. The model uses it to ground your posts in your actual work.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-indigo-50 border border-indigo-200 p-5 rounded-2xl">
+                <h4 className="font-black text-slate-900 mb-2">Also active in Copilot</h4>
+                <p className="text-sm text-slate-700">When you're chatting with the Ozigi Copilot, your GitHub repositories are included in the conversation context too. Ask the Copilot to write a post about your latest project and it already knows what you've built.</p>
               </div>
             </section>
           </div>

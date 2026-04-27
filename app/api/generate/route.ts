@@ -9,7 +9,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { getPlanStatus, incrementCampaignGeneration } from '@/lib/plan';
 import { getVertexAIClient } from '@/lib/genai-client';
-import { getComposioConnection } from '@/lib/composio';
+import { getGitHubEnrichedContext } from '@/lib/composio';
 import { extractYouTubeId, getYouTubeTranscript } from '@/lib/youtube';
 
 
@@ -242,7 +242,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // --- GitHub repos context (only if user has connected GitHub) ---
+    // --- GitHub context (repos + recent commits + README + latest release) ---
     let githubContext = '';
     const { data: githubConn, error: githubError } = await supabaseFromCookie
       .from('user_composio_connections')
@@ -253,20 +253,9 @@ export async function POST(req: Request) {
 
     if (githubConn && !githubError) {
       try {
-        const connection = await getComposioConnection(githubConn.connection_id);
-        const reposResp = await fetch(`https://backend.composio.dev/api/v1/connectedAccounts/${connection.id}/actions/getUserRepos`, {
-          headers: { 'x-api-key': process.env.COMPOSIO_API_KEY! },
-        });
-        if (reposResp.ok) {
-          const repos = await reposResp.json();
-          if (repos && repos.length) {
-            githubContext = '\n\nUser\'s GitHub repositories:\n' + repos.map((repo: any) => 
-              `- ${repo.name}: ${repo.description || 'No description'}`
-            ).join('\n');
-          }
-        }
+        githubContext = await getGitHubEnrichedContext(githubConn.connection_id);
       } catch (err) {
-        console.error('Failed to fetch GitHub repos:', err);
+        console.error('Failed to fetch GitHub context:', err);
       }
     }
 

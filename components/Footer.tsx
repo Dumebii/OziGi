@@ -53,12 +53,12 @@ export default function Footer() {
             </h4>
             <div className="flex flex-col gap-3">
               <a
-                href="https://github.com/dumebii/ozigi"
+                href="https://github.com/Ozigi-app/OziGi/"
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm text-slate-500 hover:text-white transition-colors"
+                className="text-sm text-slate-500 hover:text-white transition-colors flex items-center gap-1.5"
               >
-                GitHub
+                ⭐ Star us on GitHub
               </a>
               <a href="https://blog.ozigi.app" className="text-sm font-semibold text-slate-600 hover:text-brand-red transition">
                 Blog

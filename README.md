@@ -59,7 +59,18 @@ Choose from 14 pre-built personas — technical and non-technical — each with 
 ### 11. Subscription Management
 Full subscription lifecycle support including plan upgrades with tailored welcome emails, and self-service cancellation with reason tracking for compliance.
 
-### 12. Pricing & Gating
+### 12. GitHub Context (via Composio)
+Connect your GitHub account once in Settings → Integrations. On every campaign generation and every Copilot conversation, Ozigi pulls context from your 3 most recently active repositories via the GitHub API and includes it silently in the generation prompt. The result: your posts naturally reference what you actually built — repo names, what the project does, recent commits, and your latest release notes.
+
+What Ozigi reads per repo:
+- Repository name and description
+- README (project overview, stripped of code blocks and markdown)
+- Last 5 commit messages
+- Latest release name and notes (if you publish GitHub releases)
+
+Ozigi reads **public repository metadata only** — never source code, private repos, or secrets. The OAuth token is managed entirely by Composio; Ozigi stores only a connection reference ID.
+
+### 13. Pricing & Gating
 Free tier includes 5 campaigns/month. Team ($15/mo) unlocks 30 campaigns, image generation, email newsletter, blog distribution, and more. Organization ($39/mo) removes all limits, adds full Copilot access, and enables long-form content generation. Start with a 7‑day trial on the Team plan.
 
 ---
@@ -72,6 +83,9 @@ Free tier includes 5 campaigns/month. Team ($15/mo) unlocks 30 campaigns, image 
 | Backend | Next.js Route Handlers, Vercel Serverless |
 | AI Engine | Google Cloud Vertex AI (Gemini 2.5 Flash) |
 | Database & Auth | Supabase (PostgreSQL) |
+| Rate Limiting & Scheduling | Upstash Redis + QStash |
+| Integrations | Composio (GitHub OAuth) |
+| Email | ZeptoMail |
 | Testing | Playwright |
 
 ---
@@ -101,11 +115,26 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ### Required Environment Variables
 
 ```
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Google Cloud / Vertex AI
 GOOGLE_CLOUD_PROJECT_ID=
 GOOGLE_CLOUD_CLIENT_EMAIL=
 GOOGLE_CLOUD_PRIVATE_KEY=
+
+# Upstash — rate limiting (Redis) + scheduled posts (QStash)
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+QSTASH_TOKEN=
+QSTASH_CURRENT_SIGNING_KEY=
+QSTASH_NEXT_SIGNING_KEY=
+
+# Composio — GitHub OAuth context
+COMPOSIO_API_KEY=
+COMPOSIO_GITHUB_AUTH_CONFIG_ID=
 ```
 
 ---
