@@ -10,9 +10,8 @@ const mailClient = new SendMailClient({
   token: `Zoho-enczapikey ${ZEPTOMAIL_RAW_TOKEN}`,
 });
 
-// Hardcoded sender - never use personal emails or environment overrides
-const EMAIL_FROM_ADDRESS = 'hello@ozigi.app';
-const EMAIL_FROM_NAME = 'Ozigi';
+const EMAIL_FROM_ADDRESS = process.env.WELCOME_EMAIL_FROM_ADDRESS || 'hello@ozigi.app';
+const EMAIL_FROM_NAME = process.env.WELCOME_EMAIL_FROM_NAME || 'Ozigi';
 
 export async function sendWelcomeEmail(to: string, name: string) {
   // In development, just log the email

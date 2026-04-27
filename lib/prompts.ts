@@ -5,7 +5,6 @@ const JAILBREAK_PATTERNS = [
   /ignore\s+(all\s+)?previous\s+(instructions|directions|prompts)/i,
   /disregard\s+(all\s+)?previous/i,
   /system\s+prompt/i,
-  /banned\s+lexicon/i,
   /bypass\s+rules/i,
   /you\s+are\s+now/i,
   /forget\s+that/i,

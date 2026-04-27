@@ -9,8 +9,8 @@ const mailClient = new SendMailClient({
   token: `Zoho-enczapikey ${process.env.ZEPTOMAIL_API_KEY!}`,
 });
 
-const WELCOME_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || "hello@ozigi.app";
-const WELCOME_FROM_NAME = process.env.EMAIL_FROM_NAME || "Ozigi";
+const WELCOME_FROM_ADDRESS = process.env.WELCOME_EMAIL_FROM_ADDRESS || "hello@ozigi.app";
+const WELCOME_FROM_NAME = process.env.WELCOME_EMAIL_FROM_NAME || "Ozigi";
 
 // Secret to verify webhook calls (optional but recommended)
 const WEBHOOK_SECRET = process.env.WELCOME_EMAIL_WEBHOOK_SECRET;

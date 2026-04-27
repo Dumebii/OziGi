@@ -1,5 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Footer from "../../../components/Footer";
+
+export const metadata: Metadata = {
+  title: "Deep Dives — Ozigi Docs",
+  description:
+    "Architecture and philosophy deep dives. How the Ozigi constraint engine works, why the Banned Lexicon exists, and how we approach human-sounding AI output.",
+  openGraph: {
+    title: "Deep Dives — Ozigi Docs",
+    description: "Architecture and philosophy behind how Ozigi generates content that doesn't sound like AI.",
+    url: "https://ozigi.app/docs/deep-dives",
+    siteName: "Ozigi",
+    type: "website",
+    images: [{ url: "https://ozigi.app/opengraph-image.png", width: 1200, height: 630 }],
+  },
+  alternates: { canonical: "https://ozigi.app/docs/deep-dives" },
+};
 
 const DEEP_DIVES = [
   {

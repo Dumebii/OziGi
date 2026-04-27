@@ -14,7 +14,6 @@ const mailClient = new SendMailClient({
   token: `Zoho-enczapikey ${ZEPTOMAIL_RAW_TOKEN}`
 });
 
-// Hardcoded senders - never use personal emails or environment overrides
 const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'hello@ozigi.app';
 const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'Ozigi';
 const NEWSLETTER_FROM_ADDRESS = process.env.NEWSLETTER_FROM_ADDRESS || 'hello@ozigi.app';

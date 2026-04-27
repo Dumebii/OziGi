@@ -72,21 +72,16 @@ async function generateFromParts(parts: any[], stream = false) {
     },
   });
   
-  // Extract text from response - handle different response formats
-  let responseText = '';
-  if (response.text) {
-    responseText = typeof response.text === 'function' ? response.text() : response.text;
-  } else if (response.candidates?.[0]?.content?.parts?.[0]?.text) {
-    responseText = response.candidates[0].content.parts[0].text;
-  } else if (response.response?.text) {
-    responseText = typeof response.response.text === 'function' ? response.response.text() : response.response.text;
-  } else if (response.response?.candidates?.[0]?.content?.parts?.[0]?.text) {
-    responseText = response.response.candidates[0].content.parts[0].text;
-  } else {
-    console.error('[v0] Unexpected response format:', JSON.stringify(response, null, 2));
+  const responseText =
+    response.text ??
+    response.candidates?.[0]?.content?.parts?.[0]?.text ??
+    '';
+
+  if (!responseText) {
+    console.error('Unexpected response format:', JSON.stringify(response, null, 2));
     throw new Error('Unexpected response format from Vertex AI');
   }
-  
+
   return responseText;
 }
 

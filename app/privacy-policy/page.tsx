@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy — Ozigi",
+  description: "How Ozigi collects, uses, and protects your data. Read our full privacy policy.",
+  alternates: { canonical: "https://ozigi.app/privacy-policy" },
+};
+
 export default function PrivacyPolicy() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-16 text-[#333]">

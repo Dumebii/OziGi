@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service — Ozigi",
+  description: "Ozigi's terms of service. Read the rules governing use of the platform.",
+  alternates: { canonical: "https://ozigi.app/terms" },
+};
+
 export default function Terms() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">

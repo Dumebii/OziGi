@@ -1,4 +1,12 @@
-export default function PrivacyPolicy() {
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cookie Policy — Ozigi",
+  description: "How Ozigi uses cookies and similar tracking technologies on ozigi.app.",
+  alternates: { canonical: "https://ozigi.app/cookie-policy" },
+};
+
+export default function CookiePolicy() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
       <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-8">
