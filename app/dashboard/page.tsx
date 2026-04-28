@@ -33,6 +33,7 @@ import DashboardTour from "@/components/dashboard/DashboardTour";
 import { incrementCampaignGeneration } from "@/lib/plan";
 import { toast } from "sonner";
 import { PLATFORMS } from "@/lib/platforms";
+import { fireConversion } from "@/lib/gtag";
 
 function DashboardContent() {
   const router = useRouter();
@@ -333,6 +334,17 @@ const t = setTimeout(() => setIsTourReady(true), 800);
 return () => clearTimeout(t);
 }
 }, [sessionLoading, planLoading, session]);
+
+// Fire Google Ads conversion when redirected back after a successful checkout
+useEffect(() => {
+  if (searchParams.get("checkout") === "success") {
+    fireConversion();
+    // Clean the param from the URL so it doesn't re-fire on refresh
+    const url = new URL(window.location.href);
+    url.searchParams.delete("checkout");
+    router.replace(url.pathname + url.search, { scroll: false });
+  }
+}, [searchParams, router]);
 
 // Handle persona pre-selection from URL (e.g., from marketplace redirect)
 useEffect(() => {

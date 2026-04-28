@@ -23,7 +23,8 @@
       "Bash(python -c \"from PIL import Image; print\\('pillow ok'\\)\")",
       "Bash(python3 -)",
       "Bash(py --version)",
-      "Bash(py -c \"from PIL import Image; print\\('pillow ok'\\)\")"
+      "Bash(py -c \"from PIL import Image; print\\('pillow ok'\\)\")",
+      "Bash(py -)"
     ]
   }
 }
