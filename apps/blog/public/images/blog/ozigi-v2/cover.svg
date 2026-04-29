@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#070E1C"/>
+      <stop offset="100%" stop-color="#0F1E35"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="72%" cy="50%" r="42%">
+      <stop offset="0%" stop-color="#E8320A" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#E8320A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="20%" cy="80%" r="30%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#0A1628" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- Grid -->
+  <g stroke="#1E293B" stroke-width="1" opacity="0.45">
+    <line x1="580" y1="70"  x2="1160" y2="70"/>
+    <line x1="580" y1="160" x2="1160" y2="160"/>
+    <line x1="580" y1="250" x2="1160" y2="250"/>
+    <line x1="580" y1="340" x2="1160" y2="340"/>
+    <line x1="580" y1="430" x2="1160" y2="430"/>
+    <line x1="580" y1="520" x2="1160" y2="520"/>
+    <line x1="640"  y1="40" x2="640"  y2="590"/>
+    <line x1="730"  y1="40" x2="730"  y2="590"/>
+    <line x1="820"  y1="40" x2="820"  y2="590"/>
+    <line x1="910"  y1="40" x2="910"  y2="590"/>
+    <line x1="1000" y1="40" x2="1000" y2="590"/>
+    <line x1="1090" y1="40" x2="1090" y2="590"/>
+  </g>
+
+  <!-- V1 → V2 migration visual -->
+  <!-- V1 block - monolithic -->
+  <rect x="640" y="100" width="160" height="340" rx="8" fill="#1E293B" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="720" y="128" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="13" font-weight="600" fill="#94A3B8">v1 — Monolith</text>
+  <line x1="650" y1="138" x2="790" y2="138" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="720" y="170" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" fill="#94A3B8">Auth</text>
+  <line x1="650" y1="185" x2="790" y2="185" stroke="#0F1E35" stroke-width="1"/>
+  <text x="720" y="210" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" fill="#94A3B8">Content gen</text>
+  <line x1="650" y1="225" x2="790" y2="225" stroke="#0F1E35" stroke-width="1"/>
+  <text x="720" y="252" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" fill="#94A3B8">Posting</text>
+  <line x1="650" y1="265" x2="790" y2="265" stroke="#0F1E35" stroke-width="1"/>
+  <text x="720" y="292" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" fill="#94A3B8">Scraping</text>
+  <line x1="650" y1="305" x2="790" y2="305" stroke="#0F1E35" stroke-width="1"/>
+  <text x="720" y="334" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" fill="#94A3B8">DB layer</text>
+  <line x1="650" y1="348" x2="790" y2="348" stroke="#0F1E35" stroke-width="1"/>
+  <text x="720" y="376" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" fill="#94A3B8">UI</text>
+  <line x1="650" y1="390" x2="790" y2="390" stroke="#0F1E35" stroke-width="1"/>
+  <text x="720" y="418" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" fill="#94A3B8">Tests</text>
+
+  <!-- Arrow -->
+  <line x1="812" y1="270" x2="858" y2="270" stroke="#E8320A" stroke-width="2"/>
+  <polygon points="858,270 848,264 848,276" fill="#E8320A"/>
+
+  <!-- V2 blocks - modular -->
+  <g>
+    <rect x="870" y="100" width="110" height="36" rx="6" fill="#1E293B" stroke="#E8320A" stroke-width="1.5"/>
+    <text x="925" y="122" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" font-weight="600" fill="#E8320A">Next.js</text>
+
+    <rect x="870" y="148" width="110" height="36" rx="6" fill="#1E293B" stroke="#E8320A" stroke-width="1.5"/>
+    <text x="925" y="170" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" font-weight="600" fill="#E8320A">Supabase</text>
+
+    <rect x="870" y="196" width="110" height="36" rx="6" fill="#1E293B" stroke="#E8320A" stroke-width="1.5"/>
+    <text x="925" y="218" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" font-weight="600" fill="#E8320A">Playwright</text>
+
+    <rect x="870" y="244" width="110" height="36" rx="6" fill="#1E293B" stroke="#E8320A" stroke-width="1.5"/>
+    <text x="925" y="266" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" font-weight="600" fill="#E8320A">Agent layer</text>
+
+    <rect x="870" y="292" width="110" height="36" rx="6" fill="#1E293B" stroke="#E8320A" stroke-width="1.5"/>
+    <text x="925" y="314" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" font-weight="600" fill="#E8320A">CI / CD</text>
+
+    <rect x="870" y="340" width="110" height="36" rx="6" fill="#1E293B" stroke="#E8320A" stroke-width="1.5"/>
+    <text x="925" y="362" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" font-weight="600" fill="#E8320A">Banned Lexicon</text>
+
+    <rect x="870" y="388" width="110" height="36" rx="6" fill="#1E293B" stroke="#E8320A" stroke-width="1.5"/>
+    <text x="925" y="410" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" font-weight="600" fill="#E8320A">Personas</text>
+  </g>
+
+  <text x="720" y="465" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" fill="#94A3B8">Monolith</text>
+  <text x="925" y="444" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="11" fill="#E8320A">Modular</text>
+
+  <!-- Left accent bar -->
+  <rect x="0" y="0" width="6" height="630" fill="#E8320A"/>
+
+  <!-- Category -->
+  <text x="80" y="118" font-family="'DM Sans','Inter',sans-serif" font-size="14" font-weight="600" fill="#E8320A" letter-spacing="3">OZIGI FOCUS  ·  MARCH 2026</text>
+
+  <!-- Title -->
+  <text x="80" y="205" font-family="'DM Sans','Inter','Helvetica Neue',sans-serif" font-size="80" font-weight="800" fill="#FAFAFA">Ozigi</text>
+  <text x="80" y="296" font-family="'DM Sans','Inter','Helvetica Neue',sans-serif" font-size="80" font-weight="800" fill="#E8320A">v2.</text>
+  <text x="80" y="372" font-family="'DM Sans','Inter','Helvetica Neue',sans-serif" font-size="38" font-weight="700" fill="#FAFAFA">The full changelog.</text>
+
+  <!-- Subtitle -->
+  <text x="80" y="418" font-family="'DM Sans','Inter',sans-serif" font-size="22" fill="#94A3B8">From monolithic MVP to production</text>
+  <text x="80" y="448" font-family="'DM Sans','Inter',sans-serif" font-size="22" fill="#94A3B8">SaaS — built with Next.js, Supabase,</text>
+  <text x="80" y="478" font-family="'DM Sans','Inter',sans-serif" font-size="22" fill="#94A3B8">and Playwright.</text>
+
+  <!-- Divider -->
+  <line x1="80" y1="502" x2="460" y2="502" stroke="#1E293B" stroke-width="1"/>
+
+  <!-- Pills -->
+  <rect x="80"  y="516" width="120" height="36" rx="18" fill="#1E293B"/>
+  <text x="140" y="539" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="13" fill="#FAFAFA">5 min read</text>
+  <rect x="212" y="516" width="126" height="36" rx="18" fill="#1E293B"/>
+  <text x="275" y="539" text-anchor="middle" font-family="'DM Sans','Inter',sans-serif" font-size="13" fill="#FAFAFA">Building in public</text>
+
+  <!-- Wordmark -->
+  <text x="80"  y="598" font-family="'DM Sans','Inter',sans-serif" font-size="13" font-weight="700" fill="#E8320A" letter-spacing="3">OZIGI</text>
+  <text x="136" y="598" font-family="'DM Sans','Inter',sans-serif" font-size="13" fill="#94A3B8" opacity="0.7">  ·  blog.ozigi.app</text>
+</svg>
