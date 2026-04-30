@@ -35,21 +35,27 @@ console.log("Auth callback called, code present:", !!code);
     console.log("Exchange result:", { data, error });
 
     if (!error && data.user) {
-      // Fire and forget: send welcome email
-          console.log("User signed in:", data.user.email);
-
       const user = data.user
-      const userEmail = user.email
-      const userName = user.user_metadata?.full_name || userEmail?.split('@')[0] || 'there'
-      
-      fetch(`${origin}/api/send-welcome`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-internal-secret': process.env.CRON_SECRET ?? '',
-        },
-        body: JSON.stringify({ email: userEmail, name: userName }),
-      }).catch(err => console.error('Welcome email fetch error:', err))
+      console.log("User signed in:", user.email);
+
+      // Only send welcome email on first-ever sign-up.
+      // Compare created_at to now — new accounts are created within the last 30s.
+      const createdAt = new Date(user.created_at).getTime();
+      const isNewUser = Date.now() - createdAt < 30_000;
+
+      if (isNewUser) {
+        const userEmail = user.email
+        const userName = user.user_metadata?.full_name || userEmail?.split('@')[0] || 'there'
+
+        fetch(`${origin}/api/send-welcome`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-internal-secret': process.env.CRON_SECRET ?? '',
+          },
+          body: JSON.stringify({ email: userEmail, name: userName }),
+        }).catch(err => console.error('Welcome email fetch error:', err))
+      }
 
       return NextResponse.redirect(`${origin}${next}`)
     }

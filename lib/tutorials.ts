@@ -65,6 +65,28 @@ export const TUTORIALS: Tutorial[] = [
     category: "Features",
     publishedAt: "2026-04-27",
   },
+           {
+    id: "6",
+    slug: "automate-your-content-creation-with-ozigi",
+    title: "Create Human-Sounding LinkedIn Content in Seconds with Ozigi's AI-Powered Content Engine",
+    description: "Discover how to automate your LinkedIn content creation with Ozigi's AI-powered content engine. In this video, we'll show you how to generate engaging, human-sounding LinkedIn posts in seconds, allowing you to maintain an active presence on the platform without spending hours crafting each post. Whether you're a busy professional or a content creator, Ozigi can help you save time and boost your LinkedIn engagement effortlessly.",
+    videoId: "1UiiDYTgMZs",
+    duration: "1:38", // ← update this to the actual video length
+    category: "Workflows",
+    publishedAt: "2026-04-30",
+  },
+
+             {
+    id: "7",
+    slug: "Everything on the Ozigi Dashboard Explained",
+    title: "Learn How To Navigate The Ozigi Dashboard Like A Pro",
+    description: "This video is a complete walkthrough of the Ozigi dashboard, designed to help you navigate and utilize all the features like a pro. From setting up your account to exploring the various tools and functionalities, we'll guide you through every section of the dashboard. Whether you're new to Ozigi or looking to maximize your experience, this tutorial will provide you with the insights you need to make the most out of our AI-powered content engine.",
+    videoId: "e_5pIlv3NYE",
+    duration: "3:00", // ← update this to the actual video length
+    category: "Getting Started",
+    publishedAt: "2026-04-29",
+  },
+
   // Add more tutorials here as you upload videos to YouTube.
   // Copy the block above, increment the id, update the slug, title,
   // description, videoId (the part after ?v= in the YouTube URL),

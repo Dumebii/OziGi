@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 import {
   motion,
@@ -10,7 +9,6 @@ import {
   AnimatePresence,
 } from "framer-motion";
 import { supabase } from "@/lib/supabase/client";
-import AuthModal from "../components/AuthModal";
 
 // ── Platform icons ────────────────────────────────────────────────────────────
 
@@ -99,7 +97,6 @@ function SwipeCard({
   const rotate = useTransform(x, [-200, 0, 200], [-12, 0, 12]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
 
-  // Visual hint labels
   const likeOpacity = useTransform(x, [20, 80], [0, 1]);
   const passOpacity = useTransform(x, [-80, -20], [1, 0]);
 
@@ -110,21 +107,9 @@ function SwipeCard({
   return (
     <motion.div
       className="absolute inset-0"
-      style={{
-        zIndex: 10 - stackIndex,
-        originX: 0.5,
-        originY: 1,
-      }}
-      initial={{
-        scale: stackScale,
-        y: stackOffset,
-        rotate: stackRotate,
-      }}
-      animate={{
-        scale: stackScale,
-        y: stackOffset,
-        rotate: stackRotate,
-      }}
+      style={{ zIndex: 10 - stackIndex, originX: 0.5, originY: 1 }}
+      initial={{ scale: stackScale, y: stackOffset, rotate: stackRotate }}
+      animate={{ scale: stackScale, y: stackOffset, rotate: stackRotate }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <motion.div
@@ -141,7 +126,7 @@ function SwipeCard({
           }
         }}
         whileDrag={{ cursor: "grabbing" }}
-        className={`w-full h-full bg-white rounded-3xl border border-slate-100 shadow-xl p-6 flex flex-col select-none ${isTop ? "cursor-grab" : ""}`}
+        className={`w-full h-full bg-white rounded-3xl border border-slate-100 shadow-2xl p-6 flex flex-col select-none ${isTop ? "cursor-grab" : ""}`}
       >
         {/* Like / Pass labels */}
         {isTop && (
@@ -225,22 +210,19 @@ function SwipeCard({
   );
 }
 
-// ── Hero ──────────────────────────────────────────────────────────────────────
+// ── Hero — card deck only (the page hero layout lives in page.tsx) ─────────────
 
 export default function Hero() {
   const router = useRouter();
-  const [session, setSession] = useState<any>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const prevSession = useRef<any>(null);
   const [cards, setCards] = useState(CARDS);
 
+  /* Redirect to dashboard after sign-in */
+  const prevSession = useRef<any>(null);
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
       prevSession.current = s;
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-      setSession(newSession);
       if (event === "SIGNED_IN" && !prevSession.current) router.push("/dashboard");
       prevSession.current = newSession;
     });
@@ -250,95 +232,25 @@ export default function Hero() {
   const handleSwipe = (_dir: "left" | "right") => {
     setCards((prev) => {
       const [first, ...rest] = prev;
-      return [...rest, first]; // cycle swiped card to the back
+      return [...rest, first];
     });
   };
 
   return (
-    <section className="relative bg-brand-offwhite flex flex-col min-h-[92vh]">
-
-      {/* Main layout */}
-      <div className="flex-1 flex items-center w-full max-w-6xl mx-auto px-6 py-16 md:py-24">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 w-full">
-
-          {/* Left: text */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 space-y-5 text-center lg:text-left"
-          >
-            {/* Verb overline — small, tells you what to do */}
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-slate-400">
-              Create
-            </p>
-
-            {/* Main value prop — this is what dominates */}
-            <h2 className="text-[52px] md:text-[64px] lg:text-[72px] uppercase  font-black text-brand-navy leading-[1.05] tracking-tighter">
-              Content that<br />sounds like you.
-            </h2>
-
-            {/* Punch line — the differentiator, high contrast */}
-            <p className="text-[28px] md:text-[34px] lg:text-[38px] font-black text-brand-red leading-none tracking-tight">
-              Not like AI.
-            </p>
-
-            <p className="text-sm text-slate-500 font-semibold tracking-wide pt-1">
-              AI-powered content engine
-            </p>
-
-            <div className="pt-2">
-              <Link
-                href="/demo"
-                className="inline-flex items-center gap-2 font-black text-sm uppercase tracking-widest text-brand-navy hover:text-brand-red transition-colors group"
-              >
-                Start for free
-                <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* Right: swipeable card deck */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 flex items-center justify-center w-full"
-          >
-            <div
-              className="relative w-full max-w-[340px]"
-              style={{ height: 420 }}
-            >
-              <AnimatePresence>
-                {cards.slice(0, 3).map((card, i) => (
-                  <SwipeCard
-                    key={card.id}
-                    card={card}
-                    isTop={i === 0}
-                    stackIndex={i}
-                    onSwipe={handleSwipe}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-
-        </div>
+    <div className="w-full flex items-center justify-center py-10 pb-16">
+      <div className="relative w-full max-w-[340px] mx-auto" style={{ height: 420 }}>
+        <AnimatePresence>
+          {cards.slice(0, 3).map((card, i) => (
+            <SwipeCard
+              key={card.id}
+              card={card}
+              isTop={i === 0}
+              stackIndex={i}
+              onSwipe={handleSwipe}
+            />
+          ))}
+        </AnimatePresence>
       </div>
-
-      {/* Bottom pill */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.35 }}
-        className="pb-6 flex justify-center"
-      >
-        <div className="bg-brand-navy text-white text-sm font-semibold px-6 py-2.5 rounded-full shadow-sm">
-          Ozigi — Content That Sounds Human
-        </div>
-      </motion.div>
-
-      {isAuthModalOpen && <AuthModal onClose={() => setIsAuthModalOpen(false)} />}
-    </section>
+    </div>
   );
 }

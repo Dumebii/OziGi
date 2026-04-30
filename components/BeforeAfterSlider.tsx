@@ -46,27 +46,30 @@ export default function BeforeAfterSlider() {
   return (
     <div
       ref={sliderRef}
-      className="relative h-48 rounded-3xl overflow-hidden border-2 border-slate-200 cursor-col-resize bg-white shadow-xl"
+      className="relative h-48 rounded-2xl overflow-hidden cursor-col-resize shadow-2xl"
+      style={{ border: "1px solid rgba(255,255,255,0.12)" }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleMouseDown}
     >
       {/* Before Content (Full width base) */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-50 to-slate-100 p-6 md:p-8 flex flex-col justify-center overflow-hidden">
-        <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">
+      <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-center overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #0d1e35 0%, #111d30 100%)" }}>
+        <div className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: "rgba(100,116,139,0.75)" }}>
           Generic AI Output
         </div>
-        <p className="text-sm text-slate-600 leading-relaxed">
+        <p className="text-sm leading-relaxed" style={{ color: "rgba(148,163,184,0.7)" }}>
           The systematic approach to infrastructure optimization requires comprehensive evaluation of multiple interconnected components and operational efficiency metrics across diverse organizational structures...
         </p>
       </div>
 
       {/* After Content (Revealed from right) */}
       <div
-        className="absolute inset-0 bg-white p-6 md:p-8 flex flex-col justify-center overflow-hidden transition-all"
+        className="absolute inset-0 p-6 md:p-8 flex flex-col justify-center overflow-hidden transition-all"
         style={{
           width: `${sliderPosition}%`,
           right: 0,
           left: "auto",
+          background: "#ffffff",
         }}
       >
         <div className="text-xs font-black uppercase tracking-widest text-brand-red mb-3">

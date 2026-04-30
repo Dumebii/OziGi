@@ -83,14 +83,14 @@ const DOUBLED = [...COMPANIES, ...COMPANIES];
 
 export default function SocialProof() {
   return (
-    <section className="py-10 border-t border-slate-100 bg-brand-offwhite overflow-hidden">
+    <section className="py-10 overflow-hidden">
       <div className="max-w-5xl mx-auto px-6 mb-7">
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center text-[10px] font-black uppercase tracking-[0.22em] text-slate-300"
+          className="text-center text-[10px] font-black uppercase tracking-[0.22em] text-slate-600"
         >
           Trusted by teams building in public
         </motion.p>
@@ -98,9 +98,9 @@ export default function SocialProof() {
 
       {/* Scrolling marquee — no hover pause, continuous */}
       <div className="relative w-full overflow-hidden">
-        {/* Fade edges */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-r from-brand-offwhite to-transparent" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-l from-brand-offwhite to-transparent" />
+        {/* Fade edges — match the navyDeep wrapper (#071020) */}
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 z-10" style={{ background: "linear-gradient(to right, #071020, transparent)" }} />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 z-10" style={{ background: "linear-gradient(to left, #071020, transparent)" }} />
 
         <div
           className="flex items-center gap-14 animate-scroll whitespace-nowrap"

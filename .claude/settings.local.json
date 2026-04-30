@@ -24,7 +24,15 @@
       "Bash(python3 -)",
       "Bash(py --version)",
       "Bash(py -c \"from PIL import Image; print\\('pillow ok'\\)\")",
-      "Bash(py -)"
+      "Bash(py -)",
+      "Bash(gh repo *)",
+      "Bash(curl -s https://api.github.com/repos/Leonxlnx/taste-skill)",
+      "Bash(gh api *)",
+      "Bash(python3 -c \"import json,sys; [print\\(i['path']\\) for i in json.load\\(sys.stdin\\)['tree'] if i['type']=='blob']\")",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "WebFetch(domain:nchiko.ozigi.app)"
     ]
   }
 }
