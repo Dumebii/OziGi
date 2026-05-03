@@ -168,7 +168,7 @@ export default function Home() {
 
         {/* ─────────────────────────────────────────────────────────────── */}
         {/* HERO — split: headline left · demo right                        */}
-        {/* ─────────────────────────────────────────────────────────────── */}
+        {/* ────────────────────────��────────────────────────────────────── */}
         <section
           ref={heroRef}
           className="relative overflow-hidden min-h-[100dvh] flex items-center"
@@ -265,23 +265,42 @@ export default function Home() {
                 </MagneticBtn>
               </motion.div>
 
-              {/* Launch badges */}
+              {/* Launch badges — horizontal scroll */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.65 }}
-                className="flex flex-wrap items-center gap-5"
+                className="w-full"
               >
-                <a href="https://www.betterlaunch.co" target="_blank" rel="noopener noreferrer"
-                  className="opacity-30 hover:opacity-70 transition-opacity duration-300 grayscale hover:grayscale-0"
-                  aria-label="Featured on Better Launch">
-                  <img src="https://www.betterlaunch.co/badge.svg" alt="Featured on Better Launch" width={140} height={32} className="h-7 w-auto" />
-                </a>
-                <a href="https://www.scrolllaunch.com/products/ozigi?utm_source=badge&utm_medium=embed&utm_campaign=ozigi&ref=scrolllaunch"
-                  target="_blank" rel="noopener noreferrer"
-                  className="opacity-30 hover:opacity-70 transition-opacity duration-300 grayscale hover:grayscale-0">
-                  <img src="https://www.scrolllaunch.com/api/badge/ozigi" alt="Featured on ScrollLaunch" width={220} height={48} loading="lazy" className="h-7 w-auto" />
-                </a>
+                <div className="overflow-x-auto scrollbar-hide">
+                  <div className="flex items-center gap-6 pb-2 min-w-min">
+                    <a href="https://www.betterlaunch.co" target="_blank" rel="noopener noreferrer"
+                      className="opacity-30 hover:opacity-70 transition-opacity duration-300 grayscale hover:grayscale-0 flex-shrink-0"
+                      aria-label="Featured on Better Launch">
+                      <img src="https://www.betterlaunch.co/badge.svg" alt="Featured on Better Launch" width={140} height={32} className="h-7 w-auto" />
+                    </a>
+                    <a href="https://www.scrolllaunch.com/products/ozigi?utm_source=badge&utm_medium=embed&utm_campaign=ozigi&ref=scrolllaunch"
+                      target="_blank" rel="noopener noreferrer"
+                      className="opacity-30 hover:opacity-70 transition-opacity duration-300 grayscale hover:grayscale-0 flex-shrink-0">
+                      <img src="https://www.scrolllaunch.com/api/badge/ozigi" alt="Featured on ScrollLaunch" width={220} height={48} loading="lazy" className="h-7 w-auto" />
+                    </a>
+                    <a href="https://uno.directory" target="_blank" rel="noopener"
+                      className="opacity-30 hover:opacity-70 transition-opacity duration-300 grayscale hover:grayscale-0 flex-shrink-0"
+                      aria-label="Listed on Uno Directory">
+                      <img src="https://uno.directory/uno-directory.svg" alt="Listed on Uno Directory" width={120} height={30} className="h-7 w-auto" />
+                    </a>
+                    <a href="https://wired.business" target="_blank" rel="noopener"
+                      className="opacity-30 hover:opacity-70 transition-opacity duration-300 grayscale hover:grayscale-0 flex-shrink-0"
+                      aria-label="Featured on Wired Business">
+                      <img src="https://wired.business/badge1-white.svg" alt="Featured on Wired Business" width={200} height={54} className="h-7 w-auto" />
+                    </a>
+                    <a href="https://navs.site" target="_blank" rel="noopener"
+                      className="opacity-30 hover:opacity-70 transition-opacity duration-300 text-sm px-3 py-1 rounded-md border border-current flex-shrink-0"
+                      title="AI Sites | 2026">
+                      AI Nav Site
+                    </a>
+                  </div>
+                </div>
               </motion.div>
             </div>
 
@@ -426,7 +445,7 @@ export default function Home() {
 
         {/* ─────────────────────────────────────────────────────────────── */}
         {/* STATS                                                           */}
-        {/* ─────────────────────────────────────────────────────────────── */}
+        {/* ─────────────��───────────────────────────────────────────────── */}
         <section className="relative py-16 md:py-20"
           style={{ background: C.navy, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
           <div className="max-w-4xl mx-auto px-8 md:px-14">
