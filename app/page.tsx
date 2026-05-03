@@ -168,7 +168,7 @@ export default function Home() {
 
         {/* ─────────────────────────────────────────────────────────────── */}
         {/* HERO — split: headline left · demo right                        */}
-        {/* ────────────────────────��────────────────────────────────────── */}
+        {/* ────────────────────────���────────────────────────────────────── */}
         <section
           ref={heroRef}
           className="relative overflow-hidden min-h-[100dvh] flex items-center"
@@ -302,6 +302,11 @@ export default function Home() {
                     className="opacity-30 hover:opacity-70 transition-opacity duration-300 grayscale hover:grayscale-0 flex-shrink-0"
                     aria-label="Featured on Good AI Tools">
                     <img src="https://goodaitools.com/assets/images/badge-dark.png" alt="Badge" height={54} className="h-7 w-auto" />
+                  </a>
+                  <a href="https://www.sideprojectors.com/project/79347/ozigi-ai-content-generator-that-sounds-human" target="_blank" rel="noopener"
+                    className="opacity-30 hover:opacity-70 transition-opacity duration-300 grayscale hover:grayscale-0 flex-shrink-0"
+                    aria-label="Check out Ozigi on SideProjectors">
+                    <img src="https://www.sideprojectors.com/img/badges/badge_show_black.png" alt="Check out Ozigi — AI Content Generator That Sounds Human at @SideProjectors" className="h-7 w-auto" />
                   </a>
                   <a href="https://navs.site" target="_blank" rel="noopener"
                     className="opacity-30 hover:opacity-70 transition-opacity duration-300 text-sm px-3 py-1 rounded-md border border-current flex-shrink-0"
