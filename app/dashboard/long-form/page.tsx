@@ -1065,30 +1065,29 @@ function BriefTab() {
             {briefText && !isLoading && (
               <button
                 onClick={handleCopyBrief}
-                            className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-strong text-accent-foreground rounded-lg text-sm font-bold transition-colors"
-                          >
-                            <Copy className="w-4 h-4" />
-                            Copy All
-                          </button>
-                        </div>
+                className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-strong text-accent-foreground rounded-lg text-sm font-bold transition-colors"
+              >
+                <Copy className="w-4 h-4" />
+                Copy All
+              </button>
+            )}
+          </div>
 
-                        <article
-                          ref={articleContentRef}
-                          className="px-8 py-8 lg:px-12
-                            prose prose-slate dark:prose-invert max-w-none
-                            prose-headings:font-black prose-headings:tracking-tight prose-headings:text-foreground
-                            prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border
+          <div
+            className="px-8 py-8 lg:px-12
+              prose prose-slate dark:prose-invert max-w-none
+              prose-headings:font-black prose-headings:tracking-tight prose-headings:text-foreground
+              prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border
               prose-h3:text-base prose-h3:mt-5 prose-h3:mb-2
               prose-p:text-foreground prose-p:leading-relaxed
               prose-li:text-foreground prose-li:leading-relaxed
               prose-strong:text-foreground
               prose-a:text-accent prose-a:no-underline hover:prose-a:underline
-                            prose-code:bg-surface-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:text-foreground
-            ">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {briefText}
-              </ReactMarkdown>
-            </div>
+              prose-code:bg-surface-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:text-foreground"
+          >
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {briefText}
+            </ReactMarkdown>
           </div>
 
           {/* Footer copy button (repeated for convenience on long briefs) */}
