@@ -10,7 +10,13 @@ interface ThemeToggleProps {
   variant?: "icon" | "labelled";
 }
 
-export default function ThemeToggle({
+export function ThemeToggle(props: ThemeToggleProps) {
+  return <ThemeToggleInner {...props} />;
+}
+
+export default ThemeToggle;
+
+function ThemeToggleInner({
   className = "",
   variant = "icon",
 }: ThemeToggleProps) {

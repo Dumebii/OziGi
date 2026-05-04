@@ -281,3 +281,10 @@ entire sentence.
 - No ALL CAPS for emphasis.
 - Use contractions naturally.
 `.trim();
+
+/**
+ * Long-form variant — same rules today. Kept as a named alias so future
+ * divergence (e.g. allowing more sustained transitions in 2k-word essays
+ * than in 200-word social posts) is a one-line edit at the source.
+ */
+export const ANTI_AI_RULES_LONGFORM = ANTI_AI_RULES;
