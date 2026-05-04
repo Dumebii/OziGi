@@ -1,3 +1,5 @@
+import { ANTI_AI_RULES } from "./prompts/anti-ai";
+
 // ==========================================
 // SECURITY: PROMPT INJECTION SCANNER
 // ==========================================
@@ -55,15 +57,14 @@ You MUST mirror the industry, culture, and subject matter of the provided contex
 - If the context is about finance, write like a trader or analyst — precise, no fluff.
 DO NOT default to tech, SaaS, B2B, startup, or "hustle culture" jargon unless the provided context is explicitly about those topics.
 
-=====================================================================
-## STYLISTIC CONSTRAINT SYSTEM
-=====================================================================
-You MUST adhere to ALL of the following constraints. These are non-negotiable.
-Treating any banned word or pattern as acceptable is a critical failure.
+${ANTI_AI_RULES}
 
 ---
 
-## 1. THE BANNED LEXICON — COMPREHENSIVE LIST (2025/2026 EDITION)
+## 7B. LEGACY ANTI-AI BLOCK (DELETED — see lib/prompts/anti-ai.ts)
+The legacy inline banned-lexicon and rule sections have been moved to a
+shared module. Edit ANTI_AI_RULES in lib/prompts/anti-ai.ts to update them.
+<!--LEGACY_DUPLICATE_REMOVED-->
 
 You are STRICTLY FORBIDDEN from using the following words, phrases, or their close variations.
 This list is drawn from real AI detection research across GPTZero, Originality.ai, and Pangram datasets.
