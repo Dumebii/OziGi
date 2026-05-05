@@ -31,11 +31,11 @@ const C = {
   cardS:    "#F8FAFC",   // slate-tinted card
   cardR:    "#FFF5F3",   // red-tinted card
   cardG:    "#F0FDF4",   // green-tinted card
-  border:   "rgba(15,23,42,0.08)",   // navy/8 — subtle on light
-  borderHi: "rgba(15,23,42,0.15)",   // navy/15
+  border:   "rgba(10,22,40,0.10)",   // navy/10 — subtle on light
+  borderHi: "rgba(10,22,40,0.18)",   // navy/18
   white:    "#0A1628",   // text — brand navy (inverted role)
-  muted:    "rgba(51,65,85,0.85)",   // slate-700/85 — muted text
-  dim:      "rgba(100,116,139,0.75)",// slate-500 — dim text
+  muted:    "rgba(10,22,40,0.78)",   // navy/78 — muted text, brand-aligned & readable
+  dim:      "rgba(10,22,40,0.55)",   // navy/55 — dim text, still readable
   red:      "#E8320A",
   redSoft:  "rgba(232,50,10,0.10)",
   redGlow:  "rgba(232,50,10,0.20)",
@@ -200,10 +200,10 @@ export default function Home() {
           <div className="absolute top-0 left-0 right-0 h-px"
             style={{ background: `linear-gradient(to right, transparent, ${C.red}50, transparent)` }} />
 
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-24 flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
+          <div className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-12 lg:px-16 py-20 md:py-24 flex flex-col-reverse gap-12 md:gap-16">
 
-            {/* ── Left col: headline + CTAs ───────────────────────────── */}
-            <div className="flex-1 max-w-xl">
+            {/* ── Headline + CTAs (full width, below demo) ────────────── */}
+            <div className="w-full max-w-4xl">
               {/* Headline */}
               <motion.div style={{ y: heroParallaxY }}>
               <motion.h1
@@ -316,11 +316,12 @@ export default function Home() {
             </div>
 
             {/* ── Right col: demo widget ─��────────────────────────────── */}
+            {/* Demo widget — full attention, top of fold */}
             <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.75, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="flex-1 w-full max-w-lg lg:max-w-none"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-2xl mx-auto"
             >
               {/* Outer accent frame */}
               <div className="relative">

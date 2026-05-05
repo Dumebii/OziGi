@@ -31,9 +31,9 @@
   --surface-3: #E2E8F0;          /* slate-200 */
   --border: #E2E8F0;             /* slate-200 */
   --border-strong: #CBD5E1;      /* slate-300 */
-  --foreground: #0A1628;         /* brand-navy — rich, intentional */
-  --foreground-muted: #334155;   /* brand-slate — secondary text */
-  --foreground-subtle: #64748B;  /* slate-500 — hints/placeholders */
+  --foreground: #0A1628;         /* brand-navy — primary text */
+  --foreground-muted: #1E2A40;   /* near-navy — secondary text, still highly readable */
+  --foreground-subtle: #475569;  /* slate-600 — hints/placeholders only */
   --accent: #E8320A;             /* brand-red */
   --accent-strong: #C4290A;      /* brand-red darkened for hover */
   --accent-foreground: #FFFFFF;

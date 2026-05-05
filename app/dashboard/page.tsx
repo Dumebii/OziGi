@@ -526,7 +526,7 @@ useEffect(() => {
           <button
             data-tour="copilot-button"
             onClick={() => setIsCopilotOpen(true)}
-            className="fixed bottom-6 right-6 z-40 bg-indigo-600 text-white p-4 rounded-full shadow-2xl hover:bg-indigo-700 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+            className="fixed bottom-6 right-6 z-40 bg-accent text-white p-4 rounded-full shadow-2xl hover:bg-accent-strong transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
             aria-label="Open Copilot"
           >
             <span className="text-2xl">✨</span>
@@ -544,12 +544,12 @@ useEffect(() => {
         <div className="fixed bottom-6 right-6 z-40 group">
           <button
             disabled
-            className="bg-slate-400 text-white p-4 rounded-full shadow-2xl cursor-not-allowed flex items-center justify-center opacity-50"
+            className="bg-foreground-subtle text-white p-4 rounded-full shadow-2xl cursor-not-allowed flex items-center justify-center opacity-50"
             aria-label="Copilot unavailable"
           >
             <span className="text-2xl">✨</span>
           </button>
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-brand-navy text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
             Upgrade to Organization to use Copilot
           </div>
         </div>

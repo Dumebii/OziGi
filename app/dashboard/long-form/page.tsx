@@ -393,7 +393,7 @@ function LongFormContent() {
                     disabled={tab === "output" && !article}
                     className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-colors disabled:opacity-50 flex items-center gap-2 ${
                       activeTab === tab
-                        ? "bg-surface text-white"
+                        ? "bg-brand-navy text-white border border-brand-navy"
                         : "bg-surface text-foreground-muted hover:bg-surface-2 border border-border"
                     }`}
                   >
@@ -585,7 +585,7 @@ function LongFormContent() {
                   <button
                     onClick={handleGenerate}
                     disabled={isGenerating || context.length < 50}
-                    className="w-full bg-accent text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-accent text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-accent-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isGenerating ? (
                       <>
@@ -881,9 +881,9 @@ function ArticleMarkdown({ content }: { content: string }) {
 
             // Highlighted code block
             return (
-              <div className="my-4 rounded-lg overflow-hidden border border-slate-800">
-                <div className="px-3 py-1.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-foreground-subtle">
+              <div className="my-4 rounded-lg overflow-hidden border border-brand-navy/20">
+                <div className="px-3 py-1.5 bg-brand-navy border-b border-brand-navy/30 flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/70">
                     {lang || "code"}
                   </span>
                 </div>
@@ -895,7 +895,7 @@ function ArticleMarkdown({ content }: { content: string }) {
                     padding: "1rem",
                     fontSize: "0.8rem",
                     lineHeight: 1.55,
-                    background: "#0f172a",
+                    background: "#0A1628",
                   }}
                   codeTagProps={{ style: { fontFamily: "var(--font-mono, ui-monospace, monospace)" } }}
                 >
@@ -1013,7 +1013,7 @@ function BriefTab() {
           <button
             onClick={handleGenerate}
             disabled={isLoading || !topic.trim()}
-            className="flex-1 bg-accent text-white py-3.5 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 bg-accent text-white py-3.5 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-accent-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
