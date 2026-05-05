@@ -18,36 +18,37 @@ import PricingCards from "../components/PricingCards";
 import BeforeAfterSlider from "../components/BeforeAfterSlider";
 import { LandingDemoWidget } from "../components/LandingDemoWidget";
 import SocialProof from "../components/SocialProof";
+import PeerlistReviews from "../components/PeerlistReviews";
 import { supabase } from "@/lib/supabase/client";
 
-/* ─── Palette — brand navy base ───────────────────────────────────────── */
+/* ─── Palette — light slate base with brand navy + red ────────────────── */
 const C = {
-  navy:     "#0A1628",   // brand navy base
-  navyDeep: "#071020",   // 1 shade darker — section contrast
-  navyMid:  "#0d1e35",   // 1 shade lighter — alternate surface
-  card:     "#0f2038",   // card surface
-  cardB:    "#102240",   // blue-tinted card
-  cardS:    "#111d30",   // slate-tinted card
-  cardR:    "#200d0a",   // red-tinted card
-  cardG:    "#0a1e16",   // green-tinted card (subtle)
-  border:   "rgba(255,255,255,0.08)",
-  borderHi: "rgba(255,255,255,0.15)",
-  white:    "#ffffff",
-  muted:    "rgba(148,163,184,0.9)",
-  dim:      "rgba(100,116,139,0.75)",
+  navy:     "#F8FAFC",   // bg — light slate-50 (very airy)
+  navyDeep: "#F1F5F9",   // slate-100 — section contrast
+  navyMid:  "#FFFFFF",   // pure white — lighter alt surface
+  card:     "#FFFFFF",   // pure white cards
+  cardB:    "#F0F7FF",   // blue-tinted card
+  cardS:    "#F8FAFC",   // slate-tinted card
+  cardR:    "#FFF5F3",   // red-tinted card
+  cardG:    "#F0FDF4",   // green-tinted card
+  border:   "rgba(15,23,42,0.08)",   // navy/8 — subtle on light
+  borderHi: "rgba(15,23,42,0.15)",   // navy/15
+  white:    "#0A1628",   // text — brand navy (inverted role)
+  muted:    "rgba(51,65,85,0.85)",   // slate-700/85 — muted text
+  dim:      "rgba(100,116,139,0.75)",// slate-500 — dim text
   red:      "#E8320A",
-  redSoft:  "rgba(232,50,10,0.18)",
-  redGlow:  "rgba(232,50,10,0.28)",
+  redSoft:  "rgba(232,50,10,0.10)",
+  redGlow:  "rgba(232,50,10,0.20)",
 };
 
 /* ─── Reusable SVG patterns ───────────────────────────────────────────── */
-function DiagLines({ id, opacity = 0.04 }: { id: string; opacity?: number }) {
+function DiagLines({ id, opacity = 0.06 }: { id: string; opacity?: number }) {
   return (
     <div className="absolute inset-0 pointer-events-none" aria-hidden="true" style={{ opacity }}>
       <svg className="w-full h-full" preserveAspectRatio="xMidYMid slice">
         <defs>
           <pattern id={id} width="32" height="32" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
-            <line x1="0" y1="0" x2="0" y2="32" stroke="white" strokeWidth="0.7" />
+            <line x1="0" y1="0" x2="0" y2="32" stroke="#0A1628" strokeWidth="0.7" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill={`url(#${id})`} />
@@ -56,13 +57,13 @@ function DiagLines({ id, opacity = 0.04 }: { id: string; opacity?: number }) {
   );
 }
 
-function DotGrid({ id, opacity = 0.055 }: { id: string; opacity?: number }) {
+function DotGrid({ id, opacity = 0.08 }: { id: string; opacity?: number }) {
   return (
     <div className="absolute inset-0 pointer-events-none" aria-hidden="true" style={{ opacity }}>
       <svg className="w-full h-full" preserveAspectRatio="xMidYMid slice">
         <defs>
           <pattern id={id} width="22" height="22" patternUnits="userSpaceOnUse">
-            <circle cx="11" cy="11" r="0.85" fill="white" />
+            <circle cx="11" cy="11" r="0.85" fill="#0A1628" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill={`url(#${id})`} />
@@ -71,14 +72,14 @@ function DotGrid({ id, opacity = 0.055 }: { id: string; opacity?: number }) {
   );
 }
 
-function CrossGrid({ id, opacity = 0.035 }: { id: string; opacity?: number }) {
+function CrossGrid({ id, opacity = 0.05 }: { id: string; opacity?: number }) {
   return (
     <div className="absolute inset-0 pointer-events-none" aria-hidden="true" style={{ opacity }}>
       <svg className="w-full h-full" preserveAspectRatio="xMidYMid slice">
         <defs>
           <pattern id={id} width="20" height="20" patternUnits="userSpaceOnUse">
-            <line x1="0" y1="10" x2="20" y2="10" stroke="white" strokeWidth="0.45" />
-            <line x1="10" y1="0" x2="10" y2="20" stroke="white" strokeWidth="0.45" />
+            <line x1="0" y1="10" x2="20" y2="10" stroke="#0A1628" strokeWidth="0.45" />
+            <line x1="10" y1="0" x2="10" y2="20" stroke="#0A1628" strokeWidth="0.45" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill={`url(#${id})`} />
@@ -120,8 +121,8 @@ function MagneticBtn({ onClick, children, variant = "red" }: {
       style={{
         x: sx, y: sy,
         ...(variant === "red"
-          ? { background: `linear-gradient(135deg, ${C.red} 0%, #c52000 100%)`, boxShadow: `0 8px 32px ${C.redGlow}` }
-          : { background: "rgba(255,255,255,0.08)", border: `1px solid ${C.borderHi}` }),
+          ? { background: `linear-gradient(135deg, ${C.red} 0%, #c52000 100%)`, boxShadow: `0 8px 32px ${C.redGlow}`, color: "#FFFFFF" }
+          : { background: "rgba(15,23,42,0.06)", border: `1px solid ${C.borderHi}`, color: C.white }),
       }}
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
@@ -132,8 +133,8 @@ function MagneticBtn({ onClick, children, variant = "red" }: {
       onClick={onClick}
       whileHover={variant === "red"
         ? { boxShadow: "0 14px 52px rgba(232,50,10,0.5)" } as any
-        : { background: "rgba(255,255,255,0.14)" } as any}
-      className="px-7 py-3.5 rounded-xl text-sm font-black uppercase tracking-widest text-white transition-colors duration-300 active:scale-95 cursor-pointer"
+        : { background: "rgba(15,23,42,0.08)" } as any}
+      className="px-7 py-3.5 rounded-xl text-sm font-black uppercase tracking-widest text-inherit transition-colors duration-300 active:scale-95 cursor-pointer"
     >
       {children}
     </motion.button>
@@ -162,17 +163,17 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="font-sans text-white min-h-[100dvh] flex flex-col" style={{ background: C.navy }}>
+    <div className="font-sans min-h-[100dvh] flex flex-col" style={{ background: C.navy, color: C.white }}>
       <Header session={session} onSignIn={() => setIsAuthModalOpen(true)} />
       <main className="flex-1">
 
-        {/* ─────────────────────────────────────────────────────────────── */}
+        {/* ──────────────────────────────────────────────────────����������──────── */}
         {/* HERO — split: headline left · demo right                        */}
-        {/* ────────────────────────���────────────────────────────────────── */}
+        {/* ────────────────────────����────────────────────────────────────── */}
         <section
           ref={heroRef}
           className="relative overflow-hidden min-h-[100dvh] flex items-center"
-          style={{ background: `linear-gradient(160deg, ${C.navyDeep} 0%, ${C.navy} 55%, ${C.navyMid} 100%)` }}
+          style={{ background: `linear-gradient(160deg, ${C.navyDeep} 0%, ${C.navy} 55%, ${C.navyMid} 100%)`, color: C.white }}
           onMouseMove={(e) => {
             const r = heroRef.current?.getBoundingClientRect();
             if (r) { mouseX.set(e.clientX - r.left); mouseY.set(e.clientY - r.top); }
@@ -199,44 +200,31 @@ export default function Home() {
           <div className="absolute top-0 left-0 right-0 h-px"
             style={{ background: `linear-gradient(to right, transparent, ${C.red}50, transparent)` }} />
 
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-24 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-24 flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
 
-            {/* ── Left col: headline ──────────────────────────────────── */}
+            {/* ── Left col: headline + CTAs ───────────────────────────── */}
             <div className="flex-1 max-w-xl">
-              {/* Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45 }}
-                className="mb-8"
-              >
-                <span className="inline-flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.22em] px-5 py-2.5 rounded-full"
-                  style={{ background: C.redSoft, border: `1px solid rgba(232,50,10,0.3)`, color: C.red }}>
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: C.red }} />
-                  Live demo — no sign-up required
-                </span>
-              </motion.div>
-
-              {/* Headline — spring word animation + parallax */}
+              {/* Headline */}
               <motion.div style={{ y: heroParallaxY }}>
-                <motion.h1
-                  initial="hidden"
-                  animate="visible"
-                  variants={staggerFast}
-                  className="font-black italic uppercase tracking-tighter text-white leading-[0.93] mb-7"
-                  style={{ fontSize: "clamp(2.6rem, 5vw, 4.75rem)" }}
-                >
-                  {["Content", "that sounds", "like"].map((line, i) => (
-                    <motion.span key={i} variants={springUp} className="block">{line}</motion.span>
-                  ))}
-                  <motion.span variants={springUp} className="block">
-                    <span
-                      className="animate-gradient-x bg-clip-text text-transparent bg-[length:220%_100%]"
-                      style={{ backgroundImage: `linear-gradient(90deg, ${C.red}, #ff7b3d, ${C.red})` }}
-                    >a person</span>
-                  </motion.span>
-                  <motion.span variants={springUp} className="block">wrote it.</motion.span>
-                </motion.h1>
+              <motion.h1
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                className="text-5xl md:text-7xl lg:text-[5.5rem] font-black italic uppercase tracking-tighter leading-[0.92] mb-5"
+              >
+                Automate Content<br />
+                <span className="relative inline-block">
+                  Creation
+                  <motion.span
+                    className="absolute left-0 -bottom-0.5 h-1 rounded-full origin-left"
+                    style={{ background: C.red }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.5, delay: 0.55, ease: "easeOut" }}
+                  />
+                </span>{" "}
+                <span style={{ color: C.red }}>Without ChatGPT&apos;s Voice.</span>
+              </motion.h1>
               </motion.div>
 
               <motion.p
@@ -246,11 +234,9 @@ export default function Home() {
                 className="text-base md:text-lg font-medium leading-relaxed mb-8 max-w-md"
                 style={{ color: C.muted }}
               >
-                Paste a URL, drop some notes, or type a rough idea. Get a 3-day campaign
-                for X, LinkedIn, Discord, and email. Done in 20 seconds.
+                Blog posts, newsletters, LinkedIn, X threads — in your voice, not AI&apos;s.
               </motion.p>
 
-              {/* Ghost CTAs (secondary — demo is the primary CTA) */}
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -369,13 +355,6 @@ export default function Home() {
         </section>
 
         {/* ─────────────────────────────────────────────────────────────── */}
-        {/* SOCIAL PROOF                                                    */}
-        {/* ─────────────────────────────────────────────────────────────── */}
-        <div style={{ background: C.navyDeep, borderTop: `1px solid ${C.border}` }}>
-          <SocialProof />
-        </div>
-
-        {/* ─────────────────────────────────────────────────────────────── */}
         {/* OUTPUT SHOWCASE — fixed bg to match brand navy                  */}
         {/* ─────────────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden" style={{ background: C.navy, borderTop: `1px solid ${C.border}` }}>
@@ -406,12 +385,12 @@ export default function Home() {
           <div className="relative z-10 max-w-6xl mx-auto px-8 md:px-14">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.1 }} variants={fadeUp}
               className="text-center mb-20">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>Process</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>How it works</p>
               <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.95]">
-                From chaos<br />to clarity
+                Input. Generate.<br />Publish.
               </h2>
               <p className="text-base md:text-lg font-medium mt-5 max-w-md mx-auto" style={{ color: C.muted }}>
-                Your voice. Your ideas. Zero AI aftertaste.
+                Blog posts, newsletters, social content — all from one workflow.
               </p>
             </motion.div>
 
@@ -426,15 +405,15 @@ export default function Home() {
                 },
                 {
                   n: "02", bg: C.card,
-                  title: "Your voice applies",
-                  desc: "Set your persona once. Technical depth, tone, pacing, banned AI phrases — locked in so every post sounds like you at your most articulate.",
-                  tags: ["Persona", "Tone", "Banned lexicon"],
+                  title: "Pick your format",
+                  desc: "Blog post, email newsletter, LinkedIn carousel, X thread, or technical brief. Your voice applies to every format automatically.",
+                  tags: ["Blog", "Newsletter", "Social", "Briefs"],
                 },
                 {
                   n: "03", bg: C.cardS,
-                  title: "Ship everywhere",
-                  desc: "Post to X, LinkedIn, Discord, email, or Slack. One click. Your audience gets content that sounds human — because it is.",
-                  tags: ["X", "LinkedIn", "Discord", "Slack"],
+                  title: "Publish or send",
+                  desc: "Post directly to X and LinkedIn, send newsletters to your list, or export for your CMS. One workflow for everything.",
+                  tags: ["Direct post", "Email send", "Export"],
                 },
               ].map((step) => (
                 <motion.div key={step.n} variants={springUp}
@@ -443,7 +422,7 @@ export default function Home() {
                   style={{ background: step.bg, border: `1px solid ${C.border}` }}>
                   {/* Watermark number */}
                   <span className="absolute right-3 bottom-0 text-[6.5rem] font-black leading-none select-none pointer-events-none"
-                    style={{ color: "rgba(255,255,255,0.035)" }}>{step.n}</span>
+                    style={{ color: "rgba(15,23,42,0.04)" }}>{step.n}</span>
                   {/* Hover top glow */}
                   <div className="absolute top-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     style={{ background: `linear-gradient(to right, ${C.red}, transparent)` }} />
@@ -459,7 +438,7 @@ export default function Home() {
                   <div className="flex flex-wrap gap-2 relative z-10">
                     {step.tags.map((t) => (
                       <span key={t} className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded"
-                        style={{ background: "rgba(255,255,255,0.05)", color: C.dim }}>{t}</span>
+                        style={{ background: "rgba(15,23,42,0.05)", color: C.dim }}>{t}</span>
                     ))}
                   </div>
                 </motion.div>
@@ -469,17 +448,31 @@ export default function Home() {
         </section>
 
         {/* ─────────────────────────────────────────────────────────────── */}
+        {/* SOCIAL PROOF                                                    */}
+        {/* ─────────────────────────────────────────────────────────────── */}
+        <div style={{ background: C.navyDeep, borderTop: `1px solid ${C.border}` }}>
+          <SocialProof />
+        </div>
+
+        {/* ─────────────────────────────────────────────────────────────── */}
+        {/* PEERLIST REVIEWS — real user feedback on output quality         */}
+        {/* ─────────────────────────────────────────────────────────────── */}
+        <div style={{ background: C.navyDeep, borderTop: `1px solid ${C.border}` }}>
+          <PeerlistReviews />
+        </div>
+
+        {/* ─────────────────────────────────────────────────────────────── */}
         {/* STATS                                                           */}
-        {/* ─────────────��───────────────────────────────────────────────── */}
+        {/* ─────────────────────────────────────────────────────────────── */}
         <section className="relative py-16 md:py-20"
           style={{ background: C.navy, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
           <div className="max-w-4xl mx-auto px-8 md:px-14">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={stagger}
               className="grid grid-cols-3 gap-6 text-center">
               {[
-                { val: "20s",  label: "Campaign generated",  sub: "from URL or raw notes" },
-                { val: "5",    label: "Publishing channels", sub: "X · LinkedIn · Discord · Email · Slack" },
-                { val: "3",    label: "Days per campaign",   sub: "platform-native formats" },
+                { val: "6",    label: "Content formats",     sub: "Blog · Newsletter · LinkedIn · X · Discord · Briefs" },
+                { val: "1-click", label: "Publish & send",   sub: "Direct to social or inbox" },
+                { val: "0",    label: "AI fluff",            sub: "Banned lexicon enforced" },
               ].map((s, i) => (
                 <motion.div key={i} variants={springUp}>
                   <p className="text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter mb-2 animate-gradient-x bg-clip-text text-transparent bg-[length:220%_100%]"
@@ -517,18 +510,18 @@ export default function Home() {
                   Human-in-the-Loop
                 </p>
                 <h3 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.95]">
-                  AI does the<br />heavy lifting.<br />
-                  <span style={{ color: C.muted }}>You add the<br />secret sauce.</span>
+                  AI drafts.<br />You refine.<br />
+                  <span style={{ color: C.muted }}>Then publish<br />or send.</span>
                 </h3>
                 <p className="text-base font-medium leading-relaxed max-w-md" style={{ color: C.muted }}>
-                  Every post comes with an edit button. Add the insider detail, the specific story,
-                  the personal take that only you can make. Publish when it feels authentically yours.
+                  Every blog post, newsletter, and social post comes with an edit button. Add your insider detail,
+                  your specific take — then publish to social or send to your subscribers.
                 </p>
               </motion.div>
               <motion.div variants={fadeUp}>
                 <Link href="/docs#human-in-the-loop"
-                  className="group flex-shrink-0 flex items-center gap-3 rounded-xl px-8 py-4 text-sm font-black uppercase tracking-widest text-white transition-all duration-300 active:scale-95"
-                  style={{ background: `linear-gradient(135deg, ${C.red} 0%, #c52000 100%)`, boxShadow: `0 8px 32px ${C.redGlow}` }}>
+                  className="group flex-shrink-0 flex items-center gap-3 rounded-xl px-8 py-4 text-sm font-black uppercase tracking-widest transition-all duration-300 active:scale-95"
+                  style={{ background: `linear-gradient(135deg, ${C.red} 0%, #c52000 100%)`, boxShadow: `0 8px 32px ${C.redGlow}`, color: "#FFFFFF" }}>
                   See how it works
                   <span className="group-hover:translate-x-1.5 transition-transform duration-200">→</span>
                 </Link>
@@ -548,8 +541,8 @@ export default function Home() {
               <motion.div variants={fadeUp} className="mb-14">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>The difference</p>
                 <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] max-w-2xl">
-                  Human or chatbot?<br />
-                  <span style={{ color: C.muted }}>Your audience can tell.</span>
+                  ChatGPT or you?<br />
+                  <span style={{ color: C.muted }}>Readers know instantly.</span>
                 </h2>
               </motion.div>
 
@@ -561,7 +554,7 @@ export default function Home() {
                   style={{ background: C.cardS, border: `1px solid ${C.border}` }}>
                   <p className="text-[10px] font-black uppercase tracking-widest mb-6" style={{ color: C.dim }}>Standard AI Output</p>
                   <div className="flex-1 min-h-[13rem] rounded-xl flex items-center justify-center italic mb-6 p-6 text-center text-sm font-medium leading-relaxed"
-                    style={{ background: "rgba(255,255,255,0.04)", color: C.dim, border: `1px solid ${C.border}` }}>
+                    style={{ background: "rgba(15,23,42,0.04)", color: C.dim, border: `1px solid ${C.border}` }}>
                     "Here are 5 key takeaways from this PDF about Scaling automation. Number 1 will shock you!
                     In conclusion, AI is changing the landscape of development for everyone..."
                   </div>
@@ -580,11 +573,11 @@ export default function Home() {
                   <div className="flex-1 min-h-[13rem] rounded-xl flex flex-col md:flex-row items-stretch mb-6 overflow-hidden text-sm font-medium"
                     style={{ border: `1px solid ${C.border}` }}>
                     <div className="flex-1 p-5 flex items-center justify-center text-center italic text-xs"
-                      style={{ background: "rgba(255,255,255,0.04)", color: C.dim, borderRight: `1px solid ${C.border}` }}>
+                      style={{ background: "rgba(15,23,42,0.04)", color: C.dim, borderRight: `1px solid ${C.border}` }}>
                       [ Structured thread with your actual insights, pacing, and tone. No templates. ]
                     </div>
                     <div className="flex-1 p-5 flex items-start pt-6 text-sm leading-relaxed"
-                      style={{ background: "rgba(255,255,255,0.06)", color: C.white }}>
+                      style={{ background: "rgba(15,23,42,0.06)", color: C.white }}>
                       Scaling automation requires treating test code like production code. Poor architecture
                       sinks suites faster than flaky environments.
                     </div>
@@ -613,26 +606,26 @@ export default function Home() {
           <div className="relative z-10 max-w-6xl mx-auto px-8 md:px-14">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.1 }} variants={fadeUp}
               className="text-center mb-16">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>Use cases</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>What you can create</p>
               <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.95]">
-                Works for your world
+                Every format.<br />One voice.
               </h2>
               <p className="text-base md:text-lg font-medium mt-5 max-w-md mx-auto" style={{ color: C.muted }}>
-                Every audience can tell when content sounds fake. Yours won't.
+                Newsletters, blog posts, social content, technical briefs — all sound like you.
               </p>
             </motion.div>
 
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.05 }} variants={stagger}
               className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { n: "01", bg: C.cardB, title: "Developers & DevRel",
-                  desc: "Turn messy API docs or release notes into X threads and LinkedIn posts that read like a real engineer — not a marketing bot.", ch: "X · LinkedIn" },
-                { n: "02", bg: C.cardG, title: "Founders & Leaders",
-                  desc: "Rough notes from a fundraising call → thought leadership posts that sound like you at your most articulate, not outsourced to a chatbot.", ch: "LinkedIn · Email" },
-                { n: "03", bg: C.cardS, title: "Educators & Trainers",
-                  desc: "Upload your course slides or workshop deck. Ozigi builds a multi-week campaign that reads like you — not a lesson plan on autopilot.", ch: "Email · Discord" },
-                { n: "04", bg: C.cardR, title: "Creators & Writers",
-                  desc: "Drop a podcast, video, or newsletter. Ozigi extracts the ideas and generates hooks in your voice — the kind your audience recognises as yours.", ch: "All platforms" },
+                { n: "01", bg: C.cardB, title: "Weekly newsletters",
+                  desc: "Generate and send email newsletters that sound like you wrote them. No templates, no AI voice. Connect your list and hit send.", ch: "Email newsletters" },
+                { n: "02", bg: C.cardG, title: "Blog posts & briefs",
+                  desc: "Turn rough notes or research into polished blog posts and technical briefs. SEO-ready, human-readable, zero editing needed.", ch: "Blog · Technical docs" },
+                { n: "03", bg: C.cardS, title: "LinkedIn thought leadership",
+                  desc: "Build authority with posts and carousels that sound like you at your most articulate — not like every other AI-generated post in the feed.", ch: "LinkedIn posts · Carousels" },
+                { n: "04", bg: C.cardR, title: "X threads & engagement",
+                  desc: "Create threads that hook, educate, and convert. Your voice, your pacing, your specific takes — the kind your audience recognises.", ch: "X threads · Tweets" },
               ].map((uc) => (
                 <motion.div key={uc.n} variants={springUp}
                   whileHover={{ y: -6, transition: { type: "spring", stiffness: 260, damping: 18 } }}
@@ -663,26 +656,26 @@ export default function Home() {
           <div className="relative z-10 max-w-6xl mx-auto px-8 md:px-14">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={fadeUp}
               className="text-center mb-14">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>What's inside</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>Capabilities</p>
               <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.95]">
-                Everything built<br />to sound human
+                Write. Send. Publish.<br />All human.
               </h2>
               <p className="text-base font-medium mt-5 max-w-md mx-auto" style={{ color: C.muted }}>
-                Four core capabilities. All in one clean flow.
+                Blog posts, newsletters, social — generated and delivered from one place.
               </p>
             </motion.div>
 
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { bg: C.cardB, title: "Messy input welcome",
-                  desc: "URLs, PDFs, voice notes, scattered thoughts — Ozigi finds the signal.", tag: "Any format →" },
-                { bg: C.cardG, title: "Your voice, locked in",
-                  desc: "Persona, tone, depth, banned phrases — enforced on every post, every time.", tag: "Set once →" },
-                { bg: C.card,  title: "Instant publishing",
-                  desc: "Ship to X, LinkedIn, Discord, email, and Slack in seconds. No copy-pasting.", tag: "5 platforms →" },
-                { bg: C.cardR, title: "Bypasses AI detection",
-                  desc: "Ozigi's Banned Lexicon strips the exact patterns LinkedIn's 360Brew system flags.", tag: "Banned Lexicon →" },
+                { bg: C.cardB, title: "Blog & long-form",
+                  desc: "Full blog posts and technical briefs from rough notes. SEO-ready, publish-ready.", tag: "Long-form →" },
+                { bg: C.cardG, title: "Email newsletters",
+                  desc: "Generate and send newsletters to your subscribers. Connect your list, hit send.", tag: "Newsletter →" },
+                { bg: C.card,  title: "Social publishing",
+                  desc: "Post directly to X and LinkedIn. Threads, carousels, single posts — one click.", tag: "Social →" },
+                { bg: C.cardR, title: "Sounds human",
+                  desc: "Banned Lexicon strips AI patterns. Your content reads like you wrote it.", tag: "No AI voice →" },
               ].map((f, i) => (
                 <motion.div key={i} variants={springUp}
                   whileHover={{ y: -6, transition: { type: "spring", stiffness: 280, damping: 18 } }}
@@ -713,64 +706,19 @@ export default function Home() {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={fadeUp}
               className="text-center mb-14">
               <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>Pricing</p>
-              <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.95]">
-                No surprises.<br />
-                <span style={{ color: C.muted }}>No AI voice.</span><br />
-                Just results.
+              <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.95]" style={{ color: C.white }}>
+                Blog posts.<br />
+                Newsletters.<br />
+                <span style={{ color: C.muted }}>Social. Briefs.</span>
               </h2>
               <p className="text-base font-medium mt-5" style={{ color: C.muted }}>
-                Try free forever. Scale when you ship.
+                All formats. All human. Start free.
               </p>
             </motion.div>
             <PricingCards onOpenAuthModal={() => setIsAuthModalOpen(true)} />
           </div>
         </section>
 
-        {/* ─────────────────────────────────────────────────────────────── */}
-        {/* BOTTOM CTA CARD — like Nchiko's closing                        */}
-        {/* ─────────────────────────────────────────────────────────────── */}
-        <section className="py-16 md:py-24 px-6"
-          style={{ background: C.navyDeep, borderTop: `1px solid ${C.border}` }}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={fadeUp}
-            className="max-w-3xl mx-auto rounded-3xl p-12 md:p-20 text-center relative overflow-hidden"
-            style={{
-              background: `linear-gradient(135deg, #1f0d0a 0%, ${C.navyMid} 55%, ${C.card} 100%)`,
-              border: `1px solid rgba(232,50,10,0.2)`,
-              boxShadow: `0 0 80px rgba(232,50,10,0.09), 0 0 0 1px rgba(255,255,255,0.04)`,
-            }}>
-            {/* Background glow */}
-            <div className="absolute inset-0 pointer-events-none rounded-3xl"
-              style={{ background: `radial-gradient(ellipse at 50% 0%, rgba(232,50,10,0.14), transparent 65%)` }} />
-            {/* Diagonal lines inside card */}
-            <DiagLines id="cta-diag" opacity={0.04} />
-
-            <div className="relative z-10">
-              {/* Logo */}
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                style={{ background: `linear-gradient(135deg, ${C.red} 0%, #c52000 100%)` }}>
-                <img src="/logo.png" alt="Ozigi" className="h-9 w-auto" />
-              </div>
-
-              <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter mb-4">
-                Stop sounding like AI.
-              </h2>
-              <p className="text-base font-medium mb-8 max-w-sm mx-auto leading-relaxed" style={{ color: C.muted }}>
-                Join creators and builders who ship content in their voice — not AI's.
-              </p>
-              <motion.button
-                onClick={() => setIsAuthModalOpen(true)}
-                whileHover={{ boxShadow: "0 18px 56px rgba(232,50,10,0.55)" }}
-                className="inline-flex items-center gap-3 rounded-xl px-10 py-4 text-sm font-black uppercase tracking-widest text-white transition-all duration-300 active:scale-95 cursor-pointer"
-                style={{
-                  background: `linear-gradient(135deg, ${C.red} 0%, #c52000 100%)`,
-                  boxShadow: `0 8px 32px ${C.redGlow}`,
-                }}>
-                Get started — it's free
-              </motion.button>
-              <p className="text-xs font-medium mt-4" style={{ color: C.dim }}>No credit card required.</p>
-            </div>
-          </motion.div>
-        </section>
       </main>
 
       <Footer />

@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SettingsModal from "./SettingsModal";
-import { ThemeToggle } from "./ThemeToggle";
 import { supabase } from "@/lib/supabase/client";
 
 interface HeaderProps {
@@ -82,7 +81,7 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
   return (
     <>
       <header className={`w-full z-40 transition-all ${isDashboard ? 'bg-transparent' : ''}`}
-        style={!isDashboard ? { background: "rgba(7,16,32,0.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.07)" } : {}}>
+        style={!isDashboard ? { background: "rgba(241,245,249,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid rgba(15,23,42,0.08)" } : {}}>
         <div className={`mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between ${isDashboard ? 'w-full' : 'max-w-7xl'}`}>
 
           {/* LEFT SIDE: Brand & Mobile Toggle */}
@@ -102,7 +101,7 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
             {!isDashboard && (
               <Link href="/" className="flex items-center gap-2">
                 <img src="/logo.png" alt="Ozigi" className="h-8 w-auto logo-spin" />
-                <span className="text-2xl font-black text-white tracking-tighter">Ozigi</span>
+                <span className="text-2xl font-black text-foreground tracking-tighter">Ozigi</span>
               </Link>
             )}
           </div>
@@ -111,22 +110,22 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
           <div className="flex items-center gap-4">
             {showNav && (
               <nav className="hidden md:flex items-center gap-6 mr-4">
-                <Link href="/docs" className="text-sm font-semibold text-slate-300 hover:text-white transition">
+                <Link href="/docs" className="text-sm font-semibold text-foreground-muted hover:text-foreground transition">
                   Docs
                 </Link>
-                <Link href="/tutorials" className="text-sm font-semibold text-slate-300 hover:text-white transition">
+                <Link href="/tutorials" className="text-sm font-semibold text-foreground-muted hover:text-foreground transition">
                   Tutorials
                 </Link>
-                <Link href="https://blog.ozigi.app" className="text-sm font-semibold text-slate-300 hover:text-white transition">
+                <Link href="https://blog.ozigi.app" className="text-sm font-semibold text-foreground-muted hover:text-foreground transition">
                   Blog
                 </Link>
-                <Link href="/changelog" className="text-sm font-semibold text-slate-300 hover:text-white transition">
+                <Link href="/changelog" className="text-sm font-semibold text-foreground-muted hover:text-foreground transition">
                   Changelog
                 </Link>
-                <Link href="/architecture" className="text-sm font-semibold text-slate-300 hover:text-white transition">
+                <Link href="/architecture" className="text-sm font-semibold text-foreground-muted hover:text-foreground transition">
                   Architecture
                 </Link>
-                <Link href="/pricing" className="text-sm font-semibold text-slate-300 hover:text-white transition">
+                <Link href="/pricing" className="text-sm font-semibold text-foreground-muted hover:text-foreground transition">
                   Pricing
                 </Link>
 
@@ -137,7 +136,7 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
                   onMouseEnter={() => setIsFeaturesDropdownOpen(true)}
                   onMouseLeave={() => setIsFeaturesDropdownOpen(false)}
                 >
-                  <button className="text-sm font-semibold text-slate-300 hover:text-white transition flex items-center gap-1">
+                  <button className="text-sm font-semibold text-foreground-muted hover:text-foreground transition flex items-center gap-1">
                     Features
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -145,12 +144,12 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
                   </button>
                   {isFeaturesDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-56 rounded-xl py-2 z-50"
-                      style={{ background: "#0d1e35", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+                      style={{ background: "#FFFFFF", border: "1px solid rgba(15,23,42,0.1)", boxShadow: "0 20px 60px rgba(15,23,42,0.12)" }}>
                       {features.map((feature) => (
                         <Link
                           key={feature.href}
                           href={feature.href}
-                          className="block px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition"
+                          className="block px-4 py-2 text-sm text-foreground-muted hover:text-foreground hover:bg-surface-2 transition"
                           onClick={() => setIsFeaturesDropdownOpen(false)}
                         >
                           {feature.name}
@@ -164,7 +163,7 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
                   href={process.env.NEXT_PUBLIC_CALENDLY_URL || "mailto:hello@ozigi.app"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-slate-300 hover:text-white transition">
+                  className="text-sm font-semibold text-foreground-muted hover:text-foreground transition">
                   Contact Sales
                 </Link>
 
@@ -172,8 +171,8 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
                   href="https://github.com/Ozigi-app/OziGi/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sm font-bold text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
-                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
+                  className="flex items-center gap-1.5 text-sm font-bold text-foreground-muted hover:text-foreground px-3 py-1.5 rounded-lg transition-colors"
+                  style={{ background: "rgba(15,23,42,0.05)", border: "1px solid rgba(15,23,42,0.12)" }}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
@@ -183,16 +182,13 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
               </nav>
             )}
 
-            {/* Theme toggle — visible on every page */}
-            <ThemeToggle />
-
             {/* User Profile Dropdown (logged in) */}
             {session ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden transition-all focus:outline-none"
-                  style={{ background: "rgba(255,255,255,0.08)", border: "2px solid rgba(255,255,255,0.2)" }}
+                  style={{ background: "rgba(15,23,42,0.06)", border: "2px solid rgba(15,23,42,0.15)" }}
                 >
                   {session.user.user_metadata?.avatar_url ? (
                     <img
@@ -209,12 +205,12 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
 
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 rounded-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2"
-                    style={{ background: "#0d1e35", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 20px 60px rgba(0,0,0,0.7)" }}>
-                    <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                      <p className="text-sm font-bold text-white truncate">
+                    style={{ background: "#FFFFFF", border: "1px solid rgba(15,23,42,0.1)", boxShadow: "0 20px 60px rgba(15,23,42,0.12)" }}>
+                    <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(15,23,42,0.07)" }}>
+                      <p className="text-sm font-bold text-foreground truncate">
                         {session.user.user_metadata?.full_name || "Account"}
                       </p>
-                      <p className="text-xs text-slate-400 truncate mt-0.5">
+                      <p className="text-xs text-foreground-subtle truncate mt-0.5">
                         {session.user.email}
                       </p>
                     </div>
@@ -222,14 +218,14 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
                     {!isDashboard && (
                       <Link
                         href="/dashboard"
-                        className="block w-full text-left px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+                        className="block w-full text-left px-4 py-3 text-sm font-semibold text-foreground-muted hover:bg-surface-2 hover:text-foreground transition-colors"
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         Dashboard
                       </Link>
                     )}
 
-                    <div className="h-px my-1" style={{ background: "rgba(255,255,255,0.07)" }} />
+                    <div className="h-px my-1" style={{ background: "rgba(15,23,42,0.08)" }} />
 
                     <button
                       onClick={signOut}
@@ -248,7 +244,7 @@ export default function Header({ session: propSession, onSignIn, onOpenMobileSid
               <div className="flex items-center gap-3">
                 <button
                   onClick={onSignIn}
-                  className="hidden md:block text-sm font-bold text-slate-300 hover:text-white transition-colors px-4 py-2"
+                  className="hidden md:block text-sm font-bold text-foreground-muted hover:text-foreground transition-colors px-4 py-2"
                 >
                   Log in
                 </button>
