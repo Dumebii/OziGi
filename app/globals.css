@@ -18,44 +18,56 @@
   --brand-slate: #1E293B;
   --brand-grey: #94A3B8;
 
-  /* Light theme */
-  --bg: #FAFAFA;
-  --bg-deep: #FFFFFF;
-  --surface: #FFFFFF;
-  --surface-2: #F1F5F9;          /* slate-100 */
-  --surface-3: #E2E8F0;          /* slate-200 */
+  /* ─── Light theme — clean, airy, brand-driven ───
+     bg        : near-white slate so it reads as light but not stark white
+     surface   : pure white cards pop off the bg
+     foreground: brand navy for all text — rich, not generic grey
+     accent    : brand red for CTAs, highlights, links
+  */
+  --bg: #F1F5F9;                 /* slate-100 — light, airy, not stark */
+  --bg-deep: #F8FAFC;            /* slate-50 */
+  --surface: #FFFFFF;            /* pure white cards */
+  --surface-2: #F8FAFC;          /* slate-50 — subtle elevation */
+  --surface-3: #F1F5F9;          /* slate-100 */
   --border: #E2E8F0;             /* slate-200 */
   --border-strong: #CBD5E1;      /* slate-300 */
-  --foreground: #0F172A;         /* slate-900 */
-  --foreground-muted: #475569;   /* slate-600 */
-  --foreground-subtle: #94A3B8;  /* slate-400 */
-  --accent: #E8320A;
+  --foreground: #0A1628;         /* brand-navy — rich, intentional */
+  --foreground-muted: #334155;   /* brand-slate — secondary text */
+  --foreground-subtle: #64748B;  /* slate-500 — hints/placeholders */
+  --accent: #E8320A;             /* brand-red */
+  --accent-strong: #C4290A;      /* brand-red darkened for hover */
   --accent-foreground: #FFFFFF;
-  --success: #15803D;            /* green-700 */
-  --warning: #B45309;            /* amber-700 */
-  --info: #1D4ED8;               /* blue-700 */
-  --code-bg: #0F172A;            /* keep code dark in both themes */
+  --success: #15803D;
+  --warning: #B45309;
+  --info: #1D4ED8;
+  --code-bg: #0A1628;            /* brand-navy for code blocks */
   --code-fg: #E2E8F0;
 }
 
 .dark {
-  /* Dark theme — brand-slate base for cohesive look */
-  --bg: #0F172A;                 /* slate-900 */
-  --bg-deep: #0F172A;            /* slate-900 */
-  --surface: #1E293B;            /* brand-slate / slate-800 */
-  --surface-2: #334155;          /* slate-700 */
-  --surface-3: #475569;          /* slate-600 */
-  --border: rgba(255, 255, 255, 0.10);
-  --border-strong: rgba(255, 255, 255, 0.18);
+  /* ─── Dark theme — brand-slate base, navy + red constant ───
+     bg        : brand-navy so it feels premium and on-brand
+     surface   : lighter slate cards sit above the navy base
+     foreground: off-white, easy on the eyes
+     accent    : brand-red (unchanged)
+  */
+  --bg: #0A1628;                 /* brand-navy — premium dark base */
+  --bg-deep: #071020;            /* deeper navy */
+  --surface: #1E293B;            /* brand-slate — card surface */
+  --surface-2: #263348;          /* mid-point between navy and slate */
+  --surface-3: #334155;          /* slate-700 — elevated surface */
+  --border: rgba(241, 245, 249, 0.08);  /* slate-100/8 */
+  --border-strong: rgba(241, 245, 249, 0.16);
   --foreground: #F8FAFC;         /* slate-50 */
   --foreground-muted: #CBD5E1;   /* slate-300 */
   --foreground-subtle: #94A3B8;  /* slate-400 */
-  --accent: #E8320A;
+  --accent: #E8320A;             /* brand-red */
+  --accent-strong: #C4290A;
   --accent-foreground: #FFFFFF;
-  --success: #4ADE80;            /* green-400 */
-  --warning: #FBBF24;            /* amber-400 */
-  --info: #60A5FA;               /* blue-400 */
-  --code-bg: #0F172A;            /* slate-900 */
+  --success: #4ADE80;
+  --warning: #FBBF24;
+  --info: #60A5FA;
+  --code-bg: #071020;            /* deep navy for code */
   --code-fg: #E2E8F0;
 }
 

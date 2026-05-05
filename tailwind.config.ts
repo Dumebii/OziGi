@@ -14,8 +14,10 @@ export default {
         brand: {
           navy: "#0A1628",
           red: "#E8320A",
+          "red-dark": "#C4290A",
           offwhite: "#FAFAFA",
           slate: "#1E293B",
+          "slate-light": "#F1F5F9",
           grey: "#94A3B8",
         },
         // Semantic tokens (light/dark aware via CSS vars)
@@ -30,6 +32,7 @@ export default {
         "foreground-muted": "var(--foreground-muted)",
         "foreground-subtle": "var(--foreground-subtle)",
         accent: "var(--accent)",
+        "accent-strong": "var(--accent-strong)",
         "accent-foreground": "var(--accent-foreground)",
         success: "var(--success)",
         warning: "var(--warning)",

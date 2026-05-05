@@ -21,24 +21,24 @@ import SocialProof from "../components/SocialProof";
 import PeerlistReviews from "../components/PeerlistReviews";
 import { supabase } from "@/lib/supabase/client";
 
-/* ─── Palette — brand navy base ───────────────────────────────────────── */
+/* ─── Palette — light slate base with brand navy + red ────────────────── */
 const C = {
-  navy:     "#0A1628",   // brand navy base
-  navyDeep: "#071020",   // 1 shade darker — section contrast
-  navyMid:  "#0d1e35",   // 1 shade lighter — alternate surface
-  card:     "#0f2038",   // card surface
-  cardB:    "#102240",   // blue-tinted card
-  cardS:    "#111d30",   // slate-tinted card
-  cardR:    "#200d0a",   // red-tinted card
-  cardG:    "#0a1e16",   // green-tinted card (subtle)
-  border:   "rgba(255,255,255,0.08)",
-  borderHi: "rgba(255,255,255,0.15)",
-  white:    "#ffffff",
-  muted:    "rgba(148,163,184,0.9)",
-  dim:      "rgba(100,116,139,0.75)",
+  navy:     "#F1F5F9",   // bg — light slate-100 (airy base)
+  navyDeep: "#E2E8F0",   // slate-200 — section contrast
+  navyMid:  "#F8FAFC",   // slate-50 — lighter alt surface
+  card:     "#FFFFFF",   // pure white cards
+  cardB:    "#F0F7FF",   // blue-tinted card
+  cardS:    "#F8FAFC",   // slate-tinted card
+  cardR:    "#FFF5F3",   // red-tinted card
+  cardG:    "#F0FDF4",   // green-tinted card
+  border:   "rgba(15,23,42,0.08)",   // navy/8 — subtle on light
+  borderHi: "rgba(15,23,42,0.15)",   // navy/15
+  white:    "#0A1628",   // text — brand navy (inverted role)
+  muted:    "rgba(51,65,85,0.85)",   // slate-700/85 — muted text
+  dim:      "rgba(100,116,139,0.75)",// slate-500 — dim text
   red:      "#E8320A",
-  redSoft:  "rgba(232,50,10,0.18)",
-  redGlow:  "rgba(232,50,10,0.28)",
+  redSoft:  "rgba(232,50,10,0.10)",
+  redGlow:  "rgba(232,50,10,0.20)",
 };
 
 /* ─── Reusable SVG patterns ───────────────────────────────────────────── */
@@ -163,7 +163,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="font-sans text-white min-h-[100dvh] flex flex-col" style={{ background: C.navy }}>
+    <div className="font-sans min-h-[100dvh] flex flex-col" style={{ background: C.navy, color: C.white }}>
       <Header session={session} onSignIn={() => setIsAuthModalOpen(true)} />
       <main className="flex-1">
 
@@ -173,7 +173,7 @@ export default function Home() {
         <section
           ref={heroRef}
           className="relative overflow-hidden min-h-[100dvh] flex items-center"
-          style={{ background: `linear-gradient(160deg, ${C.navyDeep} 0%, ${C.navy} 55%, ${C.navyMid} 100%)` }}
+          style={{ background: `linear-gradient(160deg, ${C.navyDeep} 0%, ${C.navy} 55%, ${C.navyMid} 100%)`, color: C.white }}
           onMouseMove={(e) => {
             const r = heroRef.current?.getBoundingClientRect();
             if (r) { mouseX.set(e.clientX - r.left); mouseY.set(e.clientY - r.top); }
