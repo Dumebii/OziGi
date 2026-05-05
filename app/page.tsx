@@ -167,7 +167,7 @@ export default function Home() {
       <Header session={session} onSignIn={() => setIsAuthModalOpen(true)} />
       <main className="flex-1">
 
-        {/* ──────────────────────────────────────────────────────����──────── */}
+        {/* ──────────────────────────────────────────────────────������──────── */}
         {/* HERO — split: headline left · demo right                        */}
         {/* ────────────────────────����────────────────────────────────────── */}
         <section
@@ -220,24 +220,27 @@ export default function Home() {
 
               {/* Headline — spring word animation + parallax */}
               <motion.div style={{ y: heroParallaxY }}>
-                <motion.h1
-                  initial="hidden"
-                  animate="visible"
-                  variants={staggerFast}
-                  className="font-black italic uppercase tracking-tighter text-inherit leading-[0.93] mb-7"
-                  style={{ fontSize: "clamp(2.6rem, 5vw, 4.75rem)" }}
-                >
-                  {["Content", "that sounds", "like"].map((line, i) => (
-                    <motion.span key={i} variants={springUp} className="block">{line}</motion.span>
-                  ))}
-                  <motion.span variants={springUp} className="block">
-                    <span
-                      className="animate-gradient-x bg-clip-text text-transparent bg-[length:220%_100%]"
-                      style={{ backgroundImage: `linear-gradient(90deg, ${C.red}, #ff7b3d, ${C.red})` }}
-                    >a person</span>
-                  </motion.span>
-                  <motion.span variants={springUp} className="block">wrote it.</motion.span>
-                </motion.h1>
+              <motion.h1
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                className="text-5xl md:text-7xl lg:text-[5.5rem] font-black italic uppercase tracking-tighter leading-[0.92] mb-5"
+              >
+                Blog posts.<br />
+                Newsletters.<br />
+                <span className="relative inline-block">
+                  Social.
+                  {/* Animated underline */}
+                  <motion.span
+                    className="absolute left-0 -bottom-0.5 h-1 rounded-full origin-left"
+                    style={{ background: C.red }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.5, delay: 0.55, ease: "easeOut" }}
+                  />
+                </span>{" "}
+                <span style={{ color: C.red }}>Human.</span>
+              </motion.h1>
               </motion.div>
 
               <motion.p
@@ -413,12 +416,12 @@ export default function Home() {
           <div className="relative z-10 max-w-6xl mx-auto px-8 md:px-14">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.1 }} variants={fadeUp}
               className="text-center mb-20">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>Process</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>How it works</p>
               <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.95]">
-                From chaos<br />to clarity
+                Input. Generate.<br />Publish.
               </h2>
               <p className="text-base md:text-lg font-medium mt-5 max-w-md mx-auto" style={{ color: C.muted }}>
-                Your voice. Your ideas. Zero AI aftertaste.
+                Blog posts, newsletters, social content — all from one workflow.
               </p>
             </motion.div>
 
@@ -433,15 +436,15 @@ export default function Home() {
                 },
                 {
                   n: "02", bg: C.card,
-                  title: "Your voice applies",
-                  desc: "Set your persona once. Technical depth, tone, pacing, banned AI phrases — locked in so every post sounds like you at your most articulate.",
-                  tags: ["Persona", "Tone", "Banned lexicon"],
+                  title: "Pick your format",
+                  desc: "Blog post, email newsletter, LinkedIn carousel, X thread, or technical brief. Your voice applies to every format automatically.",
+                  tags: ["Blog", "Newsletter", "Social", "Briefs"],
                 },
                 {
                   n: "03", bg: C.cardS,
-                  title: "Ship everywhere",
-                  desc: "Post to X, LinkedIn, Discord, email, or Slack. One click. Your audience gets content that sounds human — because it is.",
-                  tags: ["X", "LinkedIn", "Discord", "Slack"],
+                  title: "Publish or send",
+                  desc: "Post directly to X and LinkedIn, send newsletters to your list, or export for your CMS. One workflow for everything.",
+                  tags: ["Direct post", "Email send", "Export"],
                 },
               ].map((step) => (
                 <motion.div key={step.n} variants={springUp}
@@ -484,9 +487,9 @@ export default function Home() {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={stagger}
               className="grid grid-cols-3 gap-6 text-center">
               {[
-                { val: "20s",  label: "Campaign generated",  sub: "from URL or raw notes" },
-                { val: "5",    label: "Publishing channels", sub: "X · LinkedIn · Discord · Email · Slack" },
-                { val: "3",    label: "Days per campaign",   sub: "platform-native formats" },
+                { val: "6",    label: "Content formats",     sub: "Blog · Newsletter · LinkedIn · X · Discord · Briefs" },
+                { val: "1-click", label: "Publish & send",   sub: "Direct to social or inbox" },
+                { val: "0",    label: "AI fluff",            sub: "Banned lexicon enforced" },
               ].map((s, i) => (
                 <motion.div key={i} variants={springUp}>
                   <p className="text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter mb-2 animate-gradient-x bg-clip-text text-transparent bg-[length:220%_100%]"
@@ -524,12 +527,12 @@ export default function Home() {
                   Human-in-the-Loop
                 </p>
                 <h3 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.95]">
-                  AI does the<br />heavy lifting.<br />
-                  <span style={{ color: C.muted }}>You add the<br />secret sauce.</span>
+                  AI drafts.<br />You refine.<br />
+                  <span style={{ color: C.muted }}>Then publish<br />or send.</span>
                 </h3>
                 <p className="text-base font-medium leading-relaxed max-w-md" style={{ color: C.muted }}>
-                  Every post comes with an edit button. Add the insider detail, the specific story,
-                  the personal take that only you can make. Publish when it feels authentically yours.
+                  Every blog post, newsletter, and social post comes with an edit button. Add your insider detail,
+                  your specific take — then publish to social or send to your subscribers.
                 </p>
               </motion.div>
               <motion.div variants={fadeUp}>
@@ -555,8 +558,8 @@ export default function Home() {
               <motion.div variants={fadeUp} className="mb-14">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>The difference</p>
                 <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] max-w-2xl">
-                  Human or chatbot?<br />
-                  <span style={{ color: C.muted }}>Your audience can tell.</span>
+                  ChatGPT or you?<br />
+                  <span style={{ color: C.muted }}>Readers know instantly.</span>
                 </h2>
               </motion.div>
 
@@ -620,26 +623,26 @@ export default function Home() {
           <div className="relative z-10 max-w-6xl mx-auto px-8 md:px-14">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.1 }} variants={fadeUp}
               className="text-center mb-16">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>Use cases</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>What you can create</p>
               <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.95]">
-                Works for your world
+                Every format.<br />One voice.
               </h2>
               <p className="text-base md:text-lg font-medium mt-5 max-w-md mx-auto" style={{ color: C.muted }}>
-                Every audience can tell when content sounds fake. Yours won't.
+                Newsletters, blog posts, social content, technical briefs — all sound like you.
               </p>
             </motion.div>
 
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.05 }} variants={stagger}
               className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { n: "01", bg: C.cardB, title: "Developers & DevRel",
-                  desc: "Turn messy API docs or release notes into X threads and LinkedIn posts that read like a real engineer — not a marketing bot.", ch: "X · LinkedIn" },
-                { n: "02", bg: C.cardG, title: "Founders & Leaders",
-                  desc: "Rough notes from a fundraising call → thought leadership posts that sound like you at your most articulate, not outsourced to a chatbot.", ch: "LinkedIn · Email" },
-                { n: "03", bg: C.cardS, title: "Educators & Trainers",
-                  desc: "Upload your course slides or workshop deck. Ozigi builds a multi-week campaign that reads like you — not a lesson plan on autopilot.", ch: "Email · Discord" },
-                { n: "04", bg: C.cardR, title: "Creators & Writers",
-                  desc: "Drop a podcast, video, or newsletter. Ozigi extracts the ideas and generates hooks in your voice — the kind your audience recognises as yours.", ch: "All platforms" },
+                { n: "01", bg: C.cardB, title: "Weekly newsletters",
+                  desc: "Generate and send email newsletters that sound like you wrote them. No templates, no AI voice. Connect your list and hit send.", ch: "Email newsletters" },
+                { n: "02", bg: C.cardG, title: "Blog posts & briefs",
+                  desc: "Turn rough notes or research into polished blog posts and technical briefs. SEO-ready, human-readable, zero editing needed.", ch: "Blog · Technical docs" },
+                { n: "03", bg: C.cardS, title: "LinkedIn thought leadership",
+                  desc: "Build authority with posts and carousels that sound like you at your most articulate — not like every other AI-generated post in the feed.", ch: "LinkedIn posts · Carousels" },
+                { n: "04", bg: C.cardR, title: "X threads & engagement",
+                  desc: "Create threads that hook, educate, and convert. Your voice, your pacing, your specific takes — the kind your audience recognises.", ch: "X threads · Tweets" },
               ].map((uc) => (
                 <motion.div key={uc.n} variants={springUp}
                   whileHover={{ y: -6, transition: { type: "spring", stiffness: 260, damping: 18 } }}
@@ -670,26 +673,26 @@ export default function Home() {
           <div className="relative z-10 max-w-6xl mx-auto px-8 md:px-14">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={fadeUp}
               className="text-center mb-14">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>What's inside</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>Capabilities</p>
               <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.95]">
-                Everything built<br />to sound human
+                Write. Send. Publish.<br />All human.
               </h2>
               <p className="text-base font-medium mt-5 max-w-md mx-auto" style={{ color: C.muted }}>
-                Four core capabilities. All in one clean flow.
+                Blog posts, newsletters, social — generated and delivered from one place.
               </p>
             </motion.div>
 
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { bg: C.cardB, title: "Messy input welcome",
-                  desc: "URLs, PDFs, voice notes, scattered thoughts — Ozigi finds the signal.", tag: "Any format →" },
-                { bg: C.cardG, title: "Your voice, locked in",
-                  desc: "Persona, tone, depth, banned phrases — enforced on every post, every time.", tag: "Set once →" },
-                { bg: C.card,  title: "Instant publishing",
-                  desc: "Ship to X, LinkedIn, Discord, email, and Slack in seconds. No copy-pasting.", tag: "5 platforms →" },
-                { bg: C.cardR, title: "Bypasses AI detection",
-                  desc: "Ozigi's Banned Lexicon strips the exact patterns LinkedIn's 360Brew system flags.", tag: "Banned Lexicon →" },
+                { bg: C.cardB, title: "Blog & long-form",
+                  desc: "Full blog posts and technical briefs from rough notes. SEO-ready, publish-ready.", tag: "Long-form →" },
+                { bg: C.cardG, title: "Email newsletters",
+                  desc: "Generate and send newsletters to your subscribers. Connect your list, hit send.", tag: "Newsletter →" },
+                { bg: C.card,  title: "Social publishing",
+                  desc: "Post directly to X and LinkedIn. Threads, carousels, single posts — one click.", tag: "Social →" },
+                { bg: C.cardR, title: "Sounds human",
+                  desc: "Banned Lexicon strips AI patterns. Your content reads like you wrote it.", tag: "No AI voice →" },
               ].map((f, i) => (
                 <motion.div key={i} variants={springUp}
                   whileHover={{ y: -6, transition: { type: "spring", stiffness: 280, damping: 18 } }}
@@ -721,12 +724,12 @@ export default function Home() {
               className="text-center mb-14">
               <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>Pricing</p>
               <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.95]" style={{ color: C.white }}>
-                No surprises.<br />
-                <span style={{ color: C.muted }}>No AI voice.</span><br />
-                Just results.
+                Blog posts.<br />
+                Newsletters.<br />
+                <span style={{ color: C.muted }}>Social. Briefs.</span>
               </h2>
               <p className="text-base font-medium mt-5" style={{ color: C.muted }}>
-                Try free forever. Scale when you ship.
+                All formats. All human. Start free.
               </p>
             </motion.div>
             <PricingCards onOpenAuthModal={() => setIsAuthModalOpen(true)} />
