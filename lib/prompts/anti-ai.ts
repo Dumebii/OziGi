@@ -44,7 +44,7 @@ commitment, dedication, complexities, deeper understanding, captivating, bustlin
 impactful, actionable, scalable, innovative, innovation, disruptive, disruption,
 empower, empowers, empowering, streamline, streamlines, streamlining,
 "best practices", "best practice", "thought leadership", "thought leader",
-"pain points", "value proposition", "north star", "level up", "move the needle",
+"pain points", "value proposition", "north star", "level up", "move the needle", "game-changer", "big moves"
 "low-hanging fruit", "mission-critical", "future-proof", "future-proofing",
 "next-level", "world-class", "best-in-class", "data-driven", "results-driven",
 "human-centric", "customer-centric", "community-driven", "plug-and-play",
