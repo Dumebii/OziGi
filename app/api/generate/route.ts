@@ -1,9 +1,8 @@
-// Was 60s. Multi-platform campaigns (X + LinkedIn + Discord + Slack + Email)
-// can take 25-50s on a clean call; the lexicon validator's repair retry can
-// add another full Gemini call. 180s gives us headroom for both, matching
-// the long-form route. The retry itself is also gated by a runtime budget
-// guard below so we never push the function to the edge of this limit.
-export const maxDuration = 180;
+// Vercel Hobby tier caps function runtime at 60s. Anything declared above
+// that is silently capped, so we set 60 explicitly and rely on the budget
+// guard below to skip the lexicon repair retry whenever the initial call
+// already consumed most of the runtime. Upgrade to Pro to raise this to 300.
+export const maxDuration = 60;
 import { NextResponse } from 'next/server';
 import { buildGenerationPrompt, containsPromptInjection } from '../../../lib/prompts';
 import {
@@ -109,14 +108,14 @@ async function generateFromParts(parts: any[], stream = false) {
  * because LLMs occasionally use a flagged word in a sentence the lexicon
  * was never meant to catch.
  */
-// Hard budget for the entire generation slot, including the optional retry.
-// Stays well below `maxDuration` so the route can finish persisting + return
-// JSON before Vercel kills the function. Lower it on a faster Vertex tier.
-const GENERATION_BUDGET_MS = 150_000;
+// Hard budget for the entire generation slot, sized for Hobby (60s cap).
+// Leaves ~5s for DB persist + JSON return + PostHog flush.
+const GENERATION_BUDGET_MS = 55_000;
 // Minimum runtime headroom required before we'll START a repair retry.
-// A clean Gemini call on a 5-platform campaign averages 25-50s; we need at
-// least this much remaining budget or we ship the original with warnings.
-const RETRY_MIN_REMAINING_MS = 60_000;
+// A 5-platform Gemini call typically takes 25-50s, so on Hobby the retry
+// will only fire when the initial call came back unusually fast (~10-20s).
+// Otherwise we ship the original with `lexiconWarnings` — no timeout.
+const RETRY_MIN_REMAINING_MS = 25_000;
 
 async function generateWithLexiconGuard(
   parts: any[],

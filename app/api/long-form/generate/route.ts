@@ -1,4 +1,8 @@
-export const maxDuration = 180; // Web research + long-form generation needs more headroom
+// Vercel Hobby caps at 60s. Long-form + web research routinely runs 30-55s
+// on its own, which means the lexicon repair retry will rarely fire on Hobby
+// — we ship the original with `lexiconWarnings` instead of timing out.
+// Upgrade to Pro to raise this to 300s and let retries run reliably.
+export const maxDuration = 60;
 
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
@@ -236,13 +240,13 @@ async function runWebResearch(context: string): Promise<WebResearchBundle | null
 // Main handler
 // ---------------------------------------------------------------------------
 
-// Hard budget for the route, including the optional repair retry. Sits
-// ~10s below `maxDuration` so the function has room to persist + return.
-const LONGFORM_BUDGET_MS = 170_000;
-// Minimum runtime headroom required before we'll START a repair retry.
-// A long-form regeneration can take 30-60s; skip the retry if we don't
-// have enough budget left and ship the original with `lexiconWarnings`.
-const LONGFORM_RETRY_MIN_REMAINING_MS = 65_000;
+// Hard budget for the route, sized for Vercel Hobby's 60s function cap.
+// Leaves ~5s for DB persist + JSON return.
+const LONGFORM_BUDGET_MS = 55_000;
+// Minimum runtime headroom before we'll START a repair retry. On Hobby
+// long-form often consumes 30-55s on its own, so the retry will rarely
+// fire — we ship the original with `lexiconWarnings` instead of timing out.
+const LONGFORM_RETRY_MIN_REMAINING_MS = 30_000;
 
 export async function POST(req: Request) {
   const routeStartTime = Date.now();
