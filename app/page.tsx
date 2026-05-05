@@ -167,7 +167,7 @@ export default function Home() {
       <Header session={session} onSignIn={() => setIsAuthModalOpen(true)} />
       <main className="flex-1">
 
-        {/* ──────────────────────────────────────────────────────������──────── */}
+        {/* ──────────────────────────────────────────────────────��������──────── */}
         {/* HERO — split: headline left · demo right                        */}
         {/* ────────────────────────����────────────────────────────────────── */}
         <section
@@ -204,21 +204,22 @@ export default function Home() {
 
             {/* ── Left col: headline ──────────────────────────────────── */}
             <div className="flex-1 max-w-xl">
-              {/* Badge */}
+              {/* Demo badge — top priority */}
               <motion.div
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45 }}
-                className="mb-8"
+                className="mb-6"
               >
-                <span className="inline-flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.22em] px-5 py-2.5 rounded-full"
+                <button onClick={() => setIsAuthModalOpen(true)}
+                  className="inline-flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.22em] px-5 py-2.5 rounded-full transition-all hover:scale-105"
                   style={{ background: C.redSoft, border: `1px solid rgba(232,50,10,0.3)`, color: C.red }}>
                   <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: C.red }} />
-                  Live demo — no sign-up required
-                </span>
+                  Live demo — no sign-up
+                </button>
               </motion.div>
 
-              {/* Headline — spring word animation + parallax */}
+              {/* Headline */}
               <motion.div style={{ y: heroParallaxY }}>
               <motion.h1
                 initial={{ opacity: 0, y: 28 }}
@@ -226,10 +227,9 @@ export default function Home() {
                 transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
                 className="text-5xl md:text-7xl lg:text-[5.5rem] font-black italic uppercase tracking-tighter leading-[0.92] mb-5"
               >
-                Blog posts.<br />
-                Newsletters.<br />
+                Automate Content<br />
                 <span className="relative inline-block">
-                  Social.
+                  Creation
                   {/* Animated underline */}
                   <motion.span
                     className="absolute left-0 -bottom-0.5 h-1 rounded-full origin-left"
@@ -239,7 +239,7 @@ export default function Home() {
                     transition={{ duration: 0.5, delay: 0.55, ease: "easeOut" }}
                   />
                 </span>{" "}
-                <span style={{ color: C.red }}>Human.</span>
+                <span style={{ color: C.red }}>Without ChatGPT's Voice.</span>
               </motion.h1>
               </motion.div>
 
@@ -250,7 +250,7 @@ export default function Home() {
                 className="text-base md:text-lg font-medium leading-relaxed mb-8 max-w-md"
                 style={{ color: C.muted }}
               >
-                Generate blog posts, email newsletters, LinkedIn and X threads, technical briefs — all in your voice, not ChatGPT's. No robotic fluff. No endless editing.
+                Generate blog posts, newsletters, social content — all in your voice, not AI's.
               </motion.p>
 
               {/* Ghost CTAs (secondary — demo is the primary CTA) */}

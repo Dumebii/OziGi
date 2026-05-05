@@ -65,19 +65,19 @@ export function LandingDemoWidget() {
       </div>
 
       <div className="p-5 md:p-6">
-        {/* Auto-expanding textarea */}
+        {/* Auto-expanding textarea — starts compact, expands as user types */}
         <textarea
           ref={textareaRef}
           value={input}
           onChange={handleChange}
-          placeholder="Paste a URL, drop meeting notes, or type a rough idea..."
-          rows={2}
+          placeholder="Paste a URL, notes, or idea..."
+          rows={1}
           className="w-full text-sm text-slate-800 placeholder:text-slate-400
                      bg-slate-50 border border-slate-200 rounded-xl px-4 py-3
                      overflow-hidden resize-none focus:outline-none
                      focus:border-[#E8320A]/50 focus:ring-2 focus:ring-[#E8320A]/10
                      transition-all duration-200 leading-relaxed"
-          style={{ minHeight: "3.25rem" }}
+          style={{ minHeight: "2.5rem" }}
         />
 
         {/* Sample pills */}
@@ -102,7 +102,7 @@ export function LandingDemoWidget() {
         <button
           onClick={handleGenerate}
           disabled={!input.trim() || loading}
-          className="mt-4 w-full py-3.5 disabled:opacity-40
+          className="mt-3.5 w-full py-3.5 disabled:opacity-40
                      text-white font-black uppercase tracking-widest text-xs rounded-xl
                      transition-all duration-300 active:scale-[0.98]
                      flex items-center justify-center gap-2"
