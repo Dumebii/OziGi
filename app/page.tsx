@@ -167,7 +167,7 @@ export default function Home() {
       <Header session={session} onSignIn={() => setIsAuthModalOpen(true)} />
       <main className="flex-1">
 
-        {/* ──────────────────────────────────────────────────────��──────── */}
+        {/* ──────────────────────────────────────────────────────����──────── */}
         {/* HERO — split: headline left · demo right                        */}
         {/* ────────────────────────����────────────────────────────────────── */}
         <section
@@ -247,8 +247,7 @@ export default function Home() {
                 className="text-base md:text-lg font-medium leading-relaxed mb-8 max-w-md"
                 style={{ color: C.muted }}
               >
-                Paste a URL, drop some notes, or type a rough idea. Get a 3-day campaign
-                for X, LinkedIn, Discord, and email. Done in 20 seconds.
+                Generate blog posts, email newsletters, LinkedIn and X threads, technical briefs — all in your voice, not ChatGPT's. No robotic fluff. No endless editing.
               </motion.p>
 
               {/* Ghost CTAs (secondary — demo is the primary CTA) */}
