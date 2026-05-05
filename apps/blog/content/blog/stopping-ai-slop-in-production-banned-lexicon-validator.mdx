@@ -1,0 +1,473 @@
+---
+title: "Stopping AI Slop in Production: How We Built a Two-Layer Banned-Lexicon Engine"
+date: "2026-05-05"
+description: "A user told us their Ozigi output had AI slop. So we stopped trusting the prompt and built a code-side validator that scans every draft before it ships. Here is the full architecture, the regex patterns, the repair loop, and the latency numbers."
+coverImage: "/images/blog/banned-lexicon/cover.jpg"
+author: "Dumebi Okolo"
+authorImage: "/images/authors/dumebi-okolo.jpg"
+authorBio: "Founder and CEO of Ozigi. Writes about content strategy and the architecture of AI tools for technical creators."
+authorUrl: "https://linkedin.com/in/dumebi-okolo"
+readTime: "9 min read"
+category: "Engineering, AI, LLM"
+section: "Engineering"
+keywords: ["AI slop", "LLM output validation", "banned lexicon", "prompt engineering", "Gemini 3", "post-generation guardrails", "TypeScript regex validator", "anti-AI content filter"]
+---
+
+A user pinged us last week. Their generated newsletter had the word "delve" in it. Twice.
+
+That word is on our banned list. It has been on our banned list since v1. The prompt tells the model in §1A of `lib/prompts/anti-ai.ts` to never use it. And the model used it anyway.
+
+This post is the postmortem and the fix. It covers why prompt rules alone do not stop AI slop in production, the two-layer enforcement engine we shipped to fix it, the regex patterns that catch the structural tells (not just the vocabulary), the bounded repair loop, and the actual latency cost of running this on every generation.
+
+If you ship LLM output to end users, you probably need this layer too.
+
+## Why prompts alone do not work
+
+The naive assumption when you start building with LLMs is that the prompt is a contract. You write "do not use the word delve" in the system message, the model reads it, the model complies. Job done.
+
+That assumption holds for about 80% of generations. The other 20% is where production lives.
+
+Three things break the contract:
+
+**1. Attention drop on long contexts.** Our generation prompt for the social engine is roughly 8,000 tokens once you include the persona voice, the platform-specific rules (X, LinkedIn, Discord, Slack, Email), the source material, and the full anti-AI rulebook. Gemini 3 Flash is excellent at long-context tasks, but every additional token dilutes the weight of any single instruction. The §1A banned word list sits around token 4,500. By the time the model is generating token 7,800 of the output, the rule has been in context for a long while and the next-token probability for "delve" is no longer effectively suppressed.
+
+**2. Statistical regression to training data.** LLMs are trained on the open web. The open web is full of "delve", "tapestry", "intricate dance", and every other GPT-3.5-era tell. When the model hits a low-confidence moment and has to pick between several plausible next tokens, the high-frequency training-data option wins more often than we would like. The prompt is a thumb on the scale, not a hard veto.
+
+**3. No ground truth at inference time.** The model has no way to check its own output against a list. It cannot run a regex on what it just generated. By the time it knows the word "delve" appeared in sentence three, it has already moved on to sentence seven.
+
+The fix has to live outside the model.
+
+## The architecture: two layers, one source of truth
+
+The mental model is simple. The prompt is layer one — it tells the model what we want. The validator is layer two — it checks whether we got it. If we did not, we either repair or reject.
+
+```
+┌─────────────────────────────────────────────┐
+│  lib/prompts/anti-ai.ts        (SOURCE)     │
+│  ----------------------------------         │
+│  ANTI_AI_RULES         (prose, for LLM)     │
+│  ANTI_AI_RULES_LONGFORM                     │
+│  BANNED_WORDS          (array, for code)    │
+│  BANNED_PHRASES                             │
+│  BANNED_OPENERS                             │
+│  BANNED_CLOSERS                             │
+│  BANNED_REGEX_PATTERNS                      │
+└─────────────────────────────────────────────┘
+           │                         │
+           ▼                         ▼
+┌──────────────────────┐   ┌──────────────────────────┐
+│ lib/prompts.ts       │   │ lib/prompts/long-form.ts │
+│ buildGenerationPrompt│   │ buildLongFormPrompt      │
+│ (X, LI, DC, SL, EM)  │   │ (blog, newsletter, brief)│
+└──────────────────────┘   └──────────────────────────┘
+           │                         │
+           ▼                         ▼
+┌──────────────────────────────────────────────┐
+│ lib/prompts/lexicon-validator.ts (LAYER 2)   │
+│   validateCampaign(parsed)                   │
+│   validateLongForm(parsed)                   │
+│   buildRepairDirective(report)               │
+│   summarizeForClient(report)                 │
+└──────────────────────────────────────────────┘
+           │
+           ▼
+┌──────────────────────────────────────────────┐
+│ app/api/generate/route.ts                    │
+│ app/api/long-form/generate/route.ts          │
+│   guarded: validate → repair retry → ship    │
+└──────────────────────────────────────────────┘
+```
+
+The non-obvious design choice here is that `anti-ai.ts` exports the prose AND the structured arrays from the same file. The prose is what the model reads. The arrays are what the validator reads. They have to stay in sync, and a dev-mode drift guard at the bottom of the file makes sure they do (more on that later).
+
+## Layer 1: the prose rulebook
+
+Layer one is the part most teams already have. Ours is about 280 lines of structured English, organised into eleven sections (§1A through §1K) covering banned vocabulary, contrast structures, transitional crutches, the bold-colon paragraph prefix that Gemini loves, the double-hyphen em-dash substitute, and a handful of cadence rules that apply at the post level.
+
+A representative slice:
+
+```ts
+// lib/prompts/anti-ai.ts
+export const ANTI_AI_RULES = `
+## §1A — Banned vocabulary (hard veto)
+Never use any of these words or their morphological variants:
+delve, tapestry, intricate, robust, seamless, navigating, ...
+
+## §1J — Gemini formatting tells
+- Do NOT prefix paragraphs with bold-colon labels like **The Solution:**
+- Do NOT open with "Certainly!", "Here is", or "Let's explore"
+- Do NOT use "--" as an em-dash substitute. Use a real em-dash or rephrase.
+
+## §5 — Banned contrast structures
+Never write "It is not X. It is Y." or "X isn't just Y, it's Z."
+These cadences are AI tells regardless of the words you fill in.
+`
+```
+
+This part of the system was working. Mostly. The complaint that triggered this work was the proof that "mostly" is not enough.
+
+## Layer 2: the structured lexicon
+
+Same file, different export. The arrays are the part the validator can actually act on:
+
+```ts
+// lib/prompts/anti-ai.ts (continued)
+
+export const BANNED_WORDS: readonly string[] = [
+  'delve', 'delving', 'tapestry', 'intricate', 'robust', 'seamless',
+  'navigating', 'transformative', 'pivotal', 'underscore',
+  'harness', 'unleash', 'empower', 'streamline', /* ...~120 entries */
+];
+
+export const BANNED_PHRASES: readonly string[] = [
+  'harness the power', 'tap into', 'a new era',
+  'navigate the complexities', 'cutting-edge', 'game-changer',
+  'best practices', 'thought leadership', /* ...~140 entries */
+];
+
+export const BANNED_OPENERS: readonly string[] = [
+  // §1H — adverb-comma openers (the 2026 tell)
+  'Ultimately,', 'Crucially,', 'Importantly,', 'Notably,',
+  'Significantly,', 'Remarkably,', 'Interestingly,',
+  // §1J — Gemini affirmations
+  'Certainly!', 'Absolutely!', 'Of course!', 'Indeed,',
+  'Here is', 'Here are', "Here's",
+  "Let's explore", "Let's dive", "Let's break", /* ... */
+];
+
+export const BANNED_CLOSERS: readonly string[] = [
+  'What do you think?', 'Thoughts?', 'Drop a comment',
+  'Tag someone who needs this', 'Repost if', /* ... */
+];
+
+export const BANNED_REGEX_PATTERNS = [
+  {
+    label: 'bold-colon paragraph prefix (**Term:**)',
+    kind: 'banned-structure',
+    pattern: /\*\*[^*\n]{1,40}:\*\*/g,
+  },
+  {
+    label: 'contrast: "It is not X. It is Y."',
+    kind: 'banned-contrast',
+    pattern: /\bit\s+is\s+not\s+[\w\s,'-]{1,40}\.\s+it\s+is\s+[\w\s,'-]{1,40}\b/gi,
+  },
+  {
+    label: "contrast: \"X isn't just Y, it's Z\"",
+    kind: 'banned-contrast',
+    pattern: /\b\w+\s+isn'?t\s+just\s+[\w-]+,?\s+it'?s\s+[\w-]+/gi,
+  },
+  /* ... seven more contrast variants */
+] as const;
+```
+
+Two design decisions inside the structured layer matter more than they look:
+
+The opener list is matched only at sentence-start positions, not anywhere in the body. "Let's explore" is fine inside a paragraph if a developer is quoting their PM. It is a tell only when it opens a section. The validator handles position; the array does not need to.
+
+The regex array uses a discriminated union (`kind: 'banned-structure' | 'banned-contrast' | 'banned-cadence'`) so the repair directive can group violations by category when it asks the model to retry. Telling the model "you used a banned-contrast structure on line 4 and a banned-structure pattern on line 9" gives it a much sharper retry signal than "fix these strings".
+
+## The validator
+
+`lib/prompts/lexicon-validator.ts` is a pure module. Zero external dependencies, no async, no network. It takes a parsed campaign or article and returns a typed report.
+
+```ts
+export interface Violation {
+  kind: 'banned-word' | 'banned-phrase' | 'banned-opener'
+      | 'banned-closer' | 'banned-structure' | 'banned-contrast'
+      | 'banned-cadence';
+  term: string;            // the actual offender
+  snippet: string;         // ±40 chars of surrounding context
+  location: string;        // "x_thread.day1.post[2]" etc.
+  weight: number;          // contribution to slop score
+}
+
+export interface ValidationReport {
+  violations: Violation[];
+  slopScore: number;       // sum of weights, 0 = clean
+  clean: boolean;          // slopScore === 0
+}
+```
+
+The scan algorithm has four passes. Each pass runs against a sanitized copy of the text, not the raw output.
+
+### Pass 0: sanitize
+
+Before any scan, we strip:
+
+1. Fenced code blocks (```` ``` ````) — JSON examples in long-form articles legitimately contain words like "structured" or "intricate" inside string literals.
+2. Inline code (`` ` ``) — variable names like `delveDepth` should not match the word `delve`.
+3. URLs — query strings are full of generic SEO terms.
+
+```ts
+function sanitize(input: string): string {
+  return input
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`\n]+`/g, '')
+    .replace(/https?:\/\/\S+/g, '');
+}
+```
+
+This single function eliminated about 30% of false positives in our first internal test runs. Code blocks were the biggest source.
+
+### Pass 1: word-bounded scan
+
+```ts
+for (const word of BANNED_WORDS) {
+  const re = new RegExp(`\\b${escapeRegex(word)}\\b`, 'gi');
+  for (const match of sanitized.matchAll(re)) {
+    violations.push({
+      kind: 'banned-word',
+      term: word,
+      snippet: extractSnippet(sanitized, match.index),
+      location,
+      weight: 1,
+    });
+  }
+}
+```
+
+`\b` word boundaries are the difference between catching "delve" and catching "developer". The case-insensitive flag is the difference between catching "Delve" at the start of a sentence and missing it.
+
+### Pass 2: phrase scan
+
+Phrases use a similar regex but with `\s+` between tokens to handle the model occasionally inserting line breaks mid-phrase:
+
+```ts
+for (const phrase of BANNED_PHRASES) {
+  const tokenized = phrase.split(/\s+/).map(escapeRegex).join('\\s+');
+  const re = new RegExp(`\\b${tokenized}\\b`, 'gi');
+  // ...
+}
+```
+
+### Pass 3: opener scan
+
+This is the part that needs position awareness. We split into sentences using a punctuation-aware regex, then check each sentence's first ~30 chars against the opener list:
+
+```ts
+const sentences = sanitized.split(/(?<=[.!?])\s+(?=[A-Z])/);
+
+for (const sentence of sentences) {
+  const head = sentence.slice(0, 40);
+  for (const opener of BANNED_OPENERS) {
+    if (head.toLowerCase().startsWith(opener.toLowerCase())) {
+      violations.push({
+        kind: 'banned-opener',
+        term: opener,
+        weight: 2, // openers are stronger tells
+        // ...
+      });
+    }
+  }
+}
+```
+
+Openers get a higher weight (2 instead of 1) because they are a structural tell, not just a word tell. A "Crucially," at the start of a paragraph is a much stronger signal of slop than the word "crucial" buried in a sentence.
+
+### Pass 4: regex patterns + cadence
+
+The regex patterns from the structured array run last. Then we add one detection the prose alone could not encode:
+
+```ts
+// Same-word opener cadence — the Gemini paragraph rhythm tell
+const openerWords = sentences.map(s => s.split(/\s+/)[0]?.toLowerCase());
+let streak = 1;
+for (let i = 1; i < openerWords.length; i++) {
+  if (openerWords[i] && openerWords[i] === openerWords[i - 1]) {
+    streak++;
+    if (streak >= 3) {
+      violations.push({
+        kind: 'banned-cadence',
+        term: `same-word opener "${openerWords[i]}" x${streak}`,
+        weight: 3,
+        // ...
+      });
+    }
+  } else {
+    streak = 1;
+  }
+}
+```
+
+Three or more consecutive sentences starting with the same word is a Gemini-specific cadence that humans rarely produce. Weight of 3 because it is a strong tell on its own.
+
+## The repair loop
+
+When the validator returns a non-clean report, we have a choice. Reject and ask the user to retry. Patch the text in place. Or ask the model to rewrite.
+
+We picked option three with a hard cap of one retry. The reasoning is in the latency section below; the implementation is in `app/api/generate/route.ts`:
+
+```ts
+async function generateWithLexiconGuard(parts, basePrompt) {
+  const initial = await generateFromParts(parts);
+  const parsed = JSON.parse(initial);
+  const report = validateCampaign(parsed);
+
+  const retryWorthy =
+    report.slopScore >= 3 ||
+    report.violations.some(v =>
+      v.kind === 'banned-structure'  ||
+      v.kind === 'banned-contrast'   ||
+      v.kind === 'banned-closer'
+    );
+
+  if (!retryWorthy) {
+    return { responseText: initial, report, retried: false };
+  }
+
+  const repairDirective = buildRepairDirective(report);
+  const repairParts = [
+    {
+      text: `${basePrompt}\n\n${repairDirective}\n\n` +
+            `## Rejected output (reference only — do NOT paraphrase, ` +
+            `rewrite from source)\n${initial.slice(0, 4000)}`,
+    },
+    ...parts.slice(1),
+  ];
+
+  const retried = await generateFromParts(repairParts);
+  const retriedReport = validateCampaign(JSON.parse(retried));
+
+  return retriedReport.slopScore < report.slopScore
+    ? { responseText: retried, report: retriedReport, retried: true }
+    : { responseText: initial, report, retried: true };
+}
+```
+
+`buildRepairDirective` is the part that makes the retry work. A generic "do better" instruction does not help. A specific list of what to fix does:
+
+```ts
+function buildRepairDirective(report) {
+  const grouped = groupBy(report.violations, v => v.kind);
+  const lines = ['## Repair directive (mandatory)'];
+
+  if (grouped['banned-word']?.length) {
+    lines.push(`These exact words appeared and MUST be removed: ${
+      [...new Set(grouped['banned-word'].map(v => v.term))].join(', ')
+    }`);
+  }
+  if (grouped['banned-contrast']?.length) {
+    lines.push(`These contrast structures appeared and MUST be rewritten:`);
+    grouped['banned-contrast'].forEach(v =>
+      lines.push(`  - ${v.label} at: "${v.snippet}"`)
+    );
+  }
+  // ... other categories
+
+  lines.push('Rewrite from the source material. Do not paraphrase the rejected output.');
+  return lines.join('\n');
+}
+```
+
+The "rewrite from source, do not paraphrase" instruction is critical. Without it, the model takes the rejected draft, swaps "delve" for "explore", and ships a draft that is structurally identical and still bad. With it, the model goes back to the source material and produces something genuinely different.
+
+## Threshold tuning per surface
+
+Social and long-form get different thresholds:
+
+```ts
+// Social: retry if slopScore >= 3 OR any structural violation
+const SOCIAL_RETRY_THRESHOLD = 3;
+
+// Long-form: retry if slopScore >= 4 OR any structural violation
+const LONGFORM_RETRY_THRESHOLD = 4;
+```
+
+Long-form articles are 1,500-2,500 words. A small number of violations spread across that much text is acceptable; users can edit. A 250-word LinkedIn post with three banned-word hits is unshippable.
+
+The structural violations (banned-contrast, banned-structure, banned-closer) trigger retry on either surface regardless of slop score, because those are signature tells that a human reader will spot in one glance.
+
+## The drift guard
+
+The structured arrays and the prose rulebook have to stay in sync. If a developer adds "delve" to `BANNED_WORDS` but forgets to mention it in the prose, the model never learns the rule and the validator catches it on every generation — wasting a retry. If they add it to the prose but not the array, the validator lets it through.
+
+We catch this in dev mode with a one-time import-time check:
+
+```ts
+if (process.env.NODE_ENV !== 'production') {
+  const proseLower = ANTI_AI_RULES.toLowerCase();
+  const orphans = [];
+  for (const w of BANNED_WORDS) {
+    if (!proseLower.includes(w.toLowerCase())) orphans.push(`word: ${w}`);
+  }
+  for (const p of BANNED_PHRASES) {
+    if (!proseLower.includes(p.toLowerCase())) orphans.push(`phrase: ${p}`);
+  }
+  if (orphans.length > 0) {
+    console.warn(
+      `[anti-ai] ${orphans.length} structured entries missing from prose:\n` +
+      orphans.slice(0, 10).map(o => `  - ${o}`).join('\n')
+    );
+  }
+}
+```
+
+CI promotes the warning to an error. Local dev sees a yellow log and keeps building.
+
+## Latency, cost, and what users actually feel
+
+The validator itself is free. Pure regex on a few KB of text — low single-digit milliseconds even on a 2,000-word article.
+
+The retry is the cost. One full Gemini 3 Flash call:
+
+| Surface | No retry | Retry path |
+|---|---|---|
+| Social (5 platforms) | 3-8s | 6-15s |
+| Long-form article | 15-40s | 30-75s |
+
+Worst case is roughly 2× generation time. Not 4× or 5× — we hard-capped retries at one. The reason is empirical: a third or fourth attempt has diminishing returns and tends to introduce different slop instead of removing the existing slop. After two tries, ship the cleaner of the two with `lexiconWarnings` attached so the UI can show a "Some terms flagged — regenerate?" prompt.
+
+The honest user-facing copy is in our loader now:
+
+> Every draft runs through Ozigi's banned-lexicon validator before it reaches you. If we catch AI slop, we regenerate once. That's why this can take a beat longer than other tools — the output won't read like ChatGPT.
+
+That copy turned the latency from a bug into a feature. Internal feedback shifted from "why is this slow" to "this is the only AI tool that admits it checks itself".
+
+## Telemetry
+
+Every generation logs three new fields to PostHog:
+
+```ts
+posthog.capture({
+  event: 'vertex_generation_completed',
+  properties: {
+    lexiconViolations: report.violations.length,
+    lexiconSlopScore: report.slopScore,
+    lexiconRetried: retried,
+    // ... existing properties
+  },
+});
+```
+
+`lexiconRetried` is the rate metric. If it climbs above 20%, we know the prompt has degraded and needs an update before the validator becomes the bottleneck. `lexiconSlopScore` distribution tells us which terms are leaking — if "harness" shows up in 40 violations this week and never the week before, we know to look at recent prompt changes or upstream model updates.
+
+This feedback loop is the part that makes the system improve over time. Without telemetry, you ship the validator once and never know whether it is doing anything.
+
+## What this does not catch
+
+Honest answer: a lot.
+
+The validator catches lexical slop (specific words, phrases, structures, openers). It does not catch:
+
+- Sentence rhythm tells (the one-two-three beat that closes Gemini paragraphs)
+- Paragraph balance (the model's preference for three-sentence paragraphs)
+- Information-density tells (saying nothing in 200 words)
+- Tone drift (slipping from blunt-engineering to corporate-marketing mid-post)
+
+The next layer is an LLM judge: a second, smaller model that reads the output and rates it on rhythm, density, and tone, returning a structured score. That is a 2026 Q3 project for us — needs more thought on prompt design, judge model selection, and how to keep the judge from rubber-stamping its own training distribution.
+
+For now, lexical enforcement catches roughly 85% of what users would call "slop". That is a meaningful jump from the prompt-only baseline, and it shipped this week.
+
+## Lift it for your own stack
+
+The whole system is open source. If you want the same layer in your product:
+
+1. Copy `lib/prompts/anti-ai.ts` and trim the lists to your domain.
+2. Copy `lib/prompts/lexicon-validator.ts` as-is — it is dependency-free.
+3. Wrap your generation route in something like `generateWithLexiconGuard`.
+4. Add the three PostHog properties.
+5. Update your loader copy. Tell users why it is slower. They will respect you for it.
+
+Source: [github.com/Dumebii/OziGi](https://github.com/Dumebii/OziGi).
+
+If you ship LLM output to people who can spot slop, you need both layers. The prompt asks the model to behave. The validator makes sure it did. Trust, but verify — and verify in code.
