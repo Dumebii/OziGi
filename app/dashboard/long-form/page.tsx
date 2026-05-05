@@ -601,10 +601,10 @@ function LongFormContent() {
                       </>
                     )}
                   </button>
-                  <p className="text-xs text-foreground-subtle text-center -mt-2">
+                  <p className="text-xs text-foreground-subtle text-center -mt-2 leading-relaxed">
                     {enableWebResearch
-                      ? "Web research adds ~10-30 seconds for live source gathering."
-                      : "Tip: enable Live Web Research for current, citable content."}
+                      ? "Web research adds ~10-30 seconds. Every draft also runs through the slop validator and may regenerate once if AI tells slip through."
+                      : "Every draft runs through the slop validator. If AI tells slip through, we regenerate once before showing it to you."}
                   </p>
                 </div>
               )}

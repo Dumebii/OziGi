@@ -12,10 +12,9 @@ import {
 } from "framer-motion";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import Hero from "../components/Hero";
+import DashboardPreview from "../components/DashboardPreview";
 import AuthModal from "../components/AuthModal";
 import PricingCards from "../components/PricingCards";
-import BeforeAfterSlider from "../components/BeforeAfterSlider";
 import { LandingDemoWidget } from "../components/LandingDemoWidget";
 import SocialProof from "../components/SocialProof";
 import PeerlistReviews from "../components/PeerlistReviews";
@@ -167,7 +166,7 @@ export default function Home() {
       <Header session={session} onSignIn={() => setIsAuthModalOpen(true)} />
       <main className="flex-1">
 
-        {/* ──────────────────────────────────────────────────────����������──────── */}
+        {/* ──────────────────────────────────────────────�����───────��������������──────── */}
         {/* HERO — split: headline left · demo right                        */}
         {/* ────────────────────────����────────────────────────────────────── */}
         <section
@@ -200,65 +199,108 @@ export default function Home() {
           <div className="absolute top-0 left-0 right-0 h-px"
             style={{ background: `linear-gradient(to right, transparent, ${C.red}50, transparent)` }} />
 
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-24 flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-24 flex flex-col items-center text-center gap-8">
 
-            {/* ── Left col: headline + CTAs ───────────────────────────── */}
-            <div className="flex-1 max-w-xl">
-              {/* Headline */}
-              <motion.div style={{ y: heroParallaxY }}>
+            {/* ── Eyebrow pill ────────────────────────────────────────── */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]"
+              style={{ background: "rgba(232,50,10,0.08)", color: C.red, border: `1px solid rgba(232,50,10,0.2)` }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: C.red }} />
+              Human-sounding · No AI fluff · Publish anywhere
+            </motion.div>
+
+            {/* ── Demo widget (above headline) ────────────────────────── */}
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-3xl"
+            >
+              <div className="relative">
+                {/* Top-left corner accent lines */}
+                <div className="absolute -top-3 -left-3 w-10 h-10 pointer-events-none">
+                  <div className="absolute top-0 left-0 w-full h-px" style={{ background: `linear-gradient(to right, ${C.red}, transparent)` }} />
+                  <div className="absolute top-0 left-0 h-full w-px" style={{ background: `linear-gradient(to bottom, ${C.red}, transparent)` }} />
+                </div>
+                {/* Bottom-right corner accent lines */}
+                <div className="absolute -bottom-3 -right-3 w-10 h-10 pointer-events-none">
+                  <div className="absolute bottom-0 right-0 w-full h-px" style={{ background: `linear-gradient(to left, ${C.red}, transparent)` }} />
+                  <div className="absolute bottom-0 right-0 h-full w-px" style={{ background: `linear-gradient(to top, ${C.red}, transparent)` }} />
+                </div>
+
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: C.red }} />
+                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: C.red }}>
+                    Try it now — live demo
+                  </span>
+                </div>
+
+                <LandingDemoWidget />
+
+                <p className="text-center text-[10px] font-medium mt-3" style={{ color: C.dim }}>
+                  No credit card · No account · Free to try
+                </p>
+              </div>
+            </motion.div>
+
+            {/* ── Full-width headline ─────────────────────────────────── */}
+            <motion.div style={{ y: heroParallaxY }} className="w-full">
               <motion.h1
                 initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-                className="text-5xl md:text-7xl lg:text-[5.5rem] font-black italic uppercase tracking-tighter leading-[0.92] mb-5"
+                transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] xl:text-[3.75rem] 2xl:text-[4.5rem] font-black italic uppercase tracking-tight leading-[1.05] text-balance"
               >
-                Automate Content<br />
+                Automate content creation{" "}
                 <span className="relative inline-block">
-                  Creation
+                  <span style={{ color: C.red }}>without ChatGPT&apos;s voice.</span>
                   <motion.span
-                    className="absolute left-0 -bottom-0.5 h-1 rounded-full origin-left"
+                    className="absolute left-0 -bottom-1 h-1 rounded-full origin-left"
                     style={{ background: C.red }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ duration: 0.5, delay: 0.55, ease: "easeOut" }}
+                    transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
                   />
-                </span>{" "}
-                <span style={{ color: C.red }}>Without ChatGPT&apos;s Voice.</span>
+                </span>
               </motion.h1>
-              </motion.div>
+            </motion.div>
 
-              <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, delay: 0.38 }}
-                className="text-base md:text-lg font-medium leading-relaxed mb-8 max-w-md"
-                style={{ color: C.muted }}
-              >
-                Blog posts, newsletters, LinkedIn, X threads — in your voice, not AI&apos;s.
-              </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.38 }}
+              className="text-base md:text-lg font-medium leading-relaxed max-w-xl text-pretty"
+              style={{ color: C.muted }}
+            >
+              Blog posts, newsletters, LinkedIn, X threads — in your voice, not AI&apos;s.
+            </motion.p>
 
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="flex flex-wrap items-center gap-3 mb-10"
-              >
-                <MagneticBtn variant="red" onClick={() => setIsAuthModalOpen(true)}>
-                  Get started free →
-                </MagneticBtn>
-                <MagneticBtn variant="ghost" onClick={() => setIsAuthModalOpen(true)}>
-                  Sign in
-                </MagneticBtn>
-              </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="flex flex-wrap items-center justify-center gap-3"
+            >
+              <MagneticBtn variant="red" onClick={() => setIsAuthModalOpen(true)}>
+                Get started free →
+              </MagneticBtn>
+              <MagneticBtn variant="ghost" onClick={() => setIsAuthModalOpen(true)}>
+                Sign in
+              </MagneticBtn>
+            </motion.div>
 
-              {/* Launch badges — horizontal scroll */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.65 }}
-                className="w-full overflow-x-auto scrollbar-hide"
-              >
-                <div className="flex items-center gap-6 pb-2 w-fit">
+            {/* Launch badges — horizontal scroll */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.65 }}
+              className="w-full overflow-x-auto scrollbar-hide mt-2"
+            >
+              <div className="flex items-center justify-center gap-6 pb-2 w-fit mx-auto">
                   <a href="https://peerlist.io/dumebi/project/ai-content-generator-that-sounds-human"
                     target="_blank" rel="noopener noreferrer"
                     className="opacity-30 hover:opacity-70 transition-opacity duration-300 grayscale hover:grayscale-0 flex-shrink-0"
@@ -313,62 +355,38 @@ export default function Home() {
                   </a>
                 </div>
               </motion.div>
-            </div>
-
-            {/* ── Right col: demo widget ─��────────────────────────────── */}
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.75, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="flex-1 w-full max-w-lg lg:max-w-none"
-            >
-              {/* Outer accent frame */}
-              <div className="relative">
-                {/* Top-left corner accent lines */}
-                <div className="absolute -top-3 -left-3 w-10 h-10 pointer-events-none">
-                  <div className="absolute top-0 left-0 w-full h-px" style={{ background: `linear-gradient(to right, ${C.red}, transparent)` }} />
-                  <div className="absolute top-0 left-0 h-full w-px" style={{ background: `linear-gradient(to bottom, ${C.red}, transparent)` }} />
-                </div>
-                {/* Bottom-right corner accent lines */}
-                <div className="absolute -bottom-3 -right-3 w-10 h-10 pointer-events-none">
-                  <div className="absolute bottom-0 right-0 w-full h-px" style={{ background: `linear-gradient(to left, ${C.red}, transparent)` }} />
-                  <div className="absolute bottom-0 right-0 h-full w-px" style={{ background: `linear-gradient(to top, ${C.red}, transparent)` }} />
-                </div>
-
-                {/* Label above widget */}
-                <div className="flex items-center gap-2 mb-3 px-1">
-                  <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: C.red }} />
-                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: C.red }}>
-                    Try it now — live demo
-                  </span>
-                </div>
-
-                <LandingDemoWidget />
-
-                {/* No account pill below */}
-                <p className="text-center text-[10px] font-medium mt-3" style={{ color: C.dim }}>
-                  No credit card · No account · Free to try
-                </p>
-              </div>
-            </motion.div>
           </div>
         </section>
 
         {/* ─────────────────────────────────────────────────────────────── */}
-        {/* OUTPUT SHOWCASE — fixed bg to match brand navy                  */}
+        {/* DASHBOARD PREVIEW — what a completed generation looks like      */}
         {/* ─────────────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden" style={{ background: C.navy, borderTop: `1px solid ${C.border}` }}>
-          <DotGrid id="output-dots" opacity={0.05} />
-          <div className="relative z-10">
-            <div className="pt-14 pb-2 px-8 md:px-14">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-1" style={{ color: C.dim }}>
-                What it produces
+        <section
+          className="relative overflow-hidden py-20 md:py-28"
+          style={{ background: C.navyDeep, borderTop: `1px solid ${C.border}` }}
+        >
+          <DotGrid id="preview-dots" opacity={0.05} />
+          <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={fadeUp}
+              className="text-center mb-12 md:mb-14"
+            >
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: C.red }}>
+                Inside the dashboard
               </p>
-              <p className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter" style={{ color: C.white }}>
-                Real outputs. Swipe to explore.
+              <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.98] max-w-3xl mx-auto">
+                One input. Five channels. <span style={{ color: C.muted }}>Plus a long-form draft.</span>
+              </h2>
+              <p className="text-sm md:text-base font-medium mt-4 max-w-xl mx-auto" style={{ color: C.muted }}>
+                Drop raw context. Get scheduled-ready drafts for X, LinkedIn, Discord, Email and Slack &mdash;
+                then watch a full long-form article slide in next, all in your voice.
               </p>
-            </div>
-            <Hero />
+            </motion.div>
+
+            <DashboardPreview />
           </div>
         </section>
 
@@ -460,32 +478,6 @@ export default function Home() {
         <div style={{ background: C.navyDeep, borderTop: `1px solid ${C.border}` }}>
           <PeerlistReviews />
         </div>
-
-        {/* ─────────────────────────────────────────────────────────────── */}
-        {/* STATS                                                           */}
-        {/* ─────────────────────────────────────────────────────────────── */}
-        <section className="relative py-16 md:py-20"
-          style={{ background: C.navy, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
-          <div className="max-w-4xl mx-auto px-8 md:px-14">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={stagger}
-              className="grid grid-cols-3 gap-6 text-center">
-              {[
-                { val: "6",    label: "Content formats",     sub: "Blog · Newsletter · LinkedIn · X · Discord · Briefs" },
-                { val: "1-click", label: "Publish & send",   sub: "Direct to social or inbox" },
-                { val: "0",    label: "AI fluff",            sub: "Banned lexicon enforced" },
-              ].map((s, i) => (
-                <motion.div key={i} variants={springUp}>
-                  <p className="text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter mb-2 animate-gradient-x bg-clip-text text-transparent bg-[length:220%_100%]"
-                    style={{ backgroundImage: `linear-gradient(90deg, ${C.red}, #ff7b3d, ${C.red})` }}>
-                    {s.val}
-                  </p>
-                  <p className="text-sm md:text-base font-bold mb-1">{s.label}</p>
-                  <p className="text-[11px] font-medium" style={{ color: C.dim }}>{s.sub}</p>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
 
         {/* ─────────────────────────────────────────────────────────────── */}
         {/* HUMAN-IN-THE-LOOP — cross pattern                              */}
@@ -587,12 +579,6 @@ export default function Home() {
                 </motion.div>
               </div>
 
-              <motion.div variants={fadeUp} className="mt-14">
-                <p className="text-[9px] uppercase font-black tracking-widest mb-5" style={{ color: C.dim }}>
-                  Try it yourself — drag to reveal
-                </p>
-                <BeforeAfterSlider />
-              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -703,18 +689,6 @@ export default function Home() {
           style={{ background: C.navy, borderTop: `1px solid ${C.border}` }}>
           <CrossGrid id="pricing-cross" opacity={0.035} />
           <div className="relative z-10 max-w-6xl mx-auto px-8 md:px-14">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={fadeUp}
-              className="text-center mb-14">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: C.red }}>Pricing</p>
-              <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.95]" style={{ color: C.white }}>
-                Blog posts.<br />
-                Newsletters.<br />
-                <span style={{ color: C.muted }}>Social. Briefs.</span>
-              </h2>
-              <p className="text-base font-medium mt-5" style={{ color: C.muted }}>
-                All formats. All human. Start free.
-              </p>
-            </motion.div>
             <PricingCards onOpenAuthModal={() => setIsAuthModalOpen(true)} />
           </div>
         </section>

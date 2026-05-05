@@ -5,14 +5,14 @@ const GENERATION_MESSAGES = [
   { text: "Analyzing your source material...", duration: 3000 },
   { text: "Extracting key narratives...", duration: 4000 },
   { text: "Applying your persona voice...", duration: 5000 },
-  { text: "Crafting platform-specific content...", duration: 6000 },
-  { text: "Optimizing for engagement...", duration: 5000 },
-  { text: "Filtering banned lexicon...", duration: 4000 },
-  { text: "Generating X posts...", duration: 5000 },
-  { text: "Creating LinkedIn content...", duration: 5000 },
-  { text: "Building Discord announcements...", duration: 4000 },
+  { text: "Drafting platform-specific posts...", duration: 6000 },
+  { text: "Generating X thread...", duration: 5000 },
+  { text: "Writing LinkedIn post...", duration: 5000 },
+  { text: "Building Discord announcement...", duration: 4000 },
   { text: "Composing email newsletter...", duration: 5000 },
-  { text: "Polishing final output...", duration: 8000 },
+  { text: "Running the slop filter...", duration: 5000 },
+  { text: "Scanning for AI tells...", duration: 4000 },
+  { text: "Re-running if any slop slipped through...", duration: 8000 },
   { text: "Almost there...", duration: 10000 },
 ];
 
@@ -87,8 +87,10 @@ export default function GeneratingState() {
       </p>
 
       {/* Subtle tip */}
-      <p className="mt-8 text-xs text-slate-400 max-w-sm text-center">
-        The Context Engine is transforming your raw material into platform-ready content. This typically takes 30-60 seconds.
+      <p className="mt-8 text-xs text-slate-400 max-w-sm text-center leading-relaxed">
+        Every draft runs through Ozigi&apos;s banned-lexicon validator before it reaches you.
+        If we catch AI slop, we regenerate once. That&apos;s why this can take a beat longer
+        than other tools &mdash; the output won&apos;t read like ChatGPT.
       </p>
     </div>
   );
