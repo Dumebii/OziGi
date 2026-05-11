@@ -52,7 +52,11 @@
       "Bash(pnpm --version)",
       "Bash(pnpm add *)",
       "Bash(pnpm typecheck *)",
-      "Bash(Get-ChildItem -Path . -Name)"
+      "Bash(Get-ChildItem -Path . -Name)",
+      "Bash(dir \"C:\\\\Users\\\\PC\\\\fork\\\\OziGi\" /b)",
+      "Bash(dir \"C:\\\\Users\\\\PC\\\\fork\\\\OziGi\\\\app\" /b)",
+      "Bash(dir \"C:\\\\Users\\\\PC\\\\fork\\\\OziGi\\\\components\" /b)",
+      "Bash(gh label *)"
     ]
   }
 }

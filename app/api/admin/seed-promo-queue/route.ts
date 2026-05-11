@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const ADMIN_SECRET = process.env.ADMIN_SECRET || process.env.CRON_SECRET;
 const APP_URL = process.env.APP_URL || "https://ozigi.app";
 
 // 7-email re-engagement drip sequence, spaced ~3 days apart.

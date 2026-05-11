@@ -79,7 +79,7 @@ export async function GET(req: Request) {
     const { data: users, error: usersError } = await supabase
       .from("profiles")
       .select("id, email, display_name, promo_unsubscribed")
-      .eq("promo_unsubscribed", false);
+      .or("promo_unsubscribed.eq.false,promo_unsubscribed.is.null");
 
     if (usersError) throw usersError;
 

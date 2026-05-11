@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createPromoSchedule, deletePromoSchedule, listSchedules } from "@/lib/qstash";
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const ADMIN_SECRET = process.env.ADMIN_SECRET || process.env.CRON_SECRET;
 
 function isAuthorized(req: Request) {
   return ADMIN_SECRET && req.headers.get("authorization") === `Bearer ${ADMIN_SECRET}`;
