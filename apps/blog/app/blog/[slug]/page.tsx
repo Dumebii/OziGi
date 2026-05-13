@@ -24,16 +24,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const post = await getPostBySlug(slug);
   if (!post) return { title: "Not Found" };
 
-  const baseUrl = "https://blog.ozigi.app";
-  const postUrl = `${baseUrl}/blog/${slug}`;
-  const ogImage = post.coverImage || "/images/og-default.png";
-  
+  const postUrl = `https://blog.ozigi.app/blog/${slug}`;
+
   return {
     title: `${post.title} | Ozigi Blog`,
     description: post.description || post.excerpt || "",
     keywords: post.keywords || [],
     authors: post.author ? [{ name: post.author }] : [],
-    canonical: postUrl,
     alternates: {
       canonical: postUrl,
     },
@@ -45,14 +42,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       publishedTime: post.date,
       modifiedTime: post.modifiedTime || post.date,
       authors: post.author ? [post.author] : [],
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: post.title,
-        }
-      ],
+      // images omitted — opengraph-image.tsx in this segment generates
+      // a branded PNG per post, which Next.js registers automatically
       section: post.section || "Blog",
       tags: post.keywords || post.categories || [],
     },
@@ -60,7 +51,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       card: "summary_large_image",
       title: post.title,
       description: post.description || post.excerpt || "",
-      images: [ogImage],
+      // images omitted — resolved from opengraph-image.tsx
       creator: post.authorHandle || "@ozigi_app",
       site: "@ozigi_app",
     },
