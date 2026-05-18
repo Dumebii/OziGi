@@ -228,9 +228,9 @@ export default function Home() {
                   transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                   className="w-full text-3xl sm:text-4xl md:text-[2.75rem] lg:text-[3rem] xl:text-[3.5rem] 2xl:text-[4rem] font-black italic uppercase tracking-tight leading-[1.05] text-balance"
                 >
-                  <span className="block mb-2">Automate content creation</span>
+                  <span className="block mb-2">The AI content tool that actually sounds like you</span>
                   <span className="relative inline-block">
-                    <span style={{ color: C.red }}>without ChatGPT&apos;s voice.</span>
+                    <span style={{ color: C.red }}>— not like AI.</span>
                     <motion.span
                       className="absolute left-0 -bottom-1 h-1 rounded-full origin-left"
                       style={{ background: C.red }}
