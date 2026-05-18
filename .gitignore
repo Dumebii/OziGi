@@ -48,3 +48,19 @@ next-env.d.ts
 
 # Claude Code local settings
 .claude/
+
+# Development and testing
+emails/
+playwright-report/
+playwright-reports/
+test-results/
+tests/
+
+# Scripts and automation
+scripts/
+
+# Database migrations
+supabase/migrations/
+
+# Worker configurations
+worker/
