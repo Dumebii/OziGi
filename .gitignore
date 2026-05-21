@@ -48,3 +48,10 @@ next-env.d.ts
 
 # Claude Code local settings
 .claude/
+
+# Outreach email scripts
+send_outreach.py
+send_apollo_outreach.py
+send_batch3.py
+send_batch3_retry.py
+send_tomorrow.py

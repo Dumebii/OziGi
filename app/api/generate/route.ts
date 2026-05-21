@@ -1,7 +1,6 @@
-// Vercel Hobby tier caps function runtime at 60s. We set maxDuration to 60
-// explicitly and rely on the budget guard to skip lexicon repair retries when
-// time is tight. Images and other files are passed as fileData URIs (not
-// base64-inlined) so Vertex AI fetches them directly — no encoding overhead.
+// Vercel Hobby tier caps function runtime at 60s.
+// Images and other files are passed as fileData URIs (not base64-inlined)
+// so Vertex AI fetches them directly — no encoding overhead.
 export const maxDuration = 60;
 
 import { NextResponse } from 'next/server';
@@ -12,7 +11,6 @@ import {
   type CampaignShape,
   type ValidationReport,
 } from '@/lib/prompts/lexicon-validator';
-import { repairSurgically } from '@/lib/lexicon-repair';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { PostHog } from 'posthog-node';
@@ -114,17 +112,8 @@ async function generateFromParts(parts: any[]): Promise<string> {
   return responseText;
 }
 
-// Hard budget for the entire generation slot, sized for Hobby (60s cap).
-const GENERATION_BUDGET_MS = 55_000;
-// Minimum headroom required to attempt surgical repair (much lower than
-// a full regen — repairs are tiny parallel calls, not a second full generation).
-const REPAIR_MIN_REMAINING_MS = 8_000;
-
 async function generateWithLexiconGuard(
   parts: any[],
-  _basePrompt: string,
-  startTime: number,
-  _hasFiles: boolean = false,
 ): Promise<{ responseText: string; report: ValidationReport; retried: boolean }> {
   const initial = await generateFromParts(parts);
 
@@ -137,38 +126,6 @@ async function generateWithLexiconGuard(
   }
 
   const report = validateCampaign(parsed!);
-  const retryWorthy =
-    report.slopScore >= 3 ||
-    report.violations.some(
-      (v) =>
-        v.kind === 'banned-structure' ||
-        v.kind === 'banned-contrast' ||
-        v.kind === 'banned-closer'
-    );
-
-  if (!retryWorthy) {
-    return { responseText: initial, report, retried: false };
-  }
-
-  const elapsed = Date.now() - startTime;
-  const remaining = GENERATION_BUDGET_MS - elapsed;
-  if (remaining < REPAIR_MIN_REMAINING_MS) {
-    console.warn(`[lexicon] skipping repair: only ${remaining}ms budget left, returning original with ${report.violations.length} violation(s)`);
-    return { responseText: initial, report, retried: false };
-  }
-
-  console.log(`[lexicon] ${report.violations.length} violation(s) (slop=${report.slopScore}); starting surgical repair on ${new Set(report.violations.map(v => v.location).filter(Boolean)).size} field(s)`);
-
-  try {
-    const { result: repaired, repairedCount, finalReport, improved } = await repairSurgically(parsed!, report);
-    console.log(`[lexicon] surgical repair: patched ${repairedCount} field(s) in ${Date.now() - startTime - elapsed}ms, slop ${report.slopScore} → ${finalReport.slopScore}`);
-    if (improved) {
-      return { responseText: JSON.stringify(repaired), report: finalReport, retried: true };
-    }
-  } catch (err) {
-    console.error('[lexicon] surgical repair failed, returning original:', err);
-  }
-
   return { responseText: initial, report, retried: false };
 }
 
@@ -235,7 +192,7 @@ export async function POST(req: Request) {
       const parts: any[] = [{ text: textPrompt }, ...buildFileParts(assetUrls)];
 
       const { responseText, report: lexiconReport, retried } =
-        await generateWithLexiconGuard(parts, textPrompt, startTime, assetUrls.length > 0);
+        await generateWithLexiconGuard(parts);
       const lexiconWarnings = summarizeForClient(lexiconReport);
 
       posthog.capture({
@@ -343,15 +300,15 @@ export async function POST(req: Request) {
     const parts: any[] = [{ text: textPrompt }, ...buildFileParts(assetUrls)];
 
     const { responseText, report: lexiconReport, retried } =
-      await generateWithLexiconGuard(parts, textPrompt, startTime, assetUrls.length > 0);
+      await generateWithLexiconGuard(parts);
     const lexiconWarnings = summarizeForClient(lexiconReport);
 
     await incrementCampaignGeneration(user.id);
 
     posthog.capture({
-      distinctId: ip,
+      distinctId: user.id,
       event: 'vertex_generation_completed',
-      properties: { durationMs: Date.now() - startTime, personaVoice, hasFile: assetUrls.length > 0, assetCount: assetUrls.length, status: 'success', lexiconViolations: lexiconReport.violations.length, lexiconSlopScore: lexiconReport.slopScore, lexiconRetried: retried },
+      properties: { email: user.email, durationMs: Date.now() - startTime, personaVoice, hasFile: assetUrls.length > 0, assetCount: assetUrls.length, status: 'success', lexiconViolations: lexiconReport.violations.length, lexiconSlopScore: lexiconReport.slopScore, lexiconRetried: retried },
     });
     await posthog.shutdown();
 

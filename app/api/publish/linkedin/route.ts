@@ -2,9 +2,9 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 // LinkedIn REST API version — YYYYMM format used by /rest/* endpoints.
-// 202605 = May 2026 — current active version per LinkedIn Marketing API docs.
+// 202504 = April 2026 — one month behind to ensure the version is stable/released.
 // https://learn.microsoft.com/en-us/linkedin/marketing/versioning
-const LI_VERSION = "202605";
+const LI_VERSION = "202504";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
