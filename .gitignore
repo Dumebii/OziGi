@@ -50,6 +50,8 @@ next-env.d.ts
 .claude/
 
 # Outreach email scripts
+scrape_github.py
+github_leads.csv
 send_outreach.py
 send_apollo_outreach.py
 send_batch3.py

@@ -135,6 +135,13 @@ export async function POST(req: Request) {
     host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
   });
 
+  // Populated as soon as the user is resolved so the catch block can always
+  // attach identity to error events — even if the error fires deep in generation.
+  let posthogUser: { id: string; email?: string | null } | null = null;
+  // Populated when assetUrls is parsed (both demo and auth paths) so the catch
+  // block knows whether a file upload was in flight when the error occurred.
+  let posthogAssetCount: number | null = null;
+
   try {
     const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
     const { success } = await ratelimit.limit(`ratelimit_${ip}`);
@@ -165,6 +172,7 @@ export async function POST(req: Request) {
       let urlContext = sourceMaterial?.url || '';
       const textContext = sourceMaterial?.rawText || '';
       const assetUrls: string[] = sourceMaterial?.assetUrls || [];
+      posthogAssetCount = assetUrls.length;
 
       let effectiveUrlContext = urlContext;
       if (urlContext) {
@@ -241,6 +249,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized', details: authError?.message || 'No valid session' }, { status: 401 });
     }
 
+    // Snapshot identity for the catch block — set here so any error thrown
+    // after this point (Vertex, lexicon, plan check, etc.) is attributable.
+    posthogUser = { id: user.id, email: user.email };
+
     // --- GitHub context ---
     let githubContext = '';
     const { data: githubConn } = await supabaseFromCookie
@@ -272,6 +284,7 @@ export async function POST(req: Request) {
     let urlContext = sourceMaterial?.url || '';
     const textContext = sourceMaterial?.rawText || '';
     const assetUrls: string[] = sourceMaterial?.assetUrls || [];
+    posthogAssetCount = assetUrls.length;
 
     let effectiveUrlContext = urlContext;
     if (urlContext) {
@@ -315,9 +328,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ output: responseText, lexiconWarnings });
   } catch (error: any) {
     posthog.capture({
-      distinctId: req.headers.get('x-forwarded-for') ?? '127.0.0.1',
+      distinctId: posthogUser?.id ?? req.headers.get('x-forwarded-for') ?? '127.0.0.1',
       event: 'vertex_generation_failed',
-      properties: { durationMs: Date.now() - startTime, errorMessage: error.message, status: 'error' },
+      properties: {
+        durationMs: Date.now() - startTime,
+        errorMessage: error.message,
+        status: 'error',
+        ...(posthogUser?.email ? { email: posthogUser.email } : {}),
+        ...(posthogAssetCount !== null ? { hasFile: posthogAssetCount > 0, assetCount: posthogAssetCount } : {}),
+      },
     });
     await posthog.shutdown();
     console.error('Vertex AI Generate Error:', error);
