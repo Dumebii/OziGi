@@ -49,10 +49,11 @@ next-env.d.ts
 # Claude Code local settings
 .claude/
 
-# Outreach email scripts
+# Outreach email scripts and logs
 scrape_github.py
 scrape_devto.py
 github_leads.csv
+*.log
 send_outreach.py
 send_apollo_outreach.py
 send_batch3.py
