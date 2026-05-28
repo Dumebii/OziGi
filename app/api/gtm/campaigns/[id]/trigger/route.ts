@@ -1,0 +1,50 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import { triggerImmediateScrape, triggerImmediateSend } from '@/lib/gtm/scheduler'
+
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { id } = await params
+  const { action } = await req.json() as { action: 'scrape' | 'send' }
+
+  // Verify ownership
+  const { data: campaign } = await supabaseAdmin
+    .from('campaigns')
+    .select('id, user_id')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!campaign) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const origin = new URL(req.url).origin
+
+  if (origin.includes('localhost')) {
+    // In dev: call the cron route directly (QStash can't reach localhost)
+    const cronRes = await fetch(`${origin}/api/gtm/cron/${action}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.CRON_SECRET}`,
+      },
+      body: JSON.stringify({ campaignId: id }),
+    })
+    const result = await cronRes.json()
+    return NextResponse.json(result)
+  }
+
+  // In production: enqueue via QStash
+  if (action === 'scrape') {
+    await triggerImmediateScrape(id)
+  } else if (action === 'send') {
+    await triggerImmediateSend(id)
+  } else {
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+  }
+
+  return NextResponse.json({ ok: true, queued: action })
+}
