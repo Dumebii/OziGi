@@ -12,6 +12,12 @@
  *   SUPABASE_SERVICE_ROLE_KEY
  *   GTM_ENCRYPTION_KEY
  */
+import path from 'path'
+import { config } from 'dotenv'
+
+// Load .env.local from repo root when running locally
+config({ path: path.resolve(__dirname, '../../.env.local') })
+
 import http from 'http'
 import { createClient } from '@supabase/supabase-js'
 import { loadSession, saveSession, markSessionExpired, isLoggedIn } from './browser'
