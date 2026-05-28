@@ -153,12 +153,18 @@ export async function sendViaGmail(
   }
 }
 
-// Fetch the authenticated user's email address from Google
+// Fetch the authenticated user's email address via the Gmail profile endpoint.
+// Uses gmail.googleapis.com/gmail/v1/users/me/profile which only requires
+// the gmail.send scope — avoids needing userinfo.email scope separately.
 export async function getGmailAddress(accessToken: string): Promise<string> {
-  const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo?fields=email', {
+  const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
-  if (!res.ok) throw new Error('Failed to fetch Gmail user info')
-  const { email } = await res.json()
-  return email as string
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`Failed to fetch Gmail profile (${res.status}): ${body}`)
+  }
+  const { emailAddress } = await res.json()
+  if (!emailAddress) throw new Error('Gmail profile returned no email address')
+  return emailAddress as string
 }
