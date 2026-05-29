@@ -1,8 +1,9 @@
 import { qstashClient } from '@/lib/qstash'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-const SCRAPE_CRON = '0 7 * * *'   // 7am UTC daily
-const SEND_CRON = '0 9 * * *'     // 9am UTC daily
+const SCRAPE_CRON        = '0 7 * * *'   // 7am UTC daily
+const SEND_CRON          = '0 9 * * *'   // 9am UTC daily
+const CHECK_REPLIES_CRON = '0 */4 * * *' // every 4 hours
 
 function requireAppUrl(): string {
   const url = process.env.APP_URL
@@ -15,34 +16,33 @@ function requireAppUrl(): string {
 export async function createCampaignSchedules(campaignId: string): Promise<void> {
   const appUrl = requireAppUrl()
 
-  const [scrapeSchedule, sendSchedule] = await Promise.all([
+  const [scrapeSchedule, sendSchedule, repliesSchedule] = await Promise.all([
     qstashClient.schedules.create({
       destination: `${appUrl}/api/gtm/cron/scrape`,
-      cron: SCRAPE_CRON,
-      retries: 2,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.CRON_SECRET}`,
-      },
+      cron: SCRAPE_CRON, retries: 2,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.CRON_SECRET}` },
       body: JSON.stringify({ campaignId }),
     }),
     qstashClient.schedules.create({
       destination: `${appUrl}/api/gtm/cron/send`,
-      cron: SEND_CRON,
-      retries: 2,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.CRON_SECRET}`,
-      },
+      cron: SEND_CRON, retries: 2,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.CRON_SECRET}` },
       body: JSON.stringify({ campaignId }),
+    }),
+    qstashClient.schedules.create({
+      destination: `${appUrl}/api/gtm/cron/check-replies`,
+      cron: CHECK_REPLIES_CRON, retries: 1,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.CRON_SECRET}` },
+      body: JSON.stringify({}),
     }),
   ])
 
   await supabaseAdmin.from('campaign_schedules').upsert({
-    campaign_id: campaignId,
-    scrape_schedule_id: scrapeSchedule.scheduleId,
-    send_schedule_id: sendSchedule.scheduleId,
-    updated_at: new Date().toISOString(),
+    campaign_id:         campaignId,
+    scrape_schedule_id:  scrapeSchedule.scheduleId,
+    send_schedule_id:    sendSchedule.scheduleId,
+    replies_schedule_id: repliesSchedule.scheduleId,
+    updated_at:          new Date().toISOString(),
   }, { onConflict: 'campaign_id' })
 }
 

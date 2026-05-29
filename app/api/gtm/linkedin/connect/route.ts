@@ -31,6 +31,8 @@ export async function POST(req: Request) {
 
   // Trigger the worker to log in (fire and forget — login may take minutes if 2FA)
   const workerUrl = process.env.LINKEDIN_WORKER_URL
+    ?? (process.env.NODE_ENV !== 'production' ? 'http://localhost:8080' : null)
+
   if (workerUrl) {
     fetch(`${workerUrl}/login`, {
       method: 'POST',
@@ -40,6 +42,8 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({ userId: user.id }),
     }).catch(e => console.error('[gtm/linkedin/connect] worker trigger failed:', e))
+  } else {
+    console.warn('[gtm/linkedin/connect] LINKEDIN_WORKER_URL not set — worker not triggered')
   }
 
   return NextResponse.json({ ok: true, message: 'Login started — check back in a moment.' })

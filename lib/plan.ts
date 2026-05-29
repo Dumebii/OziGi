@@ -233,6 +233,33 @@ export async function incrementCampaignGeneration(userId: string): Promise<void>
   }
 }
 
+/**
+ * Increments newsletters_generated in user_stats.
+ * Requires this RPC in Supabase (SQL editor, run once):
+ *
+ *   CREATE OR REPLACE FUNCTION increment_newsletters_generated(user_id_param UUID)
+ *   RETURNS void LANGUAGE plpgsql AS $$
+ *   BEGIN
+ *     INSERT INTO user_stats (user_id, newsletters_generated)
+ *       VALUES (user_id_param, 1)
+ *     ON CONFLICT (user_id) DO UPDATE
+ *       SET newsletters_generated = COALESCE(user_stats.newsletters_generated, 0) + 1;
+ *   END; $$;
+ *
+ * Also requires the column:
+ *   ALTER TABLE user_stats ADD COLUMN IF NOT EXISTS newsletters_generated INTEGER DEFAULT 0;
+ */
+export async function incrementNewsletterGeneration(userId: string): Promise<void> {
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { error } = await supabaseAdmin.rpc('increment_newsletters_generated', { user_id_param: userId });
+  if (error) {
+    console.error('RPC increment_newsletters_generated error:', error);
+  }
+}
+
 export async function incrementImageGeneration(userId: string): Promise<void> {
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

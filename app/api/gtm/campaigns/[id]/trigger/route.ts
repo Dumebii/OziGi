@@ -24,17 +24,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const origin = new URL(req.url).origin
 
   if (origin.includes('localhost')) {
-    // In dev: call the cron route directly (QStash can't reach localhost)
-    const cronRes = await fetch(`${origin}/api/gtm/cron/${action}`, {
+    // In dev: fire-and-forget so the trigger doesn't time out waiting for Gemini
+    fetch(`${origin}/api/gtm/cron/${action}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.CRON_SECRET}`,
       },
       body: JSON.stringify({ campaignId: id }),
-    })
-    const result = await cronRes.json()
-    return NextResponse.json(result)
+    }).catch(e => console.error(`[trigger] cron/${action} failed:`, e))
+
+    return NextResponse.json({ ok: true, message: `${action} started` })
   }
 
   // In production: enqueue via QStash

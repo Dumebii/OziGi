@@ -34,6 +34,13 @@ export interface Campaign {
   daily_linkedin_limit: number
   sequence_steps: SequenceStep[]
   status: CampaignStatus
+  // Sender / product details used by Gemini to compose outreach
+  sender_name: string
+  sender_title: string
+  product_name: string
+  product_description: string
+  cta_url: string
+  persona_voice: string | null   // writing style/tone for AI email composition
   created_at: string
   updated_at: string
 }

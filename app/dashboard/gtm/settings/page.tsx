@@ -2,11 +2,22 @@
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import GtmPageHeader from '@/components/gtm/GtmPageHeader'
+
+interface CrmConnection {
+  id: string
+  provider: 'hubspot' | 'zoho'
+  zoho_client_id: string | null
+  is_active: boolean
+  created_at: string
+}
 
 interface EmailAccount {
   id: string
   email_address: string
   display_name: string | null
+  provider: 'gmail' | 'smtp' | 'zoho'
+  smtp_host: string | null
   is_active: boolean
   daily_send_count: number
   last_send_date: string | null
@@ -37,6 +48,22 @@ function SettingsContent() {
   const [accounts, setAccounts] = useState<EmailAccount[]>([])
   const [gmailLoading, setGmailLoading] = useState(true)
 
+  // ── SMTP state ──────────────────────────────────────────────────────────────
+  const [smtpPreset, setSmtpPreset]   = useState('outlook')
+  const [smtpHost, setSmtpHost]       = useState('smtp.office365.com')
+  const [smtpPort, setSmtpPort]       = useState(587)
+  const [smtpUser, setSmtpUser]       = useState('')
+  const [smtpPass, setSmtpPass]       = useState('')
+  const [smtpFrom, setSmtpFrom]       = useState('')
+  const [smtpSaving, setSmtpSaving]   = useState(false)
+  const [smtpMsg, setSmtpMsg]         = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [showSmtp, setShowSmtp]       = useState(false)
+
+  // ── CRM state ───────────────────────────────────────────────────────────────
+  const [crmConnections, setCrmConnections] = useState<CrmConnection[]>([])
+  const [crmConnecting, setCrmConnecting]   = useState<string | null>(null)
+  const [crmMsg, setCrmMsg]                 = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
   // ── LinkedIn state ───────────────────────────────────────────────────────────
   const [liSessions, setLiSessions] = useState<LinkedInSession[]>([])
   const [liEmail, setLiEmail] = useState('')
@@ -58,6 +85,71 @@ function SettingsContent() {
       .then(d => { setAccounts(d.accounts ?? []); setGmailLoading(false) })
   }, [])
 
+  // ── Load CRM connections ──────────────────────────────────────────────────────
+  useEffect(() => {
+    fetch('/api/gtm/crm/connections')
+      .then(r => r.json())
+      .then(d => setCrmConnections(d.connections ?? []))
+  }, [])
+
+  const SMTP_PRESETS: Record<string, { host: string; port: number }> = {
+    outlook:  { host: 'smtp.office365.com', port: 587 },
+    yahoo:    { host: 'smtp.mail.yahoo.com', port: 587 },
+    zohomail: { host: 'smtp.zoho.com',       port: 587 },
+    fastmail: { host: 'smtp.fastmail.com',   port: 587 },
+    sendgrid: { host: 'smtp.sendgrid.net',   port: 587 },
+    custom:   { host: '',                    port: 587 },
+  }
+
+  function applyPreset(preset: string) {
+    setSmtpPreset(preset)
+    const p = SMTP_PRESETS[preset]
+    if (p) { setSmtpHost(p.host); setSmtpPort(p.port) }
+  }
+
+  async function saveSmtpAccount(e: React.FormEvent) {
+    e.preventDefault()
+    setSmtpSaving(true); setSmtpMsg(null)
+    const res = await fetch('/api/gtm/smtp/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ host: smtpHost, port: smtpPort, username: smtpUser, password: smtpPass, from_email: smtpFrom }),
+    })
+    const d = await res.json()
+    if (res.ok) {
+      setSmtpMsg({ type: 'success', text: 'SMTP account connected.' })
+      setSmtpUser(''); setSmtpPass(''); setShowSmtp(false)
+      const updated = await fetch('/api/gtm/gmail/accounts').then(r => r.json())
+      setAccounts(updated.accounts ?? [])
+    } else {
+      setSmtpMsg({ type: 'error', text: d.error ?? 'Failed to connect.' })
+    }
+    setSmtpSaving(false)
+  }
+
+  async function connectCrmOAuth(provider: string) {
+    setCrmConnecting(provider)
+    setCrmMsg(null)
+    const res = await fetch('/api/gtm/crm/composio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider }),
+    })
+    const d = await res.json()
+    if (res.ok && d.redirectUrl) {
+      window.location.href = d.redirectUrl
+    } else {
+      setCrmMsg({ type: 'error', text: d.error ?? 'Failed to start OAuth flow.' })
+      setCrmConnecting(null)
+    }
+  }
+
+  async function disconnectCrm(id: string, provider: string) {
+    if (!confirm(`Disconnect ${provider === 'hubspot' ? 'HubSpot' : 'Zoho CRM'}?`)) return
+    await fetch(`/api/gtm/crm/connections/${id}`, { method: 'DELETE' })
+    setCrmConnections(prev => prev.filter(c => c.id !== id))
+  }
+
   // ── Load + poll LinkedIn sessions ────────────────────────────────────────────
   function loadLinkedIn() {
     return fetch('/api/gtm/linkedin/status')
@@ -65,23 +157,34 @@ function SettingsContent() {
       .then(d => setLiSessions(d.sessions ?? []))
   }
 
+  function startPolling() {
+    if (!pollRef.current) {
+      pollRef.current = setInterval(loadLinkedIn, 3000)
+    }
+  }
+
+  function stopPolling() {
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+  }
+
   useEffect(() => {
     loadLinkedIn()
   }, [])
 
-  // Poll every 5s when a login is in progress or pending 2FA
+  // Stop polling once we reach a terminal state (active or needs_login / expired)
   useEffect(() => {
-    const needsPoll = liSessions.some(s => s.status === 'logging_in' || s.status === 'pending_2fa')
-    if (needsPoll && !pollRef.current) {
-      pollRef.current = setInterval(loadLinkedIn, 5000)
+    const inProgress = liSessions.some(
+      s => s.status === 'logging_in' || s.status === 'pending_2fa'
+    )
+    // If no session is in-progress and polling is running, stop it
+    if (!inProgress && pollRef.current) {
+      stopPolling()
     }
-    if (!needsPoll && pollRef.current) {
-      clearInterval(pollRef.current)
-      pollRef.current = null
-    }
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current)
-    }
+    return () => stopPolling()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liSessions])
 
   async function connectLinkedIn(e: React.FormEvent) {
@@ -98,6 +201,8 @@ function SettingsContent() {
       setLiMsg(d.message)
       setLiPassword('') // clear password from state
       loadLinkedIn()
+      // Start polling immediately — don't wait to see 'logging_in' in DB first
+      startPolling()
     } else {
       setLiMsg(`Error: ${d.error}`)
     }
@@ -132,7 +237,7 @@ function SettingsContent() {
   const activeSession = liSessions.find(s => s.status === 'active')
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'monospace', maxWidth: 680 }}>
+    <div style={{ padding: '2rem', maxWidth: 680 }}>
       <div style={{ marginBottom: '1.5rem' }}>
         <Link href="/dashboard/gtm" style={{ color: '#666', textDecoration: 'none', fontSize: '0.9rem' }}>← Campaigns</Link>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, marginTop: '0.5rem' }}>GTM Settings</h1>
@@ -151,16 +256,19 @@ function SettingsContent() {
 
       {/* ── Gmail ─────────────────────────────────────────────────────────── */}
       <section style={{ marginBottom: '2.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <h2 style={{ fontWeight: 700 }}>Gmail</h2>
           <a href="/api/gtm/gmail/connect" style={{ padding: '0.4rem 0.9rem', background: '#111', color: '#fff', borderRadius: 6, textDecoration: 'none', fontSize: '0.9rem' }}>
             + Connect Gmail
           </a>
         </div>
+        <div style={{ fontSize: '0.8rem', color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '0.6rem 0.8rem', marginBottom: '1rem' }}>
+          ⚠ We recently added reply detection which requires a new Gmail permission (<code>gmail.readonly</code>). If your account was connected before, please <strong>disconnect and reconnect</strong> to enable it.
+        </div>
         {gmailLoading && <p style={{ color: '#888' }}>Loading…</p>}
         {!gmailLoading && accounts.length === 0 && (
           <div style={{ border: '1px dashed #ccc', borderRadius: 8, padding: '2rem', textAlign: 'center', color: '#666', fontSize: '0.9rem' }}>
-            No Gmail account connected yet.
+            No email accounts connected yet.
           </div>
         )}
         {accounts.map(a => (
@@ -168,7 +276,10 @@ function SettingsContent() {
             <div>
               <div style={{ fontWeight: 600 }}>{a.email_address}</div>
               <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.2rem' }}>
-                {a.is_active ? '● Active' : '○ Inactive'} · Sent today: {a.daily_send_count}
+                {a.provider === 'smtp'
+                  ? <>SMTP{a.smtp_host ? ` · ${a.smtp_host}` : ''} · Sent today: {a.daily_send_count}</>
+                  : <>{a.is_active ? '● Active' : '○ Inactive'} · Sent today: {a.daily_send_count}</>
+                }
               </div>
             </div>
             <button onClick={() => disconnectGmail(a.id, a.email_address)} style={{ padding: '0.3rem 0.7rem', border: '1px solid #fca5a5', borderRadius: 5, background: 'white', color: '#dc2626', cursor: 'pointer', fontSize: '0.85rem' }}>
@@ -176,6 +287,141 @@ function SettingsContent() {
             </button>
           </div>
         ))}
+      </section>
+
+      {/* ── SMTP (non-Google) ────────────────────────────────────────────── */}
+      <section style={{ marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ fontWeight: 700 }}>Other email (SMTP)</h2>
+          <button onClick={() => setShowSmtp(v => !v)} style={{ padding: '0.4rem 0.9rem', background: 'white', border: '1px solid #ccc', borderRadius: 6, cursor: 'pointer', fontSize: '0.9rem' }}>
+            {showSmtp ? 'Cancel' : '+ Connect SMTP'}
+          </button>
+        </div>
+
+        {smtpMsg && (
+          <div style={{ background: smtpMsg.type === 'success' ? '#dcfce7' : '#fee2e2', border: `1px solid ${smtpMsg.type === 'success' ? '#86efac' : '#fca5a5'}`, borderRadius: 6, padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.9rem', color: smtpMsg.type === 'success' ? '#166534' : '#991b1b' }}>
+            {smtpMsg.text}
+          </div>
+        )}
+
+        <div style={{ fontSize: '0.82rem', color: '#555', marginBottom: '0.75rem', lineHeight: 1.6 }}>
+          Use this for Yahoo, Outlook, Microsoft 365, custom domains, or transactional providers (SendGrid, Mailgun). Your password is encrypted at rest.
+        </div>
+
+        {showSmtp && (
+          <form onSubmit={saveSmtpAccount} style={{ border: '1px solid #eee', borderRadius: 8, padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* Preset picker */}
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' as const }}>
+              {Object.entries({ outlook: 'Outlook', yahoo: 'Yahoo', zohomail: 'Zoho Mail', fastmail: 'Fastmail', sendgrid: 'SendGrid', custom: 'Custom' }).map(([k, label]) => (
+                <button key={k} type="button" onClick={() => applyPreset(k)}
+                  style={{ padding: '0.3rem 0.7rem', borderRadius: 5, border: '1px solid #ccc', background: smtpPreset === k ? '#111' : 'white', color: smtpPreset === k ? '#fff' : '#333', cursor: 'pointer', fontSize: '0.82rem' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 2 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>SMTP host</span>
+                <input value={smtpHost} onChange={e => setSmtpHost(e.target.value)} placeholder="smtp.office365.com"
+                  style={{ padding: '0.45rem 0.7rem', border: '1px solid #ccc', borderRadius: 5, fontSize: '0.9rem' }} />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 0.6 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Port</span>
+                <input type="number" value={smtpPort} onChange={e => setSmtpPort(Number(e.target.value))}
+                  style={{ padding: '0.45rem 0.7rem', border: '1px solid #ccc', borderRadius: 5, fontSize: '0.9rem' }} />
+              </label>
+            </div>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Email / username</span>
+              <input type="email" value={smtpUser} onChange={e => setSmtpUser(e.target.value)} placeholder="you@yourcompany.com"
+                style={{ padding: '0.45rem 0.7rem', border: '1px solid #ccc', borderRadius: 5, fontSize: '0.9rem' }} />
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Password / app password</span>
+              <input type="password" value={smtpPass} onChange={e => setSmtpPass(e.target.value)} placeholder="••••••••"
+                style={{ padding: '0.45rem 0.7rem', border: '1px solid #ccc', borderRadius: 5, fontSize: '0.9rem' }} />
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Display name (from)</span>
+              <input value={smtpFrom} onChange={e => setSmtpFrom(e.target.value)} placeholder="Dumebi from Ozigi"
+                style={{ padding: '0.45rem 0.7rem', border: '1px solid #ccc', borderRadius: 5, fontSize: '0.9rem' }} />
+            </label>
+
+            <button type="submit" disabled={smtpSaving || !smtpHost || !smtpUser || !smtpPass}
+              style={{ padding: '0.55rem 1.25rem', background: smtpSaving ? '#999' : '#111', color: '#fff', border: 'none', borderRadius: 5, cursor: 'pointer', fontSize: '0.95rem', alignSelf: 'flex-start' }}>
+              {smtpSaving ? 'Testing & saving…' : 'Connect'}
+            </button>
+          </form>
+        )}
+      </section>
+
+      {/* ── CRM ──────────────────────────────────────────────────────────── */}
+      <section style={{ marginBottom: '2.5rem' }}>
+        <h2 style={{ fontWeight: 700, marginBottom: '0.35rem' }}>CRM</h2>
+        <p style={{ fontSize: '0.82rem', color: '#666', marginBottom: '1rem', lineHeight: 1.6 }}>
+          Connect your CRM via OAuth — no API keys needed. Leads are synced automatically when first contacted.
+        </p>
+
+        {crmMsg && (
+          <div style={{ background: crmMsg.type === 'success' ? '#dcfce7' : '#fee2e2', border: `1px solid ${crmMsg.type === 'success' ? '#86efac' : '#fca5a5'}`, borderRadius: 6, padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.9rem', color: crmMsg.type === 'success' ? '#166534' : '#991b1b' }}>
+            {crmMsg.text}
+          </div>
+        )}
+
+        {/* Connected CRMs */}
+        {crmConnections.map(c => (
+          <div key={c.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: '1rem 1.25rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontWeight: 600 }}>
+                {{ hubspot: 'HubSpot', zoho: 'Zoho CRM', salesforce: 'Salesforce', pipedrive: 'Pipedrive' }[c.provider] ?? c.provider}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.2rem' }}>
+                {c.is_active ? '● Connected via OAuth' : '○ Inactive'}
+              </div>
+            </div>
+            <button onClick={() => disconnectCrm(c.id, c.provider)} style={{ padding: '0.3rem 0.7rem', border: '1px solid #fca5a5', borderRadius: 5, background: 'white', color: '#dc2626', cursor: 'pointer', fontSize: '0.85rem' }}>
+              Disconnect
+            </button>
+          </div>
+        ))}
+
+        {/* OAuth connect buttons — only CRMs with Composio Managed credentials */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          {[
+            { provider: 'hubspot',    label: 'HubSpot',    color: '#ff7a59' },
+            { provider: 'zoho',       label: 'Zoho CRM',   color: '#e42527' },
+            { provider: 'salesforce', label: 'Salesforce', color: '#00a1e0' },
+          ].map(({ provider, label, color }) => {
+            const already = crmConnections.some(c => c.provider === provider && c.is_active)
+            const busy = crmConnecting === provider
+            return (
+              <button
+                key={provider}
+                onClick={() => !already && connectCrmOAuth(provider)}
+                disabled={already || busy}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  padding: '0.65rem 1rem',
+                  border: `1px solid ${already ? '#86efac' : '#e5e7eb'}`,
+                  borderRadius: 8,
+                  background: already ? '#f0fdf4' : 'white',
+                  color: already ? '#166534' : '#111',
+                  cursor: already ? 'default' : busy ? 'wait' : 'pointer',
+                  fontSize: '0.9rem', fontWeight: 600,
+                  opacity: busy ? 0.7 : 1,
+                  transition: 'all 0.15s',
+                }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: already ? '#22c55e' : color, flexShrink: 0 }} />
+                {busy ? 'Redirecting…' : already ? `${label} ✓` : `Connect ${label}`}
+              </button>
+            )
+          })}
+        </div>
       </section>
 
       {/* ── LinkedIn ──────────────────────────────────────────────────────── */}
@@ -197,7 +443,7 @@ function SettingsContent() {
                 <div style={{ fontSize: '0.82rem', color: '#666', marginTop: '0.2rem' }}>
                   {STATUS_LABEL[s.status] ?? s.status}
                 </div>
-                {s.login_error && (
+                {s.login_error && s.login_error !== '__push_notification__' && (
                   <div style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '0.25rem' }}>
                     ✗ {s.login_error}
                   </div>
@@ -210,31 +456,49 @@ function SettingsContent() {
           </div>
         ))}
 
-        {/* 2FA prompt — shown when worker is waiting for a code */}
-        {pendingTwoFa && (
-          <div style={{ border: '2px solid #fbbf24', borderRadius: 8, padding: '1.25rem', marginBottom: '1rem', background: '#fffbeb' }}>
-            <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>🔐 LinkedIn sent you a verification code</div>
-            <div style={{ fontSize: '0.88rem', color: '#555', marginBottom: '1rem', lineHeight: 1.6 }}>
-              Check your email or phone for a code from LinkedIn. Enter it below — you have 5 minutes.
+        {/* 2FA prompt — shown when worker is waiting for verification */}
+        {pendingTwoFa && (() => {
+          const isPush = pendingTwoFa.login_error === '__push_notification__'
+          return (
+            <div style={{ border: '2px solid #fbbf24', borderRadius: 8, padding: '1.25rem', marginBottom: '1rem', background: '#fffbeb' }}>
+              {isPush ? (
+                <>
+                  <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📱 Approve the sign-in on your LinkedIn app</div>
+                  <div style={{ fontSize: '0.88rem', color: '#555', lineHeight: 1.6 }}>
+                    LinkedIn sent a push notification to your phone. Open your <strong>LinkedIn app</strong> and tap <strong>Yes</strong> to approve the sign-in.
+                    This page will update automatically once approved.
+                  </div>
+                  <div style={{ marginTop: '0.75rem', fontSize: '0.82rem', color: '#888' }}>
+                    No notification? Try the code method instead — disconnect and reconnect, then use a verification code sent to your email.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>🔐 LinkedIn sent you a verification code</div>
+                  <div style={{ fontSize: '0.88rem', color: '#555', marginBottom: '1rem', lineHeight: 1.6 }}>
+                    Check your email or phone for a code from LinkedIn. Enter it below — you have 5 minutes.
+                  </div>
+                  <form onSubmit={submitTwoFa} style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      value={twoFaCode}
+                      onChange={e => setTwoFaCode(e.target.value)}
+                      placeholder="Enter verification code"
+                      style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #ccc', borderRadius: 5, fontSize: '1rem', letterSpacing: '0.1em' }}
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      disabled={twoFaSubmitting || !twoFaCode}
+                      style={{ padding: '0.5rem 1rem', background: '#111', color: '#fff', border: 'none', borderRadius: 5, cursor: 'pointer' }}
+                    >
+                      {twoFaSubmitting ? 'Submitting…' : 'Submit'}
+                    </button>
+                  </form>
+                </>
+              )}
             </div>
-            <form onSubmit={submitTwoFa} style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                value={twoFaCode}
-                onChange={e => setTwoFaCode(e.target.value)}
-                placeholder="Enter verification code"
-                style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #ccc', borderRadius: 5, fontSize: '1rem', letterSpacing: '0.1em' }}
-                autoFocus
-              />
-              <button
-                type="submit"
-                disabled={twoFaSubmitting || !twoFaCode}
-                style={{ padding: '0.5rem 1rem', background: '#111', color: '#fff', border: 'none', borderRadius: 5, cursor: 'pointer' }}
-              >
-                {twoFaSubmitting ? 'Submitting…' : 'Submit'}
-              </button>
-            </form>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Connect form — shown if no active session */}
         {!activeSession && !pendingTwoFa && liSessions.every(s => s.status !== 'logging_in') && (
@@ -285,7 +549,7 @@ const errorMessages: Record<string, string> = {
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '2rem', fontFamily: 'monospace' }}>Loading…</div>}>
+    <Suspense fallback={<div style={{ padding: '2rem' }}>Loading…</div>}>
       <SettingsContent />
     </Suspense>
   )

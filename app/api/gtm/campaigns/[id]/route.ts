@@ -10,11 +10,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const { id } = await params
 
-  const [campaignRes, leadsRes, sendsRes] = await Promise.all([
+  const [campaignRes, leadsRes, sendsRes, liQueueRes] = await Promise.all([
     supabaseAdmin.from('campaigns').select('*').eq('id', id).eq('user_id', user.id).single(),
     supabaseAdmin
       .from('leads')
-      .select('id, name, email, source, status, icp_match_score, company, created_at')
+      .select('id, name, email, linkedin_url, source, status, icp_match_score, company, created_at')
       .eq('campaign_id', id)
       .order('icp_match_score', { ascending: false })
       .limit(100),
@@ -24,6 +24,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       .eq('campaign_id', id)
       .order('sent_at', { ascending: false })
       .limit(200),
+    supabaseAdmin
+      .from('linkedin_queue')
+      .select('id, lead_id, action, status, attempts, error, scheduled_at, processed_at')
+      .eq('campaign_id', id)
+      .order('created_at', { ascending: false })
+      .limit(100),
   ])
 
   if (campaignRes.error || !campaignRes.data) {
@@ -31,9 +37,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 
   return NextResponse.json({
-    campaign: campaignRes.data,
-    leads: leadsRes.data ?? [],
-    sends: sendsRes.data ?? [],
+    campaign:    campaignRes.data,
+    leads:       leadsRes.data    ?? [],
+    sends:       sendsRes.data    ?? [],
+    liQueue:     liQueueRes.data  ?? [],
   })
 }
 

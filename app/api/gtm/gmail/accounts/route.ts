@@ -13,9 +13,8 @@ export async function GET() {
 
   const { data, error } = await supabaseAdmin
     .from('email_accounts')
-    .select('id, email_address, display_name, provider, is_active, daily_send_count, last_send_date, created_at')
+    .select('id, email_address, display_name, provider, smtp_host, is_active, daily_send_count, last_send_date, created_at')
     .eq('user_id', user.id)
-    .eq('provider', 'gmail')
     .order('created_at', { ascending: true })
 
   if (error) {

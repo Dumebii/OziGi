@@ -7,7 +7,8 @@ const GMAIL_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const GMAIL_SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send'
 const SCOPES = [
   'https://www.googleapis.com/auth/gmail.send',
-  'https://www.googleapis.com/auth/userinfo.email',  // needed to read the account email address
+  'https://www.googleapis.com/auth/gmail.readonly',  // needed to detect replies via thread polling
+  'https://www.googleapis.com/auth/userinfo.email',
 ].join(' ')
 
 export function getCallbackUrl(origin: string) {
@@ -114,7 +115,13 @@ export async function refreshAccessToken(accountId: string): Promise<string> {
   return tokens.access_token
 }
 
-// Builds a RFC 2822 message and sends via Gmail REST API
+export interface GmailSendResult {
+  messageId: string
+  threadId:  string
+}
+
+// Builds a RFC 2822 message and sends via Gmail REST API.
+// Returns the Gmail messageId and threadId for reply-detection later.
 export async function sendViaGmail(
   accountId: string,
   to: string,
@@ -122,7 +129,7 @@ export async function sendViaGmail(
   htmlBody: string,
   fromName: string,
   fromEmail: string
-): Promise<void> {
+): Promise<GmailSendResult> {
   const accessToken = await refreshAccessToken(accountId)
 
   const message = [
@@ -154,6 +161,43 @@ export async function sendViaGmail(
     const err = await res.text()
     throw new Error(`Gmail send failed: ${err}`)
   }
+
+  const data = await res.json() as { id: string; threadId: string }
+  return { messageId: data.id, threadId: data.threadId }
+}
+
+/**
+ * Fetches a Gmail thread and returns true if there are messages in it
+ * that were received AFTER sentAt (i.e. the lead replied).
+ * Requires gmail.readonly scope. Silently returns false if scope is missing.
+ */
+export async function threadHasReply(
+  accountId: string,
+  threadId: string,
+  sentAt: string
+): Promise<boolean> {
+  let accessToken: string
+  try {
+    accessToken = await refreshAccessToken(accountId)
+  } catch {
+    return false
+  }
+
+  const res = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/threads/${threadId}?format=minimal`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  )
+
+  // 403 = missing scope (old connection) — silently skip
+  if (res.status === 403 || res.status === 404) return false
+  if (!res.ok) return false
+
+  const thread = await res.json() as { messages?: Array<{ internalDate: string }> }
+  const messages = thread.messages ?? []
+
+  // Any message whose internalDate is after our send is a reply from the lead
+  const sentMs = new Date(sentAt).getTime()
+  return messages.some(m => parseInt(m.internalDate) > sentMs + 30_000)  // +30s buffer
 }
 
 // Fetch the authenticated user's email address via the userinfo endpoint.

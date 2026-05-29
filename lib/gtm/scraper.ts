@@ -57,11 +57,18 @@ export async function scrapeGitHub(icpConfig: IcpConfig, limit = 30): Promise<Ra
       // Skip accounts with no useful signal
       if (!profile.bio && !profile.email && !profile.company) continue
 
+      // Enrich: if profile email is hidden, mine it from commit history
+      let email = profile.email ?? null
+      if (!email) {
+        email = await getCommitEmail(profile.login)
+        if (email) console.log(`[scraper:github] commit email found for ${profile.login}`)
+      }
+
       leads.push({
         source: 'github',
         source_id: profile.login,
         name: profile.name ?? profile.login,
-        email: profile.email ?? null,
+        email,
         github_username: profile.login,
         linkedin_url: null,
         linkedin_profile_id: null,
@@ -116,11 +123,19 @@ export async function scrapeDevTo(icpConfig: IcpConfig, limit = 30): Promise<Raw
       if (seen.has(username)) continue
       seen.add(username)
 
+      // Enrich: Dev.to doesn't expose emails, but if the author has a linked
+      // GitHub username we can mine their commit history for a real address
+      let devtoEmail: string | null = null
+      if (article.user.github_username) {
+        devtoEmail = await getCommitEmail(article.user.github_username)
+        if (devtoEmail) console.log(`[scraper:devto] commit email found for ${username}`)
+      }
+
       leads.push({
         source: 'devto',
         source_id: username,
         name: article.user.name ?? username,
-        email: null,  // Dev.to API doesn't expose emails
+        email: devtoEmail,
         github_username: article.user.github_username ?? null,
         linkedin_url: null,
         linkedin_profile_id: null,
@@ -173,7 +188,7 @@ For each lead, output a score from 0.0 to 1.0 where:
 Return a JSON array of numbers, one per lead, same order: [0.8, 0.3, ...]`
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-3-flash-preview',
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     config: { responseMimeType: 'application/json', temperature: 0.1 },
   })
@@ -184,6 +199,53 @@ Return a JSON array of numbers, one per lead, same order: [0.8, 0.3, ...]`
     ...lead,
     icp_match_score: scores[i] ?? null,
   }))
+}
+
+/**
+ * Commit-email enrichment — port of _get_commit_email from free_outbound_email_agent.
+ * Walks the user's most-recently-pushed public repos and reads the commit author
+ * email, which is almost always a real address even when the profile email is hidden.
+ */
+async function getCommitEmail(username: string): Promise<string | null> {
+  const reposRes = await fetch(
+    `${GITHUB_API}/users/${username}/repos?sort=pushed&per_page=10&type=owner`,
+    { headers: githubHeaders() }
+  )
+  if (!reposRes.ok) return null
+
+  const repos = await reposRes.json() as Array<{ name: string; fork: boolean; private: boolean }>
+
+  for (const repo of repos) {
+    if (repo.fork || repo.private) continue
+
+    try {
+      const commitsRes = await fetch(
+        `${GITHUB_API}/repos/${username}/${repo.name}/commits?author=${username}&per_page=1`,
+        { headers: githubHeaders() }
+      )
+      if (!commitsRes.ok) continue
+
+      const commits = await commitsRes.json() as Array<{
+        commit: { author: { email: string } }
+      }>
+      if (!commits?.length) continue
+
+      const email = commits[0]?.commit?.author?.email ?? ''
+      if (isValidEmail(email)) return email
+    } catch {
+      // skip this repo, try next
+    }
+
+    await sleep(300)
+  }
+
+  return null
+}
+
+function isValidEmail(email: string): boolean {
+  if (!email) return false
+  if (email.includes('noreply')) return false   // catches github noreply addresses
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 function extractTagsFromBio(bio: string): string[] {

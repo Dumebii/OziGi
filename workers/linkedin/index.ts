@@ -23,6 +23,7 @@ import { createClient } from '@supabase/supabase-js'
 import { loadSession, saveSession, markSessionExpired, isLoggedIn } from './browser'
 import { sendConnectionRequest, sendLinkedInMessage, sendFollowUp } from './actions'
 import { loginLinkedIn } from './login'
+import { searchAndSaveLeads } from './search'
 import type { BrowserContext, Browser } from 'playwright'
 
 // HTTP server — health checks + /login endpoint
@@ -31,6 +32,63 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ ok: true, service: 'linkedin-worker' }))
+    return
+  }
+
+  // POST /search — triggered by the scrape cron to find LinkedIn leads by ICP
+  if (req.method === 'POST' && req.url === '/search') {
+    const auth = req.headers['authorization']
+    if (auth !== `Bearer ${process.env.WORKER_SECRET}`) {
+      res.writeHead(401); res.end(JSON.stringify({ error: 'Unauthorized' })); return
+    }
+
+    const chunks: Buffer[] = []
+    for await (const chunk of req) chunks.push(chunk as Buffer)
+    const { userId, campaignId, icpConfig, limit } = JSON.parse(Buffer.concat(chunks).toString())
+
+    if (!userId || !campaignId || !icpConfig) {
+      res.writeHead(400); res.end(JSON.stringify({ error: 'userId, campaignId, icpConfig required' })); return
+    }
+
+    // Acknowledge immediately — search runs async
+    res.writeHead(202, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ ok: true, message: 'LinkedIn search started' }))
+
+    ;(async () => {
+      const supabase = getSupabase()
+      const { data: session } = await supabase
+        .from('linkedin_sessions')
+        .select('id, linkedin_email, status')
+        .eq('user_id', userId).eq('status', 'active')
+        .order('last_used_at', { ascending: false }).limit(1).single()
+
+      if (!session) {
+        console.warn(`[worker:search] no active LinkedIn session for user ${userId}`); return
+      }
+
+      const sessionInfo = { sessionId: session.id, userId, linkedinEmail: session.linkedin_email }
+      let browser: Browser | null = null
+      let context: BrowserContext | null = null
+
+      try {
+        const loaded = await loadSession(sessionInfo)
+        browser = loaded.browser; context = loaded.context
+
+        if (!await isLoggedIn(context)) {
+          await markSessionExpired(session.id)
+          console.warn(`[worker:search] session expired for ${session.linkedin_email}`); return
+        }
+
+        const saved = await searchAndSaveLeads(context, supabase, userId, campaignId, icpConfig, limit ?? 25)
+        console.log(`[worker:search] done — ${saved} leads saved for campaign ${campaignId}`)
+        await saveSession(sessionInfo, context)
+      } catch (err) {
+        console.error('[worker:search] error:', err)
+      } finally {
+        if (context) await context.close().catch(() => {})
+        if (browser)  await browser.close().catch(() => {})
+      }
+    })().catch(err => console.error('[worker:search] unhandled:', err))
     return
   }
 
@@ -96,6 +154,7 @@ interface QueueItem {
   user_id: string
   action: 'connect' | 'message' | 'follow_up'
   message: string | null
+  sequence_step: number
   attempts: number
   scheduled_at: string
 }
@@ -104,6 +163,12 @@ interface Lead {
   linkedin_url: string | null
   linkedin_profile_id: string | null
   name: string | null
+}
+
+/** Extract the profile slug from a LinkedIn URL (e.g. /in/john-doe → "john-doe") */
+function extractProfileId(url: string): string | null {
+  const m = url.match(/linkedin\.com\/in\/([^/?#]+)/)
+  return m ? m[1] : null
 }
 
 async function processItem(
@@ -123,6 +188,10 @@ async function processItem(
     throw new Error('Lead has no LinkedIn URL or profile ID')
   }
 
+  // Resolve profile ID — stored explicitly or extract from the URL slug
+  const profileId = lead.linkedin_profile_id
+    ?? (lead.linkedin_url ? extractProfileId(lead.linkedin_url) : null)
+
   console.log(`[worker] executing ${item.action} for lead ${item.lead_id}`)
 
   switch (item.action) {
@@ -135,13 +204,13 @@ async function processItem(
       break
 
     case 'message':
-      if (!lead.linkedin_profile_id) throw new Error('No linkedin_profile_id for message action')
-      await sendLinkedInMessage(context, lead.linkedin_profile_id, item.message ?? '')
+      if (!profileId) throw new Error('Cannot message: no linkedin_profile_id and could not extract from URL')
+      await sendLinkedInMessage(context, profileId, item.message ?? '')
       break
 
     case 'follow_up':
-      if (!lead.linkedin_profile_id) throw new Error('No linkedin_profile_id for follow_up action')
-      await sendFollowUp(context, lead.linkedin_profile_id, item.message ?? '')
+      if (!profileId) throw new Error('Cannot follow_up: no linkedin_profile_id and could not extract from URL')
+      await sendFollowUp(context, profileId, item.message ?? '')
       break
 
     default:
@@ -205,16 +274,29 @@ async function runForUser(userId: string, items: QueueItem[]): Promise<void> {
       try {
         await processItem(item, context)
 
+        const now = new Date().toISOString()
+
         await supabase
           .from('linkedin_queue')
-          .update({ status: 'done', processed_at: new Date().toISOString() })
+          .update({ status: 'done', processed_at: now })
           .eq('id', item.id)
+
+        // Mark the corresponding sequence_send as sent
+        if (item.sequence_step > 0) {
+          await supabase
+            .from('sequence_sends')
+            .update({ status: 'sent', sent_at: now })
+            .eq('lead_id', item.lead_id)
+            .eq('step', item.sequence_step)
+            .eq('channel', 'linkedin')
+            .eq('status', 'queued')
+        }
 
         // Update lead status if it was a connect action
         if (item.action === 'connect') {
           await supabase
             .from('leads')
-            .update({ status: 'contacted', updated_at: new Date().toISOString() })
+            .update({ status: 'contacted', updated_at: now })
             .eq('id', item.lead_id)
         }
 
@@ -251,7 +333,7 @@ async function poll(): Promise<void> {
 
   const { data: items, error } = await supabase
     .from('linkedin_queue')
-    .select('id, lead_id, campaign_id, user_id, action, message, attempts, scheduled_at')
+    .select('id, lead_id, campaign_id, user_id, action, message, sequence_step, attempts, scheduled_at')
     .eq('status', 'queued')
     .lte('scheduled_at', new Date().toISOString())
     .order('scheduled_at', { ascending: true })

@@ -11,11 +11,7 @@ export async function GET() {
 
   const { data, error } = await supabaseAdmin
     .from('campaigns')
-    .select(`
-      id, name, status, sources, daily_email_limit, created_at,
-      leads(count),
-      sequence_sends(count)
-    `)
+    .select('*, leads(count), sequence_sends(count)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -28,7 +24,10 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { name, icp_description, sources, daily_email_limit, sequence_steps } = await req.json()
+  const {
+    name, icp_description, sources, daily_email_limit, daily_linkedin_limit, sequence_steps,
+    sender_name, sender_title, product_name, product_description, cta_url, persona_voice,
+  } = await req.json()
 
   if (!name || !icp_description || !sources?.length) {
     return NextResponse.json({ error: 'name, icp_description, and sources are required' }, { status: 400 })
@@ -46,12 +45,19 @@ export async function POST(req: Request) {
       icp_config,
       sources,
       daily_email_limit: daily_email_limit ?? 40,
+      daily_linkedin_limit: daily_linkedin_limit ?? 20,
       sequence_steps: sequence_steps ?? [
         { step: 1, channel: 'email', delay_days: 0 },
         { step: 2, channel: 'email', delay_days: 3 },
         { step: 3, channel: 'email', delay_days: 7 },
       ],
       status: 'active',
+      sender_name:         sender_name         ?? 'Dumebi',
+      sender_title:        sender_title        ?? 'Founder',
+      product_name:        product_name        ?? 'Ozigi',
+      product_description: product_description ?? '',
+      cta_url:             cta_url             ?? 'https://ozigi.app',
+      persona_voice:       persona_voice       ?? null,
     })
     .select()
     .single()

@@ -51,6 +51,29 @@ export async function POST(req: Request) {
         allLeads.push(...leads)
       }
 
+      // LinkedIn source — delegate to the worker which has the browser session
+      if (campaign.sources.includes('linkedin')) {
+        const workerUrl = process.env.LINKEDIN_WORKER_URL ?? 'http://localhost:8080'
+        try {
+          await fetch(`${workerUrl}/search`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${process.env.WORKER_SECRET}`,
+            },
+            body: JSON.stringify({
+              userId:     campaign.user_id,
+              campaignId: campaign.id,
+              icpConfig:  campaign.icp_config,
+              limit:      25,
+            }),
+          })
+          console.log(`[gtm/cron/scrape] LinkedIn search triggered for campaign ${campaign.id}`)
+        } catch (e) {
+          console.warn(`[gtm/cron/scrape] LinkedIn worker not reachable:`, e)
+        }
+      }
+
       if (allLeads.length === 0) {
         results[campaign.id] = { scraped: 0, inserted: 0 }
         continue
