@@ -10,6 +10,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-geist-mono)', 'monospace'],
+        mono: ['var(--font-geist-mono)', 'monospace'],
+      },
       colors: {
         // Brand colors (constant across themes)
         brand: {
