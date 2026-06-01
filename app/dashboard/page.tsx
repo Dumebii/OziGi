@@ -410,8 +410,16 @@ return () => clearTimeout(t);
 
 // Fire Google Ads conversion when redirected back after a successful checkout
 useEffect(() => {
-  if (searchParams.get("checkout") === "success") {
+  const checkoutParam = searchParams.get("checkout");
+  if (checkoutParam === "success") {
     fireConversion();
+    // Clean the param from the URL so it doesn't re-fire on refresh
+    const url = new URL(window.location.href);
+    url.searchParams.delete("checkout");
+    router.replace(url.pathname + url.search, { scroll: false });
+  } else if (checkoutParam === "credits") {
+    fireConversion();
+    toast.success("Credits added to your account!");
     // Clean the param from the URL so it doesn't re-fire on refresh
     const url = new URL(window.location.href);
     url.searchParams.delete("checkout");
